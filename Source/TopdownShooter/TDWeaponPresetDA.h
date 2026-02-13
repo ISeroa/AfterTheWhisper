@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Math/Transform.h"
 #include "TDWeaponTypes.h"
 #include "TDWeaponPartDA.h"
 #include "TDWeaponPresetDA.generated.h"
@@ -30,7 +31,7 @@ struct FTDWeaponPartEntry
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	bool bOverrideOffset = false;
-
+	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (EditCondition = "bOverrideOffset"))
 	FTransform OverrideRelativeToSocket = FTransform::Identity;
 };

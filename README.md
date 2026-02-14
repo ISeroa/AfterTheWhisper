@@ -1,4 +1,4 @@
-# AfterTheWhisper
+# AfterTheWisper
 
 > Portfolio project developed with Unreal Engine 4.25 (C++)
 

@@ -1,16 +1,16 @@
 {
-  "FileVersion": 3,
-  "EngineAssociation": "4.25",
-  "Category": "",
-  "Description": "",
-  "Modules": [
-    {
-      "Name": "TopdownShooter",
-      "Type": "Runtime",
-      "LoadingPhase": "Default",
-      "AdditionalDependencies": [
-        "Engine"
-      ]
-    }
-  ]
+	"FileVersion": 3,
+	"EngineAssociation": "4.27",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "TopdownShooter",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		}
+	]
 }

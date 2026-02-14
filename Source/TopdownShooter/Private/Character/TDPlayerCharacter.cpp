@@ -73,14 +73,6 @@ void ATDPlayerCharacter::BeginPlay()
 
             CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeapon->GetHandSocketName());
         }
-
-        /*CurrentWeapon = GetWorld()->SpawnActor<ATDWeaponBase>(DefaultWeaponClass);
-        if (CurrentWeapon)
-        {
-            CurrentWeapon->SetOwner(this);
-            CurrentWeapon->SetInstigator(this);
-            CurrentWeapon->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-        }*/
     }
 }
 

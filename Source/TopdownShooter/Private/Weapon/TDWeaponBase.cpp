@@ -88,46 +88,6 @@ void ATDWeaponBase::SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMis
 	{
 		ClearAllPartsNotIn(KeepSlots);
 	}
-
-	//TArray<FWeaponPartSpec> Specs;
-	//Specs.Reserve(Preset->Parts.Num());
-
-	//TSet<FName> KeepSlots;
-
-	//for (const FTDWeaponPartEntry& E : Preset->Parts)
-	//{
-	//	const UTDWeaponPartDA* Part = E.Part;
-	//	if (!Part) continue;
-
-	//	FWeaponPartSpec S;
-	//	S.Slot = TDSlotToName(Part->Slot);
-	//	if (S.Slot.IsNone()) continue;
-
-	//	S.Mesh = Part->Mesh;
-	//	S.AttachSocket = Part->AttachSocketName;
-	//	S.RelativeTransform = Part->RelativeOffset;
-
-	//	Specs.Add(S);
-	//	KeepSlots.Add(S.Slot);
-	//}
-
-	//SetParts(Specs);
-
-	//if (bClearMissingSlots)
-	//{
-	//	for (auto& Pair : PartComps)
-	//	{
-	//		const FName Slot = Pair.Key;
-	//		UStaticMeshComponent* Comp = Pair.Value;
-	//		if (!Comp) continue;
-
-	//		if (!KeepSlots.Contains(Slot))
-	//		{
-	//			Comp->SetStaticMesh(nullptr);
-	//			Comp->SetVisibility(false, true);
-	//		}
-	//	}
-	//}
 }
 
 void ATDWeaponBase::SetParts(const TArray<FWeaponPartSpec>& InParts)
@@ -350,13 +310,20 @@ void ATDWeaponBase::FireOnce()
 
 	const bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, TraceChannel, Params);
 
+
 #if !UE_BUILD_SHIPPING
 	if (bDebugShot)
 	{
 		DrawDebugLine(World, Start, bHit ? Hit.ImpactPoint : End, bHit ? FColor::Green : FColor::Red, false, 0.05f, 0, 1.f);
 		if (bHit) DrawDebugSphere(World, Hit.ImpactPoint, 6.f, 8, FColor::Green, false, 0.05f);
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[Weapon] Hit=%s Damage=%.1f"),
+		Hit.GetActor() ? *Hit.GetActor()->GetName() : TEXT("None"),
+		Damage);
+
 #endif
+
 	if (bHit && Hit.GetActor() && Hit.GetActor() != OwnerActor)
 	{
 		UGameplayStatics::ApplyPointDamage(

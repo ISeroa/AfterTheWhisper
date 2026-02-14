@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "TDWeaponTypes.h"
+#include "Weapon/Types/TDWeaponTypes.h"
 #include "TDWeaponPartDA.generated.h"
 
 

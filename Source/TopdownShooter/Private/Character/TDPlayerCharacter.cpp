@@ -1,15 +1,15 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "TDPlayerCharacter.h"
+#include "Character/TDPlayerCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
-#include "TDPlayerController.h"
-#include "TDWeaponBase.h"
+#include "Core/TDPlayerController.h"
+#include "Weapon/TDWeaponBase.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()

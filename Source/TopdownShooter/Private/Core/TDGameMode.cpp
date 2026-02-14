@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "TDGameMode.h"
-#include "TDPlayerCharacter.h"
-#include "TDPlayerController.h"
+#include "Core/TDGameMode.h"
+#include "Core/TDPlayerController.h"
+#include "Character/TDPlayerCharacter.h"
 
 ATDGameMode::ATDGameMode()
 {

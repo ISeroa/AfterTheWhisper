@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Math/Transform.h"
-#include "TDWeaponTypes.h"
-#include "TDWeaponPartDA.h"
+#include "Weapon/Types/TDWeaponTypes.h"
+#include "Weapon/Data/TDWeaponPartDA.h"
 #include "TDWeaponPresetDA.generated.h"
 
 USTRUCT(BlueprintType)

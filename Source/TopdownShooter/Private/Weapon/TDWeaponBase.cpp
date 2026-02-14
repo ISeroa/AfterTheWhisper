@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "TDWeaponBase.h"
+#include "Weapon/TDWeaponBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
-#include "TDWeaponPresetDA.h"
+#include "Weapon/Data/TDWeaponPresetDA.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values

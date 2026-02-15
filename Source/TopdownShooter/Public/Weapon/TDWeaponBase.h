@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -34,14 +32,13 @@ class TOPDOWNSHOOTER_API ATDWeaponBase : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ATDWeaponBase();
 
 	void SetTriggerHeld(bool bHeld);
 	void SetAimTarget(const FVector& InAimTarget) { AimTarget = InAimTarget; }
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
-		FName GetHandSocketName() const { return HandSocketName; }
+	FName GetHandSocketName() const { return HandSocketName; }
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	void SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMissingSlot = true);
@@ -55,12 +52,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	void ClearPart(FName Slot);
 
+	void RequestReload();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	void FireOnce();
 	bool CanFire() const;
+	UFUNCTION(BlueprintCallable, Category = "Ammo")
+	void StartReload();
+	void FinishReload();
 
 	void StartFireLoop();
 	void StopFireLoop();
@@ -103,6 +105,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Fire")
 	float SpreadDeg = 0.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Ammo")
+	int32 MagazineSize = 12;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Ammo")
+	float ReloadTIme = 1.4f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Ammo")
+	int32 AmmoInMag = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Ammo")
+	int32 AmmoReserve = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Ammo")
+	bool bReloading = false;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Trace")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
 
@@ -123,6 +140,7 @@ private:
 		FName HandSocketName = "hand_r_socket";
 
 	FTimerHandle Timerhandle_FireLoop;
+	FTimerHandle Timerhandle_Reload;
 	bool bTriggerHeld = false;
 	FVector AimTarget = FVector::ZeroVector;
 };

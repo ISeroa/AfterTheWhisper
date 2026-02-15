@@ -34,6 +34,8 @@ protected:
 	void OnFirePressed();
 	void OnFireReleased();
 
+	void OnReloadPressed();
+
 
 protected:
 	//Animation

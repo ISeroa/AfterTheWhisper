@@ -1,16 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Weapon/TDWeaponBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
-#include "Weapon/Data/TDWeaponPresetDA.h"
 #include "DrawDebugHelpers.h"
+#include "Weapon/Data/TDWeaponPresetDA.h"
 
-// Sets default values
 ATDWeaponBase::ATDWeaponBase()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
@@ -24,10 +19,12 @@ ATDWeaponBase::ATDWeaponBase()
 	BaseMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
-// Called when the game starts or when spawned
 void ATDWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AmmoInMag = MagazineSize;
+	AmmoReserve = 60; //TODO. move to inventory
 }
 
 void ATDWeaponBase::SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMissingSlots)
@@ -173,6 +170,11 @@ void ATDWeaponBase::ClearPart(FName Slot)
 	}
 }
 
+void ATDWeaponBase::RequestReload()
+{
+	StartReload();
+}
+
 UStaticMeshComponent* ATDWeaponBase::GetOrCreatePartComp(FName Slot)
 {
 	if (Slot.IsNone()) return nullptr;
@@ -270,7 +272,7 @@ void ATDWeaponBase::StopFireLoop()
 
 bool ATDWeaponBase::CanFire() const
 {
-	return FireRate > 0.f;
+	return !bReloading && FireRate> 0.f && AmmoInMag > 0;
 }
 
 
@@ -287,13 +289,50 @@ FVector ATDWeaponBase::GetShotDirection() const
 	return Dir;
 }
 
+void ATDWeaponBase::StartReload()
+{
+	if (bReloading) return;
+	if (AmmoInMag >= MagazineSize) return;
+	if (AmmoReserve == 0) return;
 
+	bReloading = true;
 
+	GetWorldTimerManager().SetTimer(
+		Timerhandle_Reload,
+		this,
+		&ATDWeaponBase::FinishReload,
+		ReloadTIme,
+		false
+	);
+}
+
+void ATDWeaponBase::FinishReload()
+{
+	const int32 Need = MagazineSize - AmmoInMag;
+
+	const int32 Load = FMath::Min(Need, AmmoReserve);
+
+	AmmoInMag += Load;
+	AmmoReserve -= Load;
+
+	bReloading = false;
+}
 
 
 void ATDWeaponBase::FireOnce()
 {
-	if (!CanFire()) return;
+	UE_LOG(LogTemp, Warning, TEXT("Ammo=%d Reloading=%d"), AmmoInMag, bReloading);
+
+	if (!CanFire())
+	{
+		if (!bReloading && AmmoInMag == 0)
+		{
+			StartReload();
+		}
+		return;
+	}
+
+	AmmoInMag = FMath::Max(AmmoInMag - 1, 0);
 
 	UWorld* World = GetWorld();
 	AActor* OwnerActor = GetOwner();

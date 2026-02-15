@@ -141,6 +141,14 @@ void ATDPlayerCharacter::OnFireReleased()
     if (CurrentWeapon) CurrentWeapon->SetTriggerHeld(false);
 }
 
+void ATDPlayerCharacter::OnReloadPressed()
+{
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->RequestReload();
+    }
+}
+
 void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -150,6 +158,7 @@ void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATDPlayerCharacter::OnFirePressed);
     PlayerInputComponent->BindAction("Fire", IE_Released, this, &ATDPlayerCharacter::OnFireReleased);
+    PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ATDPlayerCharacter::OnReloadPressed);
 }
 
 void ATDPlayerCharacter::MoveForward(float Value)

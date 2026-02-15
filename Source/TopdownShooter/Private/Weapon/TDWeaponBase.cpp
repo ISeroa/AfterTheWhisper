@@ -24,7 +24,7 @@ void ATDWeaponBase::BeginPlay()
 	Super::BeginPlay();
 
 	AmmoInMag = MagazineSize;
-	AmmoReserve = 60; //temporary
+	AmmoReserve = 60; //TODO. move to inventory
 }
 
 void ATDWeaponBase::SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMissingSlots)

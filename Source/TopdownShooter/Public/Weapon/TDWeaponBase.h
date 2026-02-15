@@ -26,6 +26,8 @@ struct FWeaponPartSpec
 	FTransform RelativeTransform = FTransform::Identity;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, AmmoInMag, int32, MagazineSize);
+
 UCLASS()
 class TOPDOWNSHOOTER_API ATDWeaponBase : public AActor
 {
@@ -36,6 +38,9 @@ public:
 
 	void SetTriggerHeld(bool bHeld);
 	void SetAimTarget(const FVector& InAimTarget) { AimTarget = InAimTarget; }
+
+	int32 GetAmmoInMag()  const { return AmmoInMag; }
+	int32 GetMagazineSize() const { return MagazineSize; }
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	FName GetHandSocketName() const { return HandSocketName; }
@@ -54,6 +59,9 @@ public:
 
 	void RequestReload();
 
+	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
+	FOnAmmoChanged OnAmmoChanged;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -69,6 +77,8 @@ protected:
 
 	FVector GetMuzzleLocation() const;
 	FVector GetShotDirection() const;
+
+	void NotifyAmmoChanged();
 
 	void ApplyParts();
 	void ClearAllPartsNotIn(const TSet<FName>& KeepSlots);

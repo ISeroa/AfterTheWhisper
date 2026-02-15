@@ -9,6 +9,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "Core/TDPlayerController.h"
+#include "Blueprint/UserWidget.h"
+#include "UI/Widgets/TDW_AmmoWIdget.h"
 #include "Weapon/TDWeaponBase.h"
 
 // Sets default values
@@ -41,7 +43,6 @@ ATDPlayerCharacter::ATDPlayerCharacter()
 
     GetCharacterMovement()->bOrientRotationToMovement = false;
     GetCharacterMovement()->bUseControllerDesiredRotation = false;
-
     GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
     AutoPossessPlayer = EAutoReceiveInput::Player0;
@@ -73,7 +74,26 @@ void ATDPlayerCharacter::BeginPlay()
 
             CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeapon->GetHandSocketName());
         }
+
+        if (AmmoWidgetClass)
+        {
+            AmmoWidget = CreateWidget<UTDW_AmmoWidget>(GetWorld(), AmmoWidgetClass);
+
+            if (AmmoWidget)
+            {
+                AmmoWidget->AddToViewport();
+
+                if (CurrentWeapon)
+                {
+                    AmmoWidget->BindWeapon(CurrentWeapon);
+                }
+
+            }
+
+        }
+
     }
+
 }
 
 void ATDPlayerCharacter::Tick(float DeltaTime)

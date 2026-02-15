@@ -38,7 +38,7 @@ public:
 	void SetAimTarget(const FVector& InAimTarget) { AimTarget = InAimTarget; }
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
-		FName GetHandSocketName() const { return HandSocketName; }
+	FName GetHandSocketName() const { return HandSocketName; }
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	void SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMissingSlot = true);
@@ -51,6 +51,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	void ClearPart(FName Slot);
+
+	void RequestReload();
 
 protected:
 	// Called when the game starts or when spawned

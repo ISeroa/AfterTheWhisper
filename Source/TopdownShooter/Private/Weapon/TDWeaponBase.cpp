@@ -170,6 +170,11 @@ void ATDWeaponBase::ClearPart(FName Slot)
 	}
 }
 
+void ATDWeaponBase::RequestReload()
+{
+	StartReload();
+}
+
 UStaticMeshComponent* ATDWeaponBase::GetOrCreatePartComp(FName Slot)
 {
 	if (Slot.IsNone()) return nullptr;

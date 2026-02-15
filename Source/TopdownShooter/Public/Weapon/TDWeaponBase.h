@@ -39,7 +39,10 @@ public:
 	void SetTriggerHeld(bool bHeld);
 	void SetAimTarget(const FVector& InAimTarget) { AimTarget = InAimTarget; }
 
+	UFUNCTION(BlueprintPure, Category = "Weapon")
 	int32 GetAmmoInMag()  const { return AmmoInMag; }
+
+	UFUNCTION(BlueprintPure, Category = "Weapon")
 	int32 GetMagazineSize() const { return MagazineSize; }
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
@@ -78,6 +81,7 @@ protected:
 	FVector GetMuzzleLocation() const;
 	FVector GetShotDirection() const;
 
+	UFUNCTION(BlueprintCallable) //temp
 	void NotifyAmmoChanged();
 
 	void ApplyParts();
@@ -115,7 +119,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Fire")
 	float SpreadDeg = 0.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Ammo")
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Weapon|Ammo")
 	int32 MagazineSize = 12;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Ammo")

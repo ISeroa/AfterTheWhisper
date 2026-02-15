@@ -16,7 +16,6 @@
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
     USpringArmComponent* SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -48,7 +47,6 @@ ATDPlayerCharacter::ATDPlayerCharacter()
     AutoPossessPlayer = EAutoReceiveInput::Player0;
 }
 
-// Called when the game starts or when spawned
 void ATDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -75,23 +73,39 @@ void ATDPlayerCharacter::BeginPlay()
             CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeapon->GetHandSocketName());
         }
 
-        if (AmmoWidgetClass)
+    
+
+        UE_LOG(LogTemp, Warning, TEXT("[UI] AmmoWidgetClass=%s"),
+            AmmoWidgetClass ? *AmmoWidgetClass->GetName() : TEXT("NULL"));
+
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
         {
-            AmmoWidget = CreateWidget<UTDW_AmmoWidget>(GetWorld(), AmmoWidgetClass);
+            UE_LOG(LogTemp, Warning, TEXT("[UI] PC=%s IsLocal=%d"),
+                *PC->GetName(), PC->IsLocalController());
+
+            AmmoWidget = CreateWidget<UTDW_AmmoWidget>(PC, AmmoWidgetClass);
+            UE_LOG(LogTemp, Warning, TEXT("[UI] AmmoWidget=%s"),
+                AmmoWidget ? *AmmoWidget->GetName() : TEXT("NULL"));
 
             if (AmmoWidget)
             {
                 AmmoWidget->AddToViewport();
-
-                if (CurrentWeapon)
-                {
-                    AmmoWidget->BindWeapon(CurrentWeapon);
-                }
-
+                AmmoWidget->BindWeapon(CurrentWeapon);
+                UE_LOG(LogTemp, Warning, TEXT("[UI] AddedToViewport"));
             }
-
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[UI] No PlayerController on BeginPlay"));
         }
 
+        UE_LOG(LogTemp, Warning, TEXT("[UI] Bind OnAmmoChanged: Weapon=%s"),
+            CurrentWeapon ? *CurrentWeapon->GetName() : TEXT("NULL"));
+
+        if (CurrentWeapon && AmmoWidget)
+        {
+            AmmoWidget->HandleAmmoChanged(CurrentWeapon->GetAmmoInMag(), CurrentWeapon->GetMagazineSize());
+        }
     }
 
 }
@@ -99,7 +113,7 @@ void ATDPlayerCharacter::BeginPlay()
 void ATDPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
+        
     Speed = GetVelocity().Size2D();
 
     FRotator AimRot = GetControlRotation();

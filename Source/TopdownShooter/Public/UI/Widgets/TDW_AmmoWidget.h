@@ -14,19 +14,25 @@ class TOPDOWNSHOOTER_API UTDW_AmmoWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void BindWeapon(ATDWeaponBase* Weapon);
+	UFUNCTION(BlueprintCallable)
+	void BindWeapon(ATDWeaponBase* InWeapon);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_UpdateAmmo(int32 InCurrentAmmo, int32 InMagSize, float InMaxDisplay);
+
+	UFUNCTION()
+		void HandleAmmoChanged(int32 InAmmoInMag, int32 InMagazineSize);
 
 protected:
-	UFUNCTION()
-	void HandleAmmoChanged(int32 InAmmo, int32 InMagSize);
-
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* Text_Ammo;
 
-	UPROPERTY()
-	ATDWeaponBase* BoundWeapon;
+	
 
 private:
 	int32 CachedAmmo = -1;
 	int32 CachedMagSize = -1;
+
+	UPROPERTY()
+	ATDWeaponBase* BoundWeapon = nullptr;
 };

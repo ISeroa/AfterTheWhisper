@@ -291,6 +291,9 @@ FVector ATDWeaponBase::GetShotDirection() const
 
 void ATDWeaponBase::NotifyAmmoChanged()
 {
+	UE_LOG(LogTemp, Warning, TEXT("[Weapon] NotifyAmmoChanged this=%s Ammo=%d/%d"),
+		*GetName(), AmmoInMag, MagazineSize);
+
 	OnAmmoChanged.Broadcast(AmmoInMag, MagazineSize);
 }
 

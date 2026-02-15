@@ -5,33 +5,24 @@
 #include "Weapon/TDWeaponBase.h"
 #include "Components/TextBlock.h"
 
-void UTDW_AmmoWidget::BindWeapon(ATDWeaponBase* Weapon)
+void UTDW_AmmoWidget::BindWeapon(ATDWeaponBase* InWeapon)
 {
-	BoundWeapon = Weapon;
+    if (BoundWeapon)
+    {
+        BoundWeapon->OnAmmoChanged.RemoveDynamic(this, &UTDW_AmmoWidget::HandleAmmoChanged);
+    }
 
-	if (BoundWeapon)
-	{
-		BoundWeapon->OnAmmoChanged.AddDynamic(this, &UTDW_AmmoWidget::HandleAmmoChanged);
+    BoundWeapon = InWeapon;
 
-		HandleAmmoChanged(BoundWeapon->GetAmmoInMag(), BoundWeapon->GetMagazineSize());
+    if (BoundWeapon)
+    {
+        BoundWeapon->OnAmmoChanged.AddDynamic(this, &UTDW_AmmoWidget::HandleAmmoChanged);
 
-	}
+        BP_UpdateAmmo(BoundWeapon->GetAmmoInMag(), BoundWeapon->GetMagazineSize(), 100.f);
+    }
 }
 
-void UTDW_AmmoWidget::HandleAmmoChanged(int32 InAmmo, int32 InMagSize)
+void UTDW_AmmoWidget::HandleAmmoChanged(int32 InAmmoInMag, int32 InMagazineSize)
 {
-	if (InAmmo == CachedAmmo && InMagSize == CachedMagSize)
-	{
-		return;
-	}
-
-	CachedAmmo = InAmmo;
-	CachedMagSize = InMagSize;
-
-	if (Text_Ammo)
-	{
-		Text_Ammo->SetText(
-			FText::FromString(FString::Printf(TEXT("%d / %d"), InAmmo, InMagSize))
-		);
-	}
+    BP_UpdateAmmo(InAmmoInMag, InMagazineSize, 100.f);
 }

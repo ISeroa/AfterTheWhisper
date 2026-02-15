@@ -24,10 +24,6 @@ public:
 		void HandleAmmoChanged(int32 InAmmoInMag, int32 InMagazineSize);
 
 protected:
-	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Text_Ammo;
-
-	
 
 private:
 	int32 CachedAmmo = -1;

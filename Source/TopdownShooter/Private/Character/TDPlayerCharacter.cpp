@@ -92,6 +92,10 @@ void ATDPlayerCharacter::BeginPlay()
                 AmmoWidget->AddToViewport();
                 AmmoWidget->BindWeapon(CurrentWeapon);
                 UE_LOG(LogTemp, Warning, TEXT("[UI] AddedToViewport"));
+                if (ATDPlayerController* TDPC = Cast<ATDPlayerController>(GetController()))
+                {
+                    TDPC->SetAmmoWidget(AmmoWidget);
+                }
             }
         }
         else

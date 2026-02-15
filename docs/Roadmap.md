@@ -9,13 +9,13 @@
 
 ## Phase 1 — Playable Vertical Slice (필수)
 ### 1) Core Gameplay
-- [ ] 이동/에임 안정화 (Aim 실패 시 fallback, 회전 안정)
-- [ ] 무기 기본 완성 (단발 + 연사/FireRate Timer)
+- [x] 이동/에임 안정화 (Aim 실패 시 fallback, 회전 안정)
+- [x] 무기 기본 완성 (단발 + 연사/FireRate Timer)
 - [ ] 리로드(재장전) 구현 + UI 반영
 - [ ] 탄약/재장전 사운드 훅(빈 슬롯이어도 placeholder로)
 
 ### 2) Combat Feel (손맛 = 포트폴리오 핵심)
-- [ ] Muzzle Flash (간단한 Niagara라도)
+- [ ] Muzzle Flash
 - [ ] Hit Impact (표면별 아니어도 OK)
 - [ ] Hit Marker (UI)
 - [ ] 피격 피드백(적 플래시/넉백/짧은 스턴 중 1개 이상)

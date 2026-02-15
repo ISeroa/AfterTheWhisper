@@ -22,6 +22,9 @@ ATDWeaponBase::ATDWeaponBase()
 void ATDWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AmmoInMag = MagazineSize;
+	AmmoReserve = 60; //temporary
 }
 
 void ATDWeaponBase::SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMissingSlots)
@@ -264,7 +267,7 @@ void ATDWeaponBase::StopFireLoop()
 
 bool ATDWeaponBase::CanFire() const
 {
-	return !bReloading && FireRate> 0.f;
+	return !bReloading && FireRate> 0.f && AmmoInMag > 0;
 }
 
 
@@ -313,7 +316,18 @@ void ATDWeaponBase::FinishReload()
 
 void ATDWeaponBase::FireOnce()
 {
-	if (!CanFire()) return;
+	UE_LOG(LogTemp, Warning, TEXT("Ammo=%d Reloading=%d"), AmmoInMag, bReloading);
+
+	if (!CanFire())
+	{
+		if (!bReloading && AmmoInMag == 0)
+		{
+			StartReload();
+		}
+		return;
+	}
+
+	AmmoInMag = FMath::Max(AmmoInMag - 1, 0);
 
 	UWorld* World = GetWorld();
 	AActor* OwnerActor = GetOwner();

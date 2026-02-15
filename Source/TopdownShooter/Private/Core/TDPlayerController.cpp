@@ -2,6 +2,7 @@
 
 
 #include "Core/TDPlayerController.h"
+#include "UI/Widgets/TDW_AmmoWidget.h"
 
 ATDPlayerController::ATDPlayerController()
 {
@@ -32,11 +33,16 @@ void ATDPlayerController::PlayerTick(float DeltaTime)
 		CachedMouseWorldLocation = Hit.ImpactPoint;
 	}
 
-	//AActor* HitActor = Hit.GetActor();
-	//if (GEngine)
-	//{
-	//	const FString Name = HitActor ? HitActor->GetName() : TEXT("None");
-	//	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Yellow, FString::Printf(TEXT("Hit: %s"), *Name));
-	//}
+	if (!AmmoWidget) return;
 
+	float MouseX, MouseY;
+	if (GetMousePosition(MouseX, MouseY))
+	{
+		AmmoWidget->SetPositionInViewport(FVector2D(MouseX, MouseY) + MouseOffset, true);
+	}
+}
+
+void ATDPlayerController::SetAmmoWidget(UTDW_AmmoWidget* InWidget)
+{
+	AmmoWidget = InWidget;
 }

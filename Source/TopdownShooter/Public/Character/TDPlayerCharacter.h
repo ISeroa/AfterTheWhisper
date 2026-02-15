@@ -24,6 +24,8 @@ public:
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	ATDWeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -64,7 +66,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	UAnimMontage* FireMontage;
 
-
 	//Aim
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Aim")
 	float AimInterpSpeed = 15.f;
@@ -83,6 +84,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aim", meta = (ClampMin = "0.0"))
 	float AimMinDistance = 30.f;
+
 	// Stability (Aim Smoothing)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aim|Stability")
 	float TurnSpeedDegPerSec = 540.f;  
@@ -101,6 +103,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aim|Stability")
 	FVector SmoothedAimPoint = FVector::ZeroVector;
+
+	//UI
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UTDW_AmmoWidget> AmmoWidgetClass;
+
+	UPROPERTY()
+	UTDW_AmmoWidget* AmmoWidget;
 
 	//Debug
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Aim")

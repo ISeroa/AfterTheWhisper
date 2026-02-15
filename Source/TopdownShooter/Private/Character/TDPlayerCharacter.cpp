@@ -9,12 +9,13 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "Core/TDPlayerController.h"
+#include "Blueprint/UserWidget.h"
+#include "UI/Widgets/TDW_AmmoWIdget.h"
 #include "Weapon/TDWeaponBase.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
     USpringArmComponent* SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -41,13 +42,11 @@ ATDPlayerCharacter::ATDPlayerCharacter()
 
     GetCharacterMovement()->bOrientRotationToMovement = false;
     GetCharacterMovement()->bUseControllerDesiredRotation = false;
-
     GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
     AutoPossessPlayer = EAutoReceiveInput::Player0;
 }
 
-// Called when the game starts or when spawned
 void ATDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -73,13 +72,52 @@ void ATDPlayerCharacter::BeginPlay()
 
             CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CurrentWeapon->GetHandSocketName());
         }
+
+    
+
+        UE_LOG(LogTemp, Warning, TEXT("[UI] AmmoWidgetClass=%s"),
+            AmmoWidgetClass ? *AmmoWidgetClass->GetName() : TEXT("NULL"));
+
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[UI] PC=%s IsLocal=%d"),
+                *PC->GetName(), PC->IsLocalController());
+
+            AmmoWidget = CreateWidget<UTDW_AmmoWidget>(PC, AmmoWidgetClass);
+            UE_LOG(LogTemp, Warning, TEXT("[UI] AmmoWidget=%s"),
+                AmmoWidget ? *AmmoWidget->GetName() : TEXT("NULL"));
+
+            if (AmmoWidget)
+            {
+                AmmoWidget->AddToViewport();
+                AmmoWidget->BindWeapon(CurrentWeapon);
+                UE_LOG(LogTemp, Warning, TEXT("[UI] AddedToViewport"));
+                if (ATDPlayerController* TDPC = Cast<ATDPlayerController>(GetController()))
+                {
+                    TDPC->SetAmmoWidget(AmmoWidget);
+                }
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[UI] No PlayerController on BeginPlay"));
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("[UI] Bind OnAmmoChanged: Weapon=%s"),
+            CurrentWeapon ? *CurrentWeapon->GetName() : TEXT("NULL"));
+
+        if (CurrentWeapon && AmmoWidget)
+        {
+            AmmoWidget->HandleAmmoChanged(CurrentWeapon->GetAmmoInMag(), CurrentWeapon->GetMagazineSize());
+        }
     }
+
 }
 
 void ATDPlayerCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
+        
     Speed = GetVelocity().Size2D();
 
     FRotator AimRot = GetControlRotation();

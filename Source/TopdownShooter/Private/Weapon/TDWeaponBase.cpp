@@ -289,6 +289,14 @@ FVector ATDWeaponBase::GetShotDirection() const
 	return Dir;
 }
 
+void ATDWeaponBase::NotifyAmmoChanged()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Weapon] NotifyAmmoChanged this=%s Ammo=%d/%d"),
+		*GetName(), AmmoInMag, MagazineSize);
+
+	OnAmmoChanged.Broadcast(AmmoInMag, MagazineSize);
+}
+
 void ATDWeaponBase::StartReload()
 {
 	if (bReloading) return;
@@ -315,6 +323,7 @@ void ATDWeaponBase::FinishReload()
 	AmmoInMag += Load;
 	AmmoReserve -= Load;
 
+	NotifyAmmoChanged();
 	bReloading = false;
 }
 
@@ -333,6 +342,7 @@ void ATDWeaponBase::FireOnce()
 	}
 
 	AmmoInMag = FMath::Max(AmmoInMag - 1, 0);
+	NotifyAmmoChanged();
 
 	UWorld* World = GetWorld();
 	AActor* OwnerActor = GetOwner();

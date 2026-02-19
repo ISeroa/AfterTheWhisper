@@ -7,11 +7,12 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Blueprint/UserWidget.h"
 #include "DrawDebugHelpers.h"
 #include "Core/TDPlayerController.h"
-#include "Blueprint/UserWidget.h"
-#include "UI/Widgets/TDW_AmmoWIdget.h"
 #include "Weapon/TDWeaponBase.h"
+#include "UI/Widgets/TDW_AmmoWIdget.h"
+#include "UI/Widgets/TDReloadBarWidget.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -97,6 +98,27 @@ void ATDPlayerCharacter::BeginPlay()
                     TDPC->SetAmmoWidget(AmmoWidget);
                 }
             }
+
+            if (ReloadBarWidgetClass)
+            {
+                ReloadBarWidget = CreateWidget<UTDReloadBarWidget>(PC, ReloadBarWidgetClass);
+                if (ReloadBarWidget)
+                {
+                    ReloadBarWidget->AddToViewport();
+                    ReloadBarWidget->BindWeapon(CurrentWeapon);
+
+                    if (ATDPlayerController* TDPC = Cast<ATDPlayerController>(PC))
+                    {
+                        TDPC->SetReloadBarWidget(ReloadBarWidget);
+                    }
+                }
+            }
+
+            if (ReloadBarWidget && CurrentWeapon)
+            {
+                ReloadBarWidget->BindWeapon(CurrentWeapon);
+            }
+
         }
         else
         {
@@ -111,7 +133,8 @@ void ATDPlayerCharacter::BeginPlay()
             AmmoWidget->HandleAmmoChanged(CurrentWeapon->GetAmmoInMag(), CurrentWeapon->GetMagazineSize());
         }
     }
-
+    
+   
 }
 
 void ATDPlayerCharacter::Tick(float DeltaTime)

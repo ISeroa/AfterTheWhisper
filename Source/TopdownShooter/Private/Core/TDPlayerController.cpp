@@ -3,6 +3,7 @@
 
 #include "Core/TDPlayerController.h"
 #include "UI/Widgets/TDW_AmmoWidget.h"
+#include "UI/Widgets/TDReloadBarWidget.h"
 
 ATDPlayerController::ATDPlayerController()
 {
@@ -33,16 +34,29 @@ void ATDPlayerController::PlayerTick(float DeltaTime)
 		CachedMouseWorldLocation = Hit.ImpactPoint;
 	}
 
-	if (!AmmoWidget) return;
+	if (!AmmoWidget && !ReloadBarWidget) return;
 
 	float MouseX, MouseY;
 	if (GetMousePosition(MouseX, MouseY))
 	{
-		AmmoWidget->SetPositionInViewport(FVector2D(MouseX, MouseY) + MouseOffset, true);
+		if (AmmoWidget)
+		{
+			AmmoWidget->SetPositionInViewport(FVector2D(MouseX, MouseY) + MouseOffset, true);
+		}
+
+		if (ReloadBarWidget)
+		{
+			ReloadBarWidget->SetPositionInViewport(FVector2D(MouseX, MouseY) + ReloadWidgetOffset, true);
+		}
 	}
 }
 
 void ATDPlayerController::SetAmmoWidget(UTDW_AmmoWidget* InWidget)
 {
 	AmmoWidget = InWidget;
+}
+
+void ATDPlayerController::SetReloadBarWidget(UTDReloadBarWidget* InWidget)
+{
+	ReloadBarWidget = InWidget;
 }

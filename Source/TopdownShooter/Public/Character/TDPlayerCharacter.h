@@ -108,8 +108,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UTDW_AmmoWidget> AmmoWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UTDReloadBarWidget> ReloadBarWidgetClass;
+
 	UPROPERTY()
-	UTDW_AmmoWidget* AmmoWidget;
+	UTDW_AmmoWidget* AmmoWidget = nullptr;
+
+	UPROPERTY()
+	UTDReloadBarWidget* ReloadBarWidget = nullptr;
 
 	//Debug
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Aim")

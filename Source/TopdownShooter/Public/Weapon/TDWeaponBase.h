@@ -27,6 +27,8 @@ struct FWeaponPartSpec
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, AmmoInMag, int32, MagazineSize);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReloadUIStart, float, Duration);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReloadUIStop);
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDWeaponBase : public AActor
@@ -48,6 +50,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	FName GetHandSocketName() const { return HandSocketName; }
 
+	UFUNCTION(BlueprintPure, Category = "Weapon|Reload")
+	bool IsReloading() const { return bIsReloading; }
+
+	UFUNCTION(BlueprintPure, Category = "Weapon|Reload")
+	bool ShouldShowReloadIndicator() const { return bShowReloadIndicator; }
+
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	void SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMissingSlot = true);
 	
@@ -60,10 +69,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	void ClearPart(FName Slot);
 
+	void CancelReload();
 	void RequestReload();
 
 	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
+	FOnReloadUIStart OnReloadUIStart;
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
+	FOnReloadUIStop OnReloadUIStop;
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
 	FOnAmmoChanged OnAmmoChanged;
+
+	
 
 protected:
 	// Called when the game starts or when spawned
@@ -71,12 +89,22 @@ protected:
 
 	void FireOnce();
 	bool CanFire() const;
-	UFUNCTION(BlueprintCallable, Category = "Ammo")
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon|Reload")
 	void StartReload();
 	void FinishReload();
 
 	void StartFireLoop();
 	void StopFireLoop();
+
+	//state
+	void BeginReloadState();
+	void EndReloadState();
+
+	void BeginReloadUI(float Duration);
+	void EndReloadUI();
+
+	void OnReloadTimerFinished();
 
 	FVector GetMuzzleLocation() const;
 	FVector GetShotDirection() const;
@@ -122,17 +150,24 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Weapon|Ammo")
 	int32 MagazineSize = 12;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Ammo")
-	float ReloadTIme = 1.4f;
-
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Ammo")
 	int32 AmmoInMag = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Ammo")
 	int32 AmmoReserve = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Ammo")
-	bool bReloading = false;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Reload")
+	float ReloadTime = 1.4f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Reload")
+	bool bIsReloading = false;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "Weapon|Reload")
+	bool bShowReloadIndicator = false;
+
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon|Reload")
+	void NotifyReloadFinished();
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Trace")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
@@ -151,7 +186,7 @@ private:
 	TMap<FName, FWeaponPartSpec> Parts;
 
 	UPROPERTY(Transient)
-		FName HandSocketName = "hand_r_socket";
+	FName HandSocketName = "hand_r_socket";
 
 	FTimerHandle Timerhandle_FireLoop;
 	FTimerHandle Timerhandle_Reload;

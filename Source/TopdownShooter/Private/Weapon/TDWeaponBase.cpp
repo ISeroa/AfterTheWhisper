@@ -170,6 +170,34 @@ void ATDWeaponBase::ClearPart(FName Slot)
 	}
 }
 
+void ATDWeaponBase::NotifyReloadFinished()
+{
+	if (!IsReloading())
+	{
+		return;
+	}
+
+	FinishReload();
+
+	GetWorldTimerManager().ClearTimer(Timerhandle_Reload);
+
+	EndReloadUI();
+	EndReloadState();
+}
+
+void ATDWeaponBase::CancelReload()
+{
+	if (!bIsReloading)
+	{
+		return;
+	}
+
+	GetWorldTimerManager().ClearTimer(Timerhandle_Reload);
+
+	EndReloadUI();
+	EndReloadState();
+}
+
 void ATDWeaponBase::RequestReload()
 {
 	StartReload();
@@ -270,9 +298,43 @@ void ATDWeaponBase::StopFireLoop()
 	GetWorldTimerManager().ClearTimer(Timerhandle_FireLoop);
 }
 
+void ATDWeaponBase::BeginReloadState()
+{
+	bIsReloading = true;
+}
+
+void ATDWeaponBase::EndReloadState()
+{
+	bIsReloading = false;
+}
+
+void ATDWeaponBase::BeginReloadUI(float Duration)
+{
+	bShowReloadIndicator = (AmmoInMag == 0);
+
+	if (bShowReloadIndicator)
+	{
+		OnReloadUIStart.Broadcast(Duration);
+	}
+}
+
+void ATDWeaponBase::EndReloadUI()
+{
+	if (bShowReloadIndicator)
+	{
+		OnReloadUIStop.Broadcast();
+	}
+	bShowReloadIndicator = false;
+}
+
+void ATDWeaponBase::OnReloadTimerFinished()
+{
+	NotifyReloadFinished();
+}
+
 bool ATDWeaponBase::CanFire() const
 {
-	return !bReloading && FireRate> 0.f && AmmoInMag > 0;
+	return !bIsReloading && FireRate> 0.f && AmmoInMag > 0;
 }
 
 
@@ -299,17 +361,18 @@ void ATDWeaponBase::NotifyAmmoChanged()
 
 void ATDWeaponBase::StartReload()
 {
-	if (bReloading) return;
+	if (bIsReloading) return;
 	if (AmmoInMag >= MagazineSize) return;
 	if (AmmoReserve == 0) return;
 
-	bReloading = true;
+	BeginReloadState();
+	BeginReloadUI(ReloadTime);
 
 	GetWorldTimerManager().SetTimer(
 		Timerhandle_Reload,
 		this,
-		&ATDWeaponBase::FinishReload,
-		ReloadTIme,
+		&ATDWeaponBase::OnReloadTimerFinished,
+		ReloadTime,
 		false
 	);
 }
@@ -324,17 +387,18 @@ void ATDWeaponBase::FinishReload()
 	AmmoReserve -= Load;
 
 	NotifyAmmoChanged();
-	bReloading = false;
+	EndReloadUI();
+	EndReloadState();
 }
 
 
 void ATDWeaponBase::FireOnce()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Ammo=%d Reloading=%d"), AmmoInMag, bReloading);
+	UE_LOG(LogTemp, Warning, TEXT("Ammo=%d Reloading=%d"), AmmoInMag, bIsReloading);
 
 	if (!CanFire())
 	{
-		if (!bReloading && AmmoInMag == 0)
+		if (!bIsReloading && AmmoInMag == 0)
 		{
 			StartReload();
 		}

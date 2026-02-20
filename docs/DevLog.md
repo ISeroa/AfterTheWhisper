@@ -4,6 +4,57 @@
 목표는 "결정과 방향"을 기록하는 것.
 
 ---
+
+## 📅 2026-02-20
+
+### 🎯 오늘 목표 (최대 3개)
+- WeaponPresetDA에 실제 무기 스탯 추가
+- WeaponBase가 Preset 기반으로 스탯 초기화하도록 수정
+- 탄약 초기값 및 UI 갱신 흐름 안정화
+
+---
+
+### 완료한 작업
+- UTDWeaponPresetDA에 FTDWeaponStats 구조체 추가
+- Preset에 FireRate, Damage, Range, SpreadDeg, MagazineSize, ReloadTime 필드 정의
+- ATDWeaponBase::SetPartsFromPreset()에서:
+    - Preset->Stats 기반으로 무기 스탯 적용
+    - MagazineSize 기준으로 AmmoInMag 초기화
+    - NotifyAmmoChanged() 호출로 UI 동기화
+- 권총 기본 스펙 설정 및 정상 동작 확인
+
+---
+
+### 발생한 문제
+- Preset에 Stats를 추가했으나 Preset->SpreadDeg 형태로 직접 접근하여 컴파일 에러 발생
+
+---
+
+### 해결 방법 / 결정 사항
+- 모든 스탯 접근을 Preset->Stats.XXX 구조로 수정
+- 스탯 초기화는 BeginPlay가 아니라 Preset 적용 시점에서 처리하도록 결정
+- 무기 데이터의 단일 진입점은 Preset으로 유지
+---
+
+### 미완료 / 보류
+- Reload 타이머 실제 동작 검증
+- 파츠가 스탯에 영향 주는 구조 여부 미정
+
+---
+
+### 구조적 메모 (선택)
+- WeaponPresetDA가 "데이터 소스 단일화 역할"을 담당하도록 구조가 정리됨
+- WeaponBase는 Preset을 적용받는 실행 객체 역할로 분리 유지
+- 스탯 확장은 Preset 구조 안에서만 진행 가능하도록 설계
+
+---
+
+### ▶ 내일 할 일 (최대 3개)
+- 플레이어 체력 UI 구현
+
+---
+
+---
 ## 📅 2026-02-19
 
 ### 🎯 오늘 목표 (최대 3개)

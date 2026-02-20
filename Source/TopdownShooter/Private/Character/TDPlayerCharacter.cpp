@@ -160,7 +160,7 @@ void ATDPlayerCharacter::Tick(float DeltaTime)
         if (!bHasLastAimPoint) return;
         RawAimPoint = LastAimPoint;
     }
-
+//
     // Deadzone(remove vibration)
     if (bHasLastAimPoint)
     {

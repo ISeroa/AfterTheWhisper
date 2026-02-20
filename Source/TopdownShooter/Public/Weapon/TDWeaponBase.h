@@ -56,7 +56,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon|Reload")
 	bool ShouldShowReloadIndicator() const { return bShowReloadIndicator; }
 
-
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	void SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMissingSlot = true);
 	

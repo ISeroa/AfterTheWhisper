@@ -1,5 +1,5 @@
-Ammo Indicator UI
-Overview
+# Ammo Indicator UI
+## Overview
 
 무기 탄약 상태를 시각적으로 표현하는 Ammo Indicator UI를 구현한다.
 

@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Math/Transform.h"
-#include "Weapon/Types/TDWeaponTypes.h"
 #include "Weapon/Data/TDWeaponPartDA.h"
 #include "TDWeaponPresetDA.generated.h"
 
@@ -36,6 +35,30 @@ struct FTDWeaponPartEntry
 	FTransform OverrideRelativeToSocket = FTransform::Identity;
 };
 
+USTRUCT(BlueprintType)
+struct FTDWeaponStats
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Fire")
+	float FireRate = 12.f;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Fire")
+	float Range = 100000.f;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Fire")
+	float Damage = 10.f;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Fire")
+	float SpreadDeg = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Ammo")
+	int32 MagazineSize = 12;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Reload")
+	float ReloadTime = 1.4f;
+};
+
 UCLASS()
 class TOPDOWNSHOOTER_API UTDWeaponPresetDA : public UDataAsset
 {
@@ -50,5 +73,8 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	TArray<FTDWeaponPartEntry> Parts;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	FTDWeaponStats Stats;
 };
 

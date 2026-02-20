@@ -59,6 +59,17 @@ void ATDWeaponBase::SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMis
 	TArray<FWeaponPartSpec> Specs;
 	Specs.Reserve(Preset -> Parts.Num());
 
+	//weapon stats from preset
+	FireRate = Preset->Stats.FireRate;
+	Range = Preset->Stats.Range;
+	Damage = Preset->Stats.Damage;
+	SpreadDeg = Preset->Stats.SpreadDeg;
+	MagazineSize = Preset->Stats.MagazineSize;
+	ReloadTime = Preset->Stats.ReloadTime;
+	
+	AmmoInMag = MagazineSize;
+	NotifyAmmoChanged();
+	
 	TSet<FName> KeepSlots;
 
 	for (const FTDWeaponPartEntry& E : Preset->Parts)

@@ -13,6 +13,8 @@
 #include "Weapon/TDWeaponBase.h"
 #include "UI/Widgets/TDW_AmmoWIdget.h"
 #include "UI/Widgets/TDReloadBarWidget.h"
+#include "UI/Widgets/TDPlayerStatusHUD.h"
+#include "Components/TDHealthComponent.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -114,11 +116,6 @@ void ATDPlayerCharacter::BeginPlay()
                 }
             }
 
-            if (ReloadBarWidget && CurrentWeapon)
-            {
-                ReloadBarWidget->BindWeapon(CurrentWeapon);
-            }
-
         }
         else
         {
@@ -133,8 +130,23 @@ void ATDPlayerCharacter::BeginPlay()
             AmmoWidget->HandleAmmoChanged(CurrentWeapon->GetAmmoInMag(), CurrentWeapon->GetMagazineSize());
         }
     }
-    
-   
+
+    if (StatusHUDClass)
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            StatusHUD = CreateWidget<UTDPlayerStatusHUD>(PC, StatusHUDClass);
+            if (StatusHUD)
+            {
+                StatusHUD->AddToViewport();
+                if (HealthComponent)
+                {
+                    HealthComponent->OnHealthChanged.AddDynamic(this, &ATDPlayerCharacter::HandleHealthChanged);
+                    StatusHUD->SetHealth(HealthComponent->CurrentHealth, HealthComponent->MaxHealth);
+                }
+            }
+        }
+    }
 }
 
 void ATDPlayerCharacter::Tick(float DeltaTime)
@@ -220,6 +232,7 @@ void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATDPlayerCharacter::OnFirePressed);
     PlayerInputComponent->BindAction("Fire", IE_Released, this, &ATDPlayerCharacter::OnFireReleased);
     PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ATDPlayerCharacter::OnReloadPressed);
+    PlayerInputComponent->BindAction("TestDamage", IE_Pressed, this, &ATDPlayerCharacter::TestDamage);
 }
 
 void ATDPlayerCharacter::MoveForward(float Value)
@@ -317,6 +330,19 @@ void ATDPlayerCharacter::UpdateAimRotationFromPoint(float DeltaTime, const FVect
     const float Step = FMath::Clamp(DeltaYaw, -MaxStep, MaxStep);
     
     SetActorRotation(FRotator(0.f, CurrentYaw + Step, 0.f));
+}
+
+void ATDPlayerCharacter::TestDamage()
+{
+    UGameplayStatics::ApplyDamage(this, 10.f, GetController(), this, UDamageType::StaticClass());
+}
+
+void ATDPlayerCharacter::HandleHealthChanged(float NewHealth, float Delta)
+{
+    if (StatusHUD && HealthComponent)
+    {
+        StatusHUD->SetHealth(NewHealth, HealthComponent->MaxHealth);
+    }
 }
 
 void ATDPlayerCharacter::Debug_PrintTraceChannel() const

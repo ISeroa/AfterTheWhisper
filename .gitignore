@@ -5,6 +5,11 @@
 # Visual Studio 2015 user specific files
 .vs/
 
+# AI assistant plans / logs
+**/claude*.md
+**/*claude*.md
+**/swift-shimming-hedgehog*.md
+
 # Compiled Object files
 *.slo
 *.lo
@@ -492,3 +497,4 @@ FodyWeavers.xsd
 GenerateSln.bat
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,unrealengine
+.claude/settings.local.json

@@ -5,6 +5,56 @@
 
 ---
 
+## 📅 2026-02-21
+
+### 🎯 오늘 목표 (최대 3개)
+- 플레이어 체력 UI 구현
+
+---
+
+### 완료한 작업
+- ATDPlayerCharacter 상속을 ACharacter → ATDBaseCharacter로 변경
+    - HealthComponent 자동 획득, HandleDeath 바인딩 포함
+- UTDPlayerStatusHUD와 OnHealthChanged 델리게이트 연결
+    - BeginPlay에서 위젯 생성 + 바인딩 + 초기값 동기화
+- TestDamage 함수 추가 (P키 → 10 데미지)
+    - DefaultInput.ini에 TestDamage 액션 매핑 추가
+- ReloadBarWidget 중복 BindWeapon 호출 제거
+
+---
+
+### 발생한 문제
+- BindKey(EKeys::P) 사용 시 FInputChord 링커 에러 발생
+    - InputCore가 PublicDependencyModuleNames에 있음에도 dllimport 심볼 미해결
+
+---
+
+### 해결 방법 / 결정 사항
+- BindKey 대신 DefaultInput.ini에 액션 매핑 추가 후 BindAction으로 변경
+    - Fire/Reload와 동일한 방식으로 통일
+
+---
+
+### 미완료 / 보류
+- 체력 감소 시 색상 변화 연출
+- 피격 시 Vignette/붉은 플래시 연동
+
+---
+
+### 구조적 메모 (선택)
+- HealthComponent::BeginPlay()는 Actor::BeginPlay()보다 먼저 실행 → 초기값 동기화 안전
+- 플레이어/적 모두 ATDBaseCharacter를 통해 동일한 HealthComponent 구조 공유
+- 화면 고정 HUD는 PlayerController 위치 제어 불필요 (Ammo/Reload와 다름)
+
+---
+
+### ▶ 내일 할 일 (최대 3개)
+- Muzzle Flash 구현
+- Hit Impact 구현
+
+---
+
+---
 ## 📅 2026-02-20
 
 ### 🎯 오늘 목표 (최대 3개)

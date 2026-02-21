@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "Character/TDBaseCharacter.h"
 #include "TDPlayerCharacter.generated.h"
 
 class UInputComponent;
@@ -11,7 +11,7 @@ class ATDWeaponBase;
 class UTDWeaponPresetDA;
 
 UCLASS()
-class TOPDOWNSHOOTER_API ATDPlayerCharacter : public ACharacter
+class TOPDOWNSHOOTER_API ATDPlayerCharacter : public ATDBaseCharacter
 {
 	GENERATED_BODY()
 
@@ -111,11 +111,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UTDReloadBarWidget> ReloadBarWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UTDPlayerStatusHUD> StatusHUDClass;
+
 	UPROPERTY()
 	UTDW_AmmoWidget* AmmoWidget = nullptr;
 
 	UPROPERTY()
 	UTDReloadBarWidget* ReloadBarWidget = nullptr;
+
+	UPROPERTY()
+	UTDPlayerStatusHUD* StatusHUD = nullptr;
 
 	//Debug
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Aim")
@@ -125,6 +131,11 @@ protected:
 
 private:
 	bool GetMouseAimPointRaw(FVector& OutAimPoint) const;
+
+	UFUNCTION()
+	void HandleHealthChanged(float NewHealth, float Delta);
+
+	void TestDamage();
 	void UpdateAimRotationFromPoint(float DeltaTime, const FVector& AimPoint);
 
 	void Debug_PrintTraceChannel() const;

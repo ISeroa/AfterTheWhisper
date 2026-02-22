@@ -15,7 +15,7 @@
 - [ ] 탄약/재장전 사운드 훅(빈 슬롯이어도 placeholder로)
 
 ### 2) Combat Feel (손맛 = 포트폴리오 핵심)
-- [ ] Muzzle Flash
+- [X] Muzzle Flash
 - [ ] Hit Impact (표면별 아니어도 OK)
 - [ ] Hit Marker (UI)
 - [ ] 피격 피드백(적 플래시/넉백/짧은 스턴 중 1개 이상)

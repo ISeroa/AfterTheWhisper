@@ -410,7 +410,7 @@ void ATDWeaponBase::PlayWeaponSfx(USoundBase* Sound, FName AttachSocket)
 
 	if (BaseMesh)
 	{
-		UGameplayStatics::PlaySoundAttached(Sound, BaseMesh, AttachSocket);
+		UGameplayStatics::SpawnSoundAttached(Sound, BaseMesh, AttachSocket);
 		return;
 	}
 
@@ -423,8 +423,12 @@ void ATDWeaponBase::FireOnce()
 
 	if (!CanFire())
 	{
-		if (!bIsReloading && AmmoInMag == 0)
+		if (!bIsReloading && AmmoInMag <= 0)
 		{
+			if (CurrentPreset)
+			{
+				PlayWeaponSfx(CurrentPreset->SoundSet.DryFire, "SCK_Muzzle");
+			}
 			StartReload();
 		}
 		return;

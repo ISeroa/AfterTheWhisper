@@ -6,6 +6,70 @@
 
 ---
 
+## 📅 2026-02-26
+
+### 🎯 오늘 목표 (최대 3개)
+- 무기 사운드 시스템 구현 (발사/DryFire/탄피)
+- Niagara 머즐 플래시 C++ 연동
+- 실내/실외 사운드 분기 구조 확정
+
+---
+
+### 완료한 작업
+- FWeaponSoundSet 구조체 추가 (FireIndoor / FireOutdoor / DryFire / CasingDrop)
+- WeaponPresetDA에 SoundSet, MuzzleFlashEffect, MuzzleSocketName 프로퍼티 추가
+- ATDPlayerController에 bIsIndoor + GetIsIndoor() 추가
+- PlayWeaponSfx() 구현 (SpawnSoundAttached 우선, fallback PlaySoundAtLocation)
+- FireOnce()에서 발사 성공 시 Indoor/Outdoor 분기 사운드 재생
+- FireOnce()에서 탄 0 이하 시 DryFire 사운드 재생
+- FireOnce()에서 발사 성공 시 CasingDrop 사운드 재생 (SCK_Ejector)
+- GetMuzzleTransformWS() 추가 (소켓 존재 로그 포함, fallback ComponentTransform)
+- SpawnMuzzleFlash() 추가 → FireOnce()에서 호출
+- Build.cs에 Niagara 모듈 추가
+- MuzzleSocketName을 DA에서 지정 가능하도록 이전 (기본값 "SCK_Muzzle")
+- SetPartsFromPreset()에서 MuzzleSocketName DA 값 적용
+
+---
+
+### 발생한 문제
+- Niagara가 원점(0,0,0)에서 스폰되는 현상
+    - DrawDebugSphere는 정상 위치를 표시했으나 Niagara만 원점 스폰
+- 소켓 이름 불일치 (코드 기본값 "Muzzle" vs 실제 소켓 "SCK_Muzzle")
+
+---
+
+### 해결 방법 / 결정 사항
+- 원인: bExists=false 시 GetMuzzleTransformWS()가 FTransform::Identity 반환
+    - DrawDebugSphere는 ComponentLocation fallback으로 정상 표시 → 불일치 발생
+    - !bExists일 때 Identity 대신 GetComponentTransform() fallback으로 수정
+- 소켓명을 DA의 MuzzleSocketName 필드로 이전하여 데이터 기반으로 관리
+    - DA 기본값 "SCK_Muzzle"로 설정, SetPartsFromPreset에서 적용
+
+---
+
+### 미완료 / 보류
+- Concurrency / Attenuation 세부 튜닝 (Phase 2)
+- 실내/실외 자동 판별 (트리거/볼륨 기반, Phase 2)
+- 탄피 바닥 접촉 위치 사운드 개선
+
+---
+
+### 구조적 메모 (선택)
+- DrawDebugSphere와 실제 반환값의 fallback 경로가 다를 경우 디버그가 오히려 혼선을 줄 수 있음
+    → 디버그 표시 로직과 실제 반환 로직은 동일한 fallback 경로를 공유해야 함
+- 소켓명처럼 메시 의존적인 값은 WeaponBase 하드코딩보다 DA에서 지정하는 편이 안전
+
+---
+
+### ▶ 내일 할 일 (최대 3개)
+- Hit Impact VFX/사운드
+- Hit Marker UI
+- Enemy 기본 구조 (Chase + Attack)
+
+---
+
+---
+
 ## 📅 2026-02-22
 
 ### 🎯 오늘 목표 (최대 3개)

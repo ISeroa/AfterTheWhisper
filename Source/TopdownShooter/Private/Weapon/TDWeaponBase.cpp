@@ -1,6 +1,7 @@
 #include "Weapon/TDWeaponBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Core/TDPlayerController.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
@@ -68,7 +69,8 @@ void ATDWeaponBase::SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMis
 	SpreadDeg = Preset->Stats.SpreadDeg;
 	MagazineSize = Preset->Stats.MagazineSize;
 	ReloadTime = Preset->Stats.ReloadTime;
-	
+	MuzzleSocketName = Preset->MuzzleSocketName;
+
 	AmmoInMag = MagazineSize;
 	NotifyAmmoChanged();
 	
@@ -272,7 +274,40 @@ FVector ATDWeaponBase::GetMuzzleLocation() const
 		return MuzzleComp->GetSocketLocation(MuzzleSocketName);
 	}
 
-	return MuzzleComp -> GetComponentLocation();
+	return MuzzleComp->GetComponentLocation();
+}
+
+FTransform ATDWeaponBase::GetMuzzleTransformWS() const
+{
+	UStaticMeshComponent* Comp = FindMuzzleProviderComp();
+
+	const bool bExists = Comp && Comp->DoesSocketExist(MuzzleSocketName);
+	UE_LOG(LogTemp, Warning, TEXT("[MuzzleFlash] Socket=%s exists=%s Comp=%s"),
+		*MuzzleSocketName.ToString(),
+		bExists ? TEXT("true") : TEXT("false"),
+		Comp ? *Comp->GetName() : TEXT("nullptr"));
+
+	if (!Comp) return FTransform::Identity;
+	if (!bExists)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[MuzzleFlash] Socket '%s' not found on '%s' — fallback to ComponentTransform"),
+			*MuzzleSocketName.ToString(), *Comp->GetName());
+		return Comp->GetComponentTransform();
+	}
+	return Comp->GetSocketTransform(MuzzleSocketName);
+}
+
+void ATDWeaponBase::SpawnMuzzleFlash()
+{
+	if (!CurrentPreset || !CurrentPreset->MuzzleFlashEffect) return;
+
+	const FTransform MuzzleT = GetMuzzleTransformWS();
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		CurrentPreset->MuzzleFlashEffect,
+		MuzzleT.GetLocation(),
+		MuzzleT.GetRotation().Rotator()
+	);
 }
 
 
@@ -438,6 +473,8 @@ void ATDWeaponBase::FireOnce()
 	AmmoInMag = FMath::Max(AmmoInMag - 1, 0);
 	NotifyAmmoChanged();
 
+	SpawnMuzzleFlash();
+
 	if (CurrentPreset)
 	{
 		ATDPlayerController* PC = nullptr;
@@ -449,6 +486,11 @@ void ATDWeaponBase::FireOnce()
 			? CurrentPreset->SoundSet.FireIndoor
 			: CurrentPreset->SoundSet.FireOutdoor;
 		PlayWeaponSfx(FireSound, "SCK_Muzzle");
+
+		if (CurrentPreset->SoundSet.CasingDrop)
+		{
+			PlayWeaponSfx(CurrentPreset->SoundSet.CasingDrop, "SCK_Ejector");
+		}
 	}
 
 	UWorld* World = GetWorld();

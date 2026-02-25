@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "Math/Transform.h"
 #include "Sound/SoundBase.h"
+#include "NiagaraSystem.h"
 #include "Weapon/Data/TDWeaponPartDA.h"
 #include "TDWeaponPresetDA.generated.h"
 
@@ -98,5 +99,11 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FWeaponSoundSet SoundSet;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX")
+	UNiagaraSystem* MuzzleFlashEffect = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Assemble")
+	FName MuzzleSocketName = "SCK_Muzzle";
 };
 

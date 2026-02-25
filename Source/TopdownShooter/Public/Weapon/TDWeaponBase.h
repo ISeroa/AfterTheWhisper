@@ -107,9 +107,11 @@ protected:
 	void OnReloadTimerFinished();
 
 	FVector GetMuzzleLocation() const;
+	FTransform GetMuzzleTransformWS() const;
 	FVector GetShotDirection() const;
 
 	void PlayWeaponSfx(USoundBase* Sound, FName AttachSocket);
+	void SpawnMuzzleFlash();
 
 	UFUNCTION(BlueprintCallable) //temp
 	void NotifyAmmoChanged();

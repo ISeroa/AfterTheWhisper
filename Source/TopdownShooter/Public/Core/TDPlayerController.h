@@ -24,6 +24,9 @@ protected:
 	UTDW_AmmoWidget* AmmoWidget = nullptr;
 	UTDReloadBarWidget* ReloadBarWidget = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World")
+	bool bIsIndoor = true;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
 	FVector2D MouseOffset = FVector2D(20.f, 0.f);
 	FVector2D ReloadWidgetOffset = FVector2D(20.f, 0.f);

@@ -1,6 +1,7 @@
 #include "Weapon/TDWeaponBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
+#include "Core/TDPlayerController.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Weapon/Data/TDWeaponPresetDA.h"
@@ -436,6 +437,19 @@ void ATDWeaponBase::FireOnce()
 
 	AmmoInMag = FMath::Max(AmmoInMag - 1, 0);
 	NotifyAmmoChanged();
+
+	if (CurrentPreset)
+	{
+		ATDPlayerController* PC = nullptr;
+		if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+		{
+			PC = Cast<ATDPlayerController>(OwnerPawn->GetController());
+		}
+		USoundBase* FireSound = (PC && PC->GetIsIndoor())
+			? CurrentPreset->SoundSet.FireIndoor
+			: CurrentPreset->SoundSet.FireOutdoor;
+		PlayWeaponSfx(FireSound, "SCK_Muzzle");
+	}
 
 	UWorld* World = GetWorld();
 	AActor* OwnerActor = GetOwner();

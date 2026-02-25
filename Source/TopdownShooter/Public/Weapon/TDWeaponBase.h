@@ -7,6 +7,7 @@
 class USceneComponent;
 class UStaticMeshComponent;
 class UTDWeaponPresetDA;
+class USoundBase;
 
 USTRUCT(BlueprintType)
 struct FWeaponPartSpec
@@ -107,6 +108,8 @@ protected:
 
 	FVector GetMuzzleLocation() const;
 	FVector GetShotDirection() const;
+
+	void PlayWeaponSfx(USoundBase* Sound, FName AttachSocket);
 
 	UFUNCTION(BlueprintCallable) //temp
 	void NotifyAmmoChanged();

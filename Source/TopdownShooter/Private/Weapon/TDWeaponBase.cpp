@@ -1,5 +1,6 @@
 #include "Weapon/TDWeaponBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Weapon/Data/TDWeaponPresetDA.h"
@@ -402,6 +403,19 @@ void ATDWeaponBase::FinishReload()
 	EndReloadState();
 }
 
+
+void ATDWeaponBase::PlayWeaponSfx(USoundBase* Sound, FName AttachSocket)
+{
+	if (!Sound) return;
+
+	if (BaseMesh)
+	{
+		UGameplayStatics::PlaySoundAttached(Sound, BaseMesh, AttachSocket);
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
+}
 
 void ATDWeaponBase::FireOnce()
 {

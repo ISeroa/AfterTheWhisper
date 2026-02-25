@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Math/Transform.h"
+#include "Sound/SoundBase.h"
+#include "NiagaraSystem.h"
 #include "Weapon/Data/TDWeaponPartDA.h"
 #include "TDWeaponPresetDA.generated.h"
 
@@ -59,6 +61,24 @@ struct FTDWeaponStats
 	float ReloadTime = 1.4f;
 };
 
+USTRUCT(BlueprintType)
+struct FWeaponSoundSet
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
+	USoundBase* FireIndoor = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
+	USoundBase* FireOutdoor = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
+	USoundBase* DryFire = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sound")
+	USoundBase* CasingDrop = nullptr;
+};
+
 UCLASS()
 class TOPDOWNSHOOTER_API UTDWeaponPresetDA : public UDataAsset
 {
@@ -76,5 +96,14 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	FTDWeaponStats Stats;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FWeaponSoundSet SoundSet;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VFX")
+	UNiagaraSystem* MuzzleFlashEffect = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Assemble")
+	FName MuzzleSocketName = "SCK_Muzzle";
 };
 

@@ -15,6 +15,8 @@ class TOPDOWNSHOOTER_API ATDPlayerController : public APlayerController
 public:
 	void SetAmmoWidget(UTDW_AmmoWidget* InWidget);
 	void SetReloadBarWidget(UTDReloadBarWidget* InWidget);
+
+	bool GetIsIndoor() const { return bIsIndoor; }
 	
 protected:
 	ATDPlayerController();
@@ -23,6 +25,9 @@ protected:
 	UPROPERTY()
 	UTDW_AmmoWidget* AmmoWidget = nullptr;
 	UTDReloadBarWidget* ReloadBarWidget = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World")
+	bool bIsIndoor = true;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
 	FVector2D MouseOffset = FVector2D(20.f, 0.f);

@@ -14,6 +14,7 @@ class TOPDOWNSHOOTER_API ATDCasing : public AActor
 
 public:
 	ATDCasing();
+	void AddIgnoredActor(AActor* Actor);
 
 protected:
 	virtual void BeginPlay() override;

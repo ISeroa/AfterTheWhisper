@@ -112,6 +112,7 @@ protected:
 
 	void PlayWeaponSfx(USoundBase* Sound, FName AttachSocket);
 	void SpawnMuzzleFlash();
+	void SpawnCasing();
 
 	UFUNCTION(BlueprintCallable) //temp
 	void NotifyAmmoChanged();

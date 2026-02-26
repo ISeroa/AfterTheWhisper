@@ -11,6 +11,19 @@ ATDCasing::ATDCasing()
 
 	MeshComp->BodyInstance.bSimulatePhysics = true;
 	MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	MeshComp->CanCharacterStepUpOn = ECB_No;
+	MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	MeshComp->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
+	MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+}
+
+void ATDCasing::AddIgnoredActor(AActor* Actor)
+{
+	if (Actor)
+	{
+		MeshComp->IgnoreActorWhenMoving(Actor, true);
+	}
 }
 
 void ATDCasing::BeginPlay()

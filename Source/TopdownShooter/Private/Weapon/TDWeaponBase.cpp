@@ -486,11 +486,6 @@ void ATDWeaponBase::FireOnce()
 			? CurrentPreset->SoundSet.FireIndoor
 			: CurrentPreset->SoundSet.FireOutdoor;
 		PlayWeaponSfx(FireSound, "SCK_Muzzle");
-
-		if (CurrentPreset->SoundSet.CasingDrop)
-		{
-			PlayWeaponSfx(CurrentPreset->SoundSet.CasingDrop, "SCK_Ejector");
-		}
 	}
 
 	UWorld* World = GetWorld();

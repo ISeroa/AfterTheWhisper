@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Weapon/Data/TDWeaponPresetDA.h"
+#include "Weapon/TDCasing.h"
 
 ATDWeaponBase::ATDWeaponBase()
 {
@@ -297,6 +298,47 @@ FTransform ATDWeaponBase::GetMuzzleTransformWS() const
 	return Comp->GetSocketTransform(MuzzleSocketName);
 }
 
+void ATDWeaponBase::SpawnCasing()
+{
+	if (!CurrentPreset || !CurrentPreset->CasingClass) return;
+
+	const FName EjectorSocket = TEXT("SCK_Ejector");
+	FTransform SpawnT = GetActorTransform();
+
+	UStaticMeshComponent* SocketComp = nullptr;
+	if (BaseMesh && BaseMesh->DoesSocketExist(EjectorSocket))
+	{
+		SocketComp = BaseMesh;
+	}
+	else
+	{
+		for (const auto& Pair : PartComps)
+		{
+			if (Pair.Value && Pair.Value->DoesSocketExist(EjectorSocket))
+			{
+				SocketComp = Pair.Value;
+				break;
+			}
+		}
+	}
+
+	if (SocketComp)
+	{
+		SpawnT = SocketComp->GetSocketTransform(EjectorSocket, RTS_World);
+	}
+
+	FActorSpawnParameters Params;
+	Params.Owner = GetOwner();
+	Params.Instigator = GetInstigator();
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	ATDCasing* Casing = GetWorld()->SpawnActor<ATDCasing>(CurrentPreset->CasingClass, SpawnT, Params);
+	if (Casing)
+	{
+		Casing->AddIgnoredActor(this);
+	}
+}
+
 void ATDWeaponBase::SpawnMuzzleFlash()
 {
 	if (!CurrentPreset || !CurrentPreset->MuzzleFlashEffect) return;
@@ -474,6 +516,7 @@ void ATDWeaponBase::FireOnce()
 	NotifyAmmoChanged();
 
 	SpawnMuzzleFlash();
+	SpawnCasing();
 
 	if (CurrentPreset)
 	{
@@ -486,11 +529,6 @@ void ATDWeaponBase::FireOnce()
 			? CurrentPreset->SoundSet.FireIndoor
 			: CurrentPreset->SoundSet.FireOutdoor;
 		PlayWeaponSfx(FireSound, "SCK_Muzzle");
-
-		if (CurrentPreset->SoundSet.CasingDrop)
-		{
-			PlayWeaponSfx(CurrentPreset->SoundSet.CasingDrop, "SCK_Ejector");
-		}
 	}
 
 	UWorld* World = GetWorld();

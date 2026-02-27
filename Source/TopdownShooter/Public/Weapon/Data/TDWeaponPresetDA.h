@@ -10,6 +10,8 @@
 #include "Weapon/Data/TDWeaponPartDA.h"
 #include "TDWeaponPresetDA.generated.h"
 
+class ATDCasing;
+
 USTRUCT(BlueprintType)
 struct FTDGripOffset
 {
@@ -105,5 +107,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Assemble")
 	FName MuzzleSocketName = "SCK_Muzzle";
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Casing")
+	TSubclassOf<ATDCasing> CasingClass;
 };
 

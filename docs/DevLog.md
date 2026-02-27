@@ -6,28 +6,87 @@
 
 ---
 
+## 📅 2026-02-27
+
+### 🎯 오늘 목표 (최대 3개)
+- ATDCasing 캐릭터 충돌 버그 원인 파악 및 해결
+
+---
+
+### 완료한 작업
+- ATDCasing 캐릭터 충돌 이슈 원인 규명 및 수정
+    - BP_TDCasing에 남아 있던 Collision 오버라이드 값을 "Reset to Default"로 초기화
+    - C++ 생성자에서 설정한 PhysicsOnly / ECC_Pawn Ignore가 런타임에 정상 적용됨을 확인
+- CLAUDE.md 생성 및 Physics/Collision 주의 사항 섹션 추가
+
+---
+
+### 발생한 문제
+- C++에서 Collision 설정을 변경해도 런타임에 반영되지 않음
+    - PhysicsOnly, Pawn Ignore를 생성자에서 설정했으나 캐릭터가 탄피 위에서 계속 들썩임
+
+---
+
+### 해결 방법 / 결정 사항
+- **근본 원인**: Unreal Engine은 Blueprint가 C++ 컴포넌트 기본값을 인스턴스별로 오버라이드할 수 있으며,
+  이미 생성된 BP는 이후 C++ 기본값 변경을 자동으로 상속하지 않음
+- BP_TDCasing 에디터에서 MeshComp Collision 프로퍼티 → "Reset to Default" 초기화로 해결
+- 향후 보장이 필요한 Collision 설정은 `BeginPlay()`에서 강제 적용하는 패턴도 사용 가능
+
+---
+
+### 미완료 / 보류
+- 탄피 사운드 소재별 분기 (Phase 2)
+
+---
+
+### 구조적 메모 (선택)
+- C++ 생성자 기본값 변경 후 BP에서 의도대로 동작하지 않으면 BP 오버라이드 잔존 여부를 먼저 의심
+- Physics/Collision처럼 런타임 동작에 직결되는 설정은 `BeginPlay()` 강제 적용을 표준 패턴으로 고려
+- BP에서 "Reset to Default" 후 저장하지 않으면 변경이 유지되지 않으므로 반드시 저장 확인
+
+---
+
+### ▶ 내일 할 일 (최대 3개)
+- Hit Impact VFX/사운드
+- Hit Marker UI
+- Enemy 기본 구조 (Chase + Attack)
+
+---
+
+---
+
 ## 📅 2026-02-26
 
 ### 🎯 오늘 목표 (최대 3개)
 - 무기 사운드 시스템 구현 (발사/DryFire/탄피)
 - Niagara 머즐 플래시 C++ 연동
-- 실내/실외 사운드 분기 구조 확정
+- ATDCasing 탄피 액터 구현
 
 ---
 
 ### 완료한 작업
+**[무기 사운드 / 머즐 플래시]**
 - FWeaponSoundSet 구조체 추가 (FireIndoor / FireOutdoor / DryFire / CasingDrop)
 - WeaponPresetDA에 SoundSet, MuzzleFlashEffect, MuzzleSocketName 프로퍼티 추가
 - ATDPlayerController에 bIsIndoor + GetIsIndoor() 추가
 - PlayWeaponSfx() 구현 (SpawnSoundAttached 우선, fallback PlaySoundAtLocation)
 - FireOnce()에서 발사 성공 시 Indoor/Outdoor 분기 사운드 재생
 - FireOnce()에서 탄 0 이하 시 DryFire 사운드 재생
-- FireOnce()에서 발사 성공 시 CasingDrop 사운드 재생 (SCK_Ejector)
 - GetMuzzleTransformWS() 추가 (소켓 존재 로그 포함, fallback ComponentTransform)
 - SpawnMuzzleFlash() 추가 → FireOnce()에서 호출
 - Build.cs에 Niagara 모듈 추가
 - MuzzleSocketName을 DA에서 지정 가능하도록 이전 (기본값 "SCK_Muzzle")
 - SetPartsFromPreset()에서 MuzzleSocketName DA 값 적용
+
+**[ATDCasing 탄피 액터]**
+- ATDCasing 최소 뼈대 구현 (StaticMeshComp Root, PhysicsOnly, LifeSpan 8s, Tick 비활성화)
+- WeaponPresetDA에 TSubclassOf<ATDCasing> CasingClass 추가
+- ATDWeaponBase::SpawnCasing() 구현 → SCK_Ejector 소켓 기준 스폰, FireOnce() 발사 성공 경로에서만 호출
+- ATDCasing::AddIgnoredActor() 추가 → 스폰 직후 무기 액터(this) Ignore 등록
+- ATDCasing::OnHit() 구현 → WorldStatic 충돌 + MinImpactSpeed 조건 시 ImpactSound 1회 재생
+- FireOnce()의 CasingDrop 사운드 재생 제거 → 탄피 impact 사운드는 ATDCasing에서만 담당하도록 이관
+- 충돌 채널 정리: ECC_Pawn / ECC_PhysicsBody / ECC_Camera → Ignore, PhysicsOnly 설정
 
 ---
 
@@ -35,22 +94,27 @@
 - Niagara가 원점(0,0,0)에서 스폰되는 현상
     - DrawDebugSphere는 정상 위치를 표시했으나 Niagara만 원점 스폰
 - 소켓 이름 불일치 (코드 기본값 "Muzzle" vs 실제 소켓 "SCK_Muzzle")
+- ATDCasing 생성자에서 EXCEPTION_ACCESS_VIOLATION (address 0x1c0)
+    - SetSimulatePhysics(true)를 생성자에서 호출 → CDO 시점에 물리 핸들 미초기화
+- ATDCasing이 캐릭터 바닥 판정에 걸려 들썩임
+    - QueryAndPhysics 상태에서 캐릭터 플로어 스윕에 탐지됨
 
 ---
 
 ### 해결 방법 / 결정 사항
-- 원인: bExists=false 시 GetMuzzleTransformWS()가 FTransform::Identity 반환
-    - DrawDebugSphere는 ComponentLocation fallback으로 정상 표시 → 불일치 발생
-    - !bExists일 때 Identity 대신 GetComponentTransform() fallback으로 수정
+- Niagara 원점 스폰: !bExists일 때 FTransform::Identity 대신 GetComponentTransform() fallback으로 수정
 - 소켓명을 DA의 MuzzleSocketName 필드로 이전하여 데이터 기반으로 관리
-    - DA 기본값 "SCK_Muzzle"로 설정, SetPartsFromPreset에서 적용
+- ATDCasing 생성자 크래시: SetSimulatePhysics() → BodyInstance.bSimulatePhysics = true 로 변경
+    - 생성자에서는 런타임 물리 API 사용 금지, 초기값 직접 설정 패턴 사용
+- 바닥 들썩임: PhysicsOnly + ECB_No + ECC_Pawn Ignore 적용 시도 → 미해결, 내일 재점검
 
 ---
 
 ### 미완료 / 보류
+- ~~**ATDCasing 바닥 들썩임**~~ → 2026-02-27 해결 (BP_TDCasing 오버라이드 초기화)
 - Concurrency / Attenuation 세부 튜닝 (Phase 2)
 - 실내/실외 자동 판별 (트리거/볼륨 기반, Phase 2)
-- 탄피 바닥 접촉 위치 사운드 개선
+- ATDCasing ImpactSound 소재별 분기 (Phase 2)
 
 ---
 
@@ -58,6 +122,12 @@
 - DrawDebugSphere와 실제 반환값의 fallback 경로가 다를 경우 디버그가 오히려 혼선을 줄 수 있음
     → 디버그 표시 로직과 실제 반환 로직은 동일한 fallback 경로를 공유해야 함
 - 소켓명처럼 메시 의존적인 값은 WeaponBase 하드코딩보다 DA에서 지정하는 편이 안전
+- UE4 생성자에서 SetSimulatePhysics() 금지 — CDO 시점에 World/PhysicsScene 없음
+    → BodyInstance 멤버 직접 설정으로 대체
+- PhysicsOnly와 QueryAndPhysics의 차이: 캐릭터 플로어 스윕은 Query 기반이므로 PhysicsOnly로 차단 가능
+    → OnComponentHit는 물리 엔진 레벨 콜백이므로 영향 없음
+- 탄피 사운드 책임은 WeaponBase(발사 시점)가 아닌 ATDCasing(충돌 시점)에서 담당
+    → 물리 충돌 위치/타이밍이 자연스럽고, 소리 발생 지점이 정확해짐
 
 ---
 

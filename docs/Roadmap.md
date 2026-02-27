@@ -16,6 +16,7 @@
 
 ### 2) Combat Feel (손맛 = 포트폴리오 핵심)
 - [X] Muzzle Flash
+- [x] 탄피 스폰 (ATDCasing) — 스폰/물리/impact sound/캐릭터 충돌 해결 완료
 - [ ] Hit Impact (표면별 아니어도 OK)
 - [ ] Hit Marker (UI)
 - [ ] 피격 피드백(적 플래시/넉백/짧은 스턴 중 1개 이상)

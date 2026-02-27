@@ -497,4 +497,4 @@ FodyWeavers.xsd
 GenerateSln.bat
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,unrealengine
-.claude/settings.local.json
+.claude/

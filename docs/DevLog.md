@@ -6,6 +6,56 @@
 
 ---
 
+## 📅 2026-02-27
+
+### 🎯 오늘 목표 (최대 3개)
+- ATDCasing 캐릭터 충돌 버그 원인 파악 및 해결
+
+---
+
+### 완료한 작업
+- ATDCasing 캐릭터 충돌 이슈 원인 규명 및 수정
+    - BP_TDCasing에 남아 있던 Collision 오버라이드 값을 "Reset to Default"로 초기화
+    - C++ 생성자에서 설정한 PhysicsOnly / ECC_Pawn Ignore가 런타임에 정상 적용됨을 확인
+- CLAUDE.md 생성 및 Physics/Collision 주의 사항 섹션 추가
+
+---
+
+### 발생한 문제
+- C++에서 Collision 설정을 변경해도 런타임에 반영되지 않음
+    - PhysicsOnly, Pawn Ignore를 생성자에서 설정했으나 캐릭터가 탄피 위에서 계속 들썩임
+
+---
+
+### 해결 방법 / 결정 사항
+- **근본 원인**: Unreal Engine은 Blueprint가 C++ 컴포넌트 기본값을 인스턴스별로 오버라이드할 수 있으며,
+  이미 생성된 BP는 이후 C++ 기본값 변경을 자동으로 상속하지 않음
+- BP_TDCasing 에디터에서 MeshComp Collision 프로퍼티 → "Reset to Default" 초기화로 해결
+- 향후 보장이 필요한 Collision 설정은 `BeginPlay()`에서 강제 적용하는 패턴도 사용 가능
+
+---
+
+### 미완료 / 보류
+- 탄피 사운드 소재별 분기 (Phase 2)
+
+---
+
+### 구조적 메모 (선택)
+- C++ 생성자 기본값 변경 후 BP에서 의도대로 동작하지 않으면 BP 오버라이드 잔존 여부를 먼저 의심
+- Physics/Collision처럼 런타임 동작에 직결되는 설정은 `BeginPlay()` 강제 적용을 표준 패턴으로 고려
+- BP에서 "Reset to Default" 후 저장하지 않으면 변경이 유지되지 않으므로 반드시 저장 확인
+
+---
+
+### ▶ 내일 할 일 (최대 3개)
+- Hit Impact VFX/사운드
+- Hit Marker UI
+- Enemy 기본 구조 (Chase + Attack)
+
+---
+
+---
+
 ## 📅 2026-02-26
 
 ### 🎯 오늘 목표 (최대 3개)
@@ -61,7 +111,7 @@
 ---
 
 ### 미완료 / 보류
-- **ATDCasing 바닥 들썩임 미해결** — PhysicsOnly/ECB_No 적용했으나 캐릭터가 탄피 위에서 튀는 현상 잔존
+- ~~**ATDCasing 바닥 들썩임**~~ → 2026-02-27 해결 (BP_TDCasing 오버라이드 초기화)
 - Concurrency / Attenuation 세부 튜닝 (Phase 2)
 - 실내/실외 자동 판별 (트리거/볼륨 기반, Phase 2)
 - ATDCasing ImpactSound 소재별 분기 (Phase 2)

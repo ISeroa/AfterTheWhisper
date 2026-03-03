@@ -6,6 +6,90 @@
 
 ---
 
+## 📅 2026-03-04
+
+### 🎯 오늘 목표 (최대 3개)
+- ATDEnemyAIController 구현 (기반 구조 → MoveToLocation → Encircle 전술 → 다중 적 분산)
+
+---
+
+### 완료한 작업
+
+**[ATDEnemyAIController 기반 구조]**
+- `AAIController` 상속 `ATDEnemyAIController` 클래스 신규 생성 (`Public/AI/`, `Private/AI/`)
+- `OnPossess` / `OnUnPossess` 오버라이드 + UE_LOG 확인 로그
+- `ATDEnemyCharacter` 생성자에서 `AIControllerClass = ATDEnemyAIController::StaticClass()`, `AutoPossessAI = PlacedInWorldOrSpawned`
+- Build.cs에 `AIModule` 의존성 추가
+
+**[Timer 기반 UpdateMoveTarget 루프]**
+- `RepathInterval`(0.35f) UPROPERTY
+- `OnPossess`에서 루핑 Timer 시작 — 적마다 `InitialDelay = RandRange(0, RepathInterval)` 로 첫 실행 타이밍 분산
+- `OnUnPossess`에서 `ClearTimer`
+
+**[ETDMovementTactic enum 및 DirectChase]**
+- `ETDMovementTactic { DirectChase, Encircle }` (BlueprintType)
+- `GetPlayerPawn()` (`UGameplayStatics::GetPlayerPawn(0)`)
+- `ComputeMoveGoal()` — switch 분기, DirectChase는 PlayerLocation 반환
+- `UpdateMoveTarget()`에서 `MoveToLocation(Goal, AcceptanceRadius=60, bStopOnOverlap=true)`
+
+**[Encircle 전술 — 슬롯 기반 비용 선택 최종 구조]**
+- `NumSlots`(12) 개의 고정 슬롯을 플레이어 주변 원 위에 배치 (월드 고정 X/Y 축 기준, 플레이어 회전 무관)
+- 매 `UpdateMoveTarget`에서 각 슬롯 비용을 계산해 최저 비용 슬롯 선택:
+  ```
+  Cost = Dist2D(SelfLoc, SlotPos)
+       + OccupancyPenalty(400)  × (반경 OccupancyRadius(160) 안 실제 위치한 적 수)
+       + SameSlotPenalty(100000) × (다른 ATDEnemyAIController 중 CurrentSlotIndex == i 인 수)
+  ```
+- `CurrentSlotIndex` — 선택 즉시 저장, 다른 컨트롤러가 `TActorIterator`로 읽어 중복 회피
+- `OnUnPossess`에서 `CurrentSlotIndex = INDEX_NONE` — 사망/해제 즉시 슬롯 해방
+- `RadiusBias = RandRange(-Jitter, Jitter)` — `OnPossess` 1회 고정 (반경 미세 분산)
+- 디버그: 후보 슬롯 회색 점 / 선택 Goal 초록 구체 (비 Shipping)
+
+---
+
+### 발생한 문제 및 폐기된 중간 시도
+
+| 시도 | 문제 | 결정 |
+|---|---|---|
+| PlayerForward 기반 Encircle 방향 계산 | 플레이어 제자리 회전 시 적 목표도 회전 | 월드 고정 축(X/Y)으로 교체 |
+| UniqueID 기반 고정 SlotAngle | 스폰 위치와 무관한 각도 → 뭉침 | 상대 위치 atan2로 교체 |
+| AngleLockMode (Locked/Unlocked/Reacquire) | 슬롯 고정/갱신 제어는 해결책이 아니었음 | 슬롯 비용 선택으로 전면 교체, 제거 |
+| NumSlots 양자화(RoundToInt) | 다수 적이 같은 양자화 슬롯으로 몰림 | 비용 함수(OccupancyPenalty + SameSlotPenalty)로 대체 |
+| AngleBiasRad 인스턴스 편향 | 슬롯 기반에서 의미 없어짐 | 제거, RadiusBias만 유지 |
+
+---
+
+### 해결 방법 / 결정 사항
+- **위치 기반 + 의도 기반 이중 패널티**: 실제 위치(OccupancyPenalty)와 예약 의도(SameSlotPenalty)를 모두 비용에 반영 → 전역 매니저 없이 분산 달성
+- **SameSlotPenalty = 100000**: 거리 비용(수백)을 압도하는 크기여야 중복 슬롯 선택이 사실상 차단됨
+- **InitialDelay 분산**: 같은 프레임에 모든 적이 동시에 슬롯을 선택하는 경쟁 완화
+- **`MoveToLocation` 전제**: 레벨에 RecastNavMesh 필수
+
+---
+
+### 미완료 / 보류
+- Enemy Attack (사거리 내 접근 시 공격)
+- Enemy 피격/사망 처리 (HealthComponent 공용화)
+- 정지거리 (공격 사거리 내 이동 중단)
+
+---
+
+### 구조적 메모
+- 전역 슬롯 예약 테이블 없이 `CurrentSlotIndex` 공개 멤버 + `TActorIterator` 순회만으로 의도 기반 분산 구현 가능
+- `const` 함수에서 멤버 상태(`CurrentSlotIndex`)를 변경해야 할 경우 함수 자체를 non-const로 선언하는 것이 `mutable`보다 의도가 명확함
+- OccupancyPenalty(위치)와 SameSlotPenalty(의도)는 스케일이 달라야 함 — 의도 패널티가 거리 비용보다 수백 배 커야 실질적 회피가 됨
+
+---
+
+### ▶ 내일 할 일 (최대 3개)
+- Enemy Attack 구현 (사거리 감지 → 사격 또는 근접)
+- Enemy HealthComponent 연결 및 피격/사망 처리
+- Hit Impact VFX/사운드
+
+---
+
+---
+
 ## 📅 2026-02-27
 
 ### 🎯 오늘 목표 (최대 3개)

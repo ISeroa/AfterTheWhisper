@@ -1,5 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Character/TDEnemyCharacter.h"
+#include "AI/TDEnemyAIController.h"
 
+ATDEnemyCharacter::ATDEnemyCharacter()
+{
+	AIControllerClass = ATDEnemyAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+}

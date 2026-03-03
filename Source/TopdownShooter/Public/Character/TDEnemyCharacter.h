@@ -8,5 +8,7 @@ UCLASS()
 class TOPDOWNSHOOTER_API ATDEnemyCharacter : public ATDBaseCharacter
 {
 	GENERATED_BODY()
-	
+
+public:
+	ATDEnemyCharacter();
 };

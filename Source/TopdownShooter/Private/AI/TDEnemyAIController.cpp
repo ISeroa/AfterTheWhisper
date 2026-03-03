@@ -1,4 +1,5 @@
 #include "AI/TDEnemyAIController.h"
+#include "Kismet/GameplayStatics.h"
 
 void ATDEnemyAIController::OnPossess(APawn* InPawn)
 {
@@ -13,6 +14,7 @@ void ATDEnemyAIController::OnPossess(APawn* InPawn)
 		RepathInterval,
 		true
 	);
+	UE_LOG(LogTemp, Warning, TEXT("[EnemyAI] Timer set interval=%.2f"), RepathInterval);
 }
 
 void ATDEnemyAIController::OnUnPossess()
@@ -22,7 +24,37 @@ void ATDEnemyAIController::OnUnPossess()
 	Super::OnUnPossess();
 }
 
+APawn* ATDEnemyAIController::GetPlayerPawn() const
+{
+	return UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+}
+
+FVector ATDEnemyAIController::ComputeMoveGoal(APawn* Player) const
+{
+	switch (MovementTactic)
+	{
+	case ETDMovementTactic::DirectChase:
+		return Player->GetActorLocation();
+
+	case ETDMovementTactic::Encircle:
+		// placeholder — Encircle 계산은 미구현
+		return Player->GetActorLocation();
+
+	default:
+		return Player->GetActorLocation();
+	}
+}
+
 void ATDEnemyAIController::UpdateMoveTarget()
 {
-	UE_LOG(LogTemp, Log, TEXT("[TDEnemyAI] UpdateMoveTarget: tick"));
+	UE_LOG(LogTemp, Warning, TEXT("[EnemyAI] UpdateMoveTarget"));
+	
+	APawn* Player = GetPlayerPawn();
+	if (!Player)
+	{
+		return;
+	}
+
+	const FVector Goal = ComputeMoveGoal(Player);
+	MoveToLocation(Goal, AcceptanceRadius, /*bStopOnOverlap=*/true);
 }

@@ -23,13 +23,14 @@
 - [ ] Camera Shake (약하게)
 
 ### 3) Enemy (1종이라도 '게임'처럼)
-- [ ] Enemy 1종: Chase + Attack + Dead
+- [x] Enemy 이동 AI (ATDEnemyAIController — DirectChase + Encircle 슬롯 분산)
+- [ ] Enemy Attack (사거리 감지 → 사격 또는 근접)
 - [ ] 피격/사망 처리 (HealthComponent 공용화)
 - [ ] 스폰 5~10마리에도 프레임 안정 (Tick 최소화)
 
 ### 4) Minimal UI & Flow
-- [ ] 체력 UI
-- [ ] 탄약 UI
+- [x] 체력 UI (UTDPlayerStatusHUD — HealthComponent 델리게이트 연결)
+- [x] 탄약 UI (UTDW_AmmoWidget — 파이 인디케이터, 마우스 추적)
 - [ ] Game Over → Restart
 - [ ] Victory 조건(목표 지점 도달 / 웨이브 종료 중 하나)
 

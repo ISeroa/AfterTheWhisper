@@ -1,4 +1,6 @@
 #include "AI/TDEnemyAIController.h"
+#include "Character/TDEnemyCharacter.h"
+#include "AI/TDEnemyMeleeAttackComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
 
@@ -139,6 +141,11 @@ void ATDEnemyAIController::UpdateMoveTarget()
 
 	const FVector Goal = ComputeMoveGoal(Player);
 	MoveToLocation(Goal, AcceptanceRadius, /*bStopOnOverlap=*/true);
+
+	if (ATDEnemyCharacter* Enemy = Cast<ATDEnemyCharacter>(GetPawn()))
+	{
+		Enemy->MeleeAttackComp->TryAttack(Player);
+	}
 
 #if !UE_BUILD_SHIPPING
 	DrawDebugSphere(GetWorld(), Goal, 24.f, 8, FColor::Green, false, RepathInterval * 1.1f);

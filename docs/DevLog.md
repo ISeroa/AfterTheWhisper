@@ -45,6 +45,16 @@
 - `RadiusBias = RandRange(-Jitter, Jitter)` — `OnPossess` 1회 고정 (반경 미세 분산)
 - 디버그: 후보 슬롯 회색 점 / 선택 Goal 초록 구체 (비 Shipping)
 
+**[UTDEnemyMeleeAttackComponent — 근접 공격 컴포넌트]**
+- `UActorComponent` 상속, `PrimaryComponentTick.bCanEverTick = false` (Tick 미사용)
+- `TryAttack(AActor* Target)` — `bOnCooldown` 또는 `DistSquared > AttackRange²` 이면 즉시 return
+- 범위 내 + 쿨다운 없을 시: `bOnCooldown = true` → `WindupTimerHandle` 시작
+- `ExecuteHit()` — 윈드업 후 DistSquared 재확인 → `UGameplayStatics::ApplyDamage` 호출 → `CooldownTimerHandle` 시작
+- `ResetCooldown()` — `bOnCooldown = false`
+- `TWeakObjectPtr<AActor> PendingTarget` — 윈드업 중 타깃 사망 시 자동 null 처리
+- `ATDEnemyCharacter` 생성자에서 `CreateDefaultSubobject` — BP에서 AttackRange / WindupTime / Cooldown / AttackDamage 조정 가능
+- `ATDEnemyAIController::UpdateMoveTarget()` 에 `TryAttack(Player)` 호출 2줄 추가 (기존 구조 최소 수정)
+
 ---
 
 ### 발생한 문제 및 폐기된 중간 시도
@@ -68,9 +78,8 @@
 ---
 
 ### 미완료 / 보류
-- Enemy Attack (사거리 내 접근 시 공격)
 - Enemy 피격/사망 처리 (HealthComponent 공용화)
-- 정지거리 (공격 사거리 내 이동 중단)
+- 정지거리 — AttackRange 내 진입 시 이동 중단 (현재는 이동 중에도 공격 판정)
 
 ---
 
@@ -82,9 +91,9 @@
 ---
 
 ### ▶ 내일 할 일 (최대 3개)
-- Enemy Attack 구현 (사거리 감지 → 사격 또는 근접)
 - Enemy HealthComponent 연결 및 피격/사망 처리
 - Hit Impact VFX/사운드
+- Camera Shake (발사/피격)
 
 ---
 

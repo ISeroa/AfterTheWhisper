@@ -4,6 +4,8 @@
 #include "Character/TDBaseCharacter.h"
 #include "TDEnemyCharacter.generated.h"
 
+class UTDEnemyMeleeAttackComponent;
+
 UCLASS()
 class TOPDOWNSHOOTER_API ATDEnemyCharacter : public ATDBaseCharacter
 {
@@ -11,4 +13,7 @@ class TOPDOWNSHOOTER_API ATDEnemyCharacter : public ATDBaseCharacter
 
 public:
 	ATDEnemyCharacter();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UTDEnemyMeleeAttackComponent* MeleeAttackComp = nullptr;
 };

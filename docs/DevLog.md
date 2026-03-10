@@ -57,6 +57,103 @@
     - root bone 추가 방식과 Unreal 임포트 옵션 조합 재검토
     - ABP_Player retarget 또는 재작성 방안 결정
 - 파이프라인 확정 후 애니메이션 교체 재시도
+## 📅 2026-03-08
+
+### 🎯 오늘 목표 (최대 3개)
+- 사격 몽타주 정렬 문제 원인 파악 및 해결
+
+---
+
+### 완료한 작업
+
+**[UpperBody 사격 몽타주 테스트 및 적용]**
+- `AM_Pistol_Fire` 몽타주를 UpperBody 슬롯에 연결하여 재생 테스트
+
+**[총구 방향 불일치 문제 해결]**
+- 사격 시 총구 방향과 실제 발사 방향이 어긋나는 문제 발견 및 원인 조사
+- Layered Blend Per Bone 설정이 팔/손 회전에 미치는 영향 확인
+- UpperBody 애니메이션 블렌딩 과정에서 팔/손 회전이 틀어지는 문제 확인
+- `Mesh Space Rotation Blend` 활성화로 상체 회전 안정화
+- 사격 애니메이션을 교체하지 않고 애니메이션 커브 및 레이어 트랙을 직접 수정하여 포즈 보정
+- 총구 방향과 사격 방향이 시각적으로 자연스럽게 맞도록 튜닝
+- 완벽한 정렬은 아니지만 향후 Aim Spread 적용 시 체감 문제 없을 수준으로 개선
+
+---
+
+### 발생한 문제
+- Layered Blend Per Bone에서 Mesh Space Rotation Blend 비활성화 상태에서 상체 회전이 로컬 스페이스로 누산되어 팔 방향 틀어짐 발생
+
+---
+
+### 해결 방법 / 결정 사항
+- `Mesh Space Rotation Blend` 활성화 → 상체 본 회전이 메시 스페이스 기준으로 블렌딩되어 팔 방향 안정화
+- 사격 시스템 로직은 변경하지 않고 애니메이션 레벨에서 문제 해결 (몽타주/커브 수정)
+- 애셋 교체 없이 기존 애니메이션 튜닝으로 해결 → 향후 Aim Spread 도입 시 재검토
+
+---
+
+### 미완료 / 보류
+- 정밀 정렬은 Aim Spread 적용 이후 재평가
+
+---
+
+### 구조적 메모 (선택)
+- `Layered Blend Per Bone`에서 `Mesh Space Rotation Blend`는 상체 에임 블렌딩 시 거의 필수 — 비활성화하면 본 체인 누산으로 팔 방향이 틀어짐
+- 총구 방향 불일치는 발사 로직이 아닌 애니메이션 레이어 설정에서 비롯될 수 있음
+
+---
+
+### ▶ 내일 할 일 (최대 3개)
+- Hit Impact VFX/사운드
+- Enemy 피격/사망 처리
+- Camera Shake (발사/피격)
+
+---
+
+---
+
+## 📅 2026-03-07
+
+### 🎯 오늘 목표 (최대 3개)
+- 사격 시 Fire Montage 재생 구현
+
+---
+
+### 완료한 작업
+
+**[Fire Montage 연동]**
+- `ATDPlayerCharacter::OnFirePressed()`에 `Montage_Play(FireMontage)` 호출 추가
+- `FireMontage` 변수(`EditDefaultsOnly`)는 기존 헤더에 이미 선언되어 있었으므로 CPP만 수정
+- AnimGraph 구조: Locomotion → UpperBody Slot → LayeredBlendPerBone(Spine1) — 상체만 사격, 하체 Locomotion 유지
+- `BP_TDPlayerCharacter` → Fire Montage 슬롯에 `AM_Pistol_Fire` 할당, 정상 재생 확인
+
+---
+
+### 발생한 문제
+- Idle → Fire 시작 포즈 차이가 커서 팝핑 현상 발생 → 현재 `AM_Pistol_Fire` 에셋 교체 필요
+
+---
+
+### 해결 방법 / 결정 사항
+- 코드 구조는 확정. 애니메이션 에셋만 교체하면 해결 가능
+
+---
+
+### 미완료 / 보류
+- Fire Montage 에셋 교체 (Idle 포즈와 시작 포즈가 연속적인 애니메이션으로)
+
+---
+
+### 구조적 메모 (선택)
+- 몽타주 재생은 `OnFirePressed()`에서 처리 — 발사 입력과 동일 타이밍, Tick 불필요
+- UpperBody Slot + LayeredBlendPerBone(Spine1) 구조에서 상체 몽타주는 코드 추가 없이 동작
+
+---
+
+### ▶ 내일 할 일 (최대 3개)
+- Fire Montage 에셋 교체
+- Hit Impact VFX/사운드
+- Enemy 피격/사망 처리
 
 ---
 

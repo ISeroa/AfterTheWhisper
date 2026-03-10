@@ -207,6 +207,12 @@ void ATDPlayerCharacter::Tick(float DeltaTime)
 void ATDPlayerCharacter::OnFirePressed()
 {
     if (CurrentWeapon) CurrentWeapon->SetTriggerHeld(true);
+
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    if (AnimInstance && FireMontage)
+    {
+        AnimInstance->Montage_Play(FireMontage);
+    }
 }
 
 void ATDPlayerCharacter::OnFireReleased()

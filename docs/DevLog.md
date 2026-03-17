@@ -6,6 +6,69 @@
 
 ---
 
+## 📅 2026-03-17
+
+### 🎯 오늘 목표 (최대 3개)
+- AnimNotify 기반 발사 경로 구축 및 중복 발사 문제 해결
+
+---
+
+### 완료한 작업
+
+**[UAnimNotify_Fire 클래스 신규 구현]**
+- `UAnimNotify_Fire` 클래스 생성 (`Public/Animation/`, `Private/Animation/`)
+- `Notify()` 오버라이드 — `MeshComp->GetOwner()`로 `ATDPlayerCharacter` 캐스팅 후 `OnFireNotify()` 호출
+
+**[ATDPlayerCharacter::OnFireNotify() 추가]**
+- `CurrentWeapon` null 가드 후 `CurrentWeapon->Fire()` 호출
+- `OnReloadPressed()`와 동일한 패턴으로 작성
+
+**[ATDWeaponBase::Fire() 추가]**
+- `FireOnce()`가 `protected`라 외부 접근 불가 → public 래퍼 `Fire()` 추가
+- `CanFire()` 체크는 `FireOnce()` 내부에 이미 존재하므로 중복 추가 없음
+
+**[중복 발사 문제 해결]**
+- 원인: `OnFirePressed()`에서 `SetTriggerHeld(true)` → 내부 `FireOnce()` 즉시 호출, 동시에 몽타주 Notify → `Fire()` 호출로 1입력에 2발사 발생
+- 해결: `OnFirePressed()`에서 `SetTriggerHeld(true)` 제거, `IsReloading()` 체크 후 몽타주 재생만 처리
+- `OnFireReleased()`에서 `SetTriggerHeld(false)` 제거
+- 실제 발사는 `AnimNotify_Fire → OnFireNotify() → Fire()` 단일 경로로 통일
+
+**[단발 사격 동작 확인]**
+- AnimNotify 경로 단발 발사 정상 동작 확인
+
+---
+
+### 발생한 문제
+
+| 문제 | 원인 |
+|---|---|
+| 1입력에 2발 발사 | `SetTriggerHeld(true)` 내부 즉시 발사 + Notify 발사가 동시에 살아있었음 |
+
+---
+
+### 해결 방법 / 결정 사항
+- 입력 처리는 몽타주 재생만 담당, 실제 발사는 Notify에서만 처리하는 구조로 확정
+- `SetTriggerHeld` / `StartFireLoop` / `StopFireLoop`는 이 경로에서 제거 — 연사는 차후 몽타주 루프에 위임 예정
+
+---
+
+### 미완료 / 보류
+- 연사 구현 — 몽타주 루프 기반으로 Notify를 통해 반복 발사하는 구조 (차후 작업 예정)
+
+---
+
+### 구조적 메모
+- `FireOnce()`는 protected → 외부에서 직접 발사가 필요하면 public `Fire()` 래퍼 경유
+- AnimNotify 기반 발사 구조에서는 입력 처리 쪽에서 직접 발사 호출이 없어야 중복이 사라짐
+- 발사 가능 여부 확인(`IsReloading()`)은 입력 시점에 유지 — 불필요한 몽타주 재생 방지
+
+---
+
+### ▶ 다음 작업 계획
+- 연사 구현 (몽타주 루프 + Notify 반복 발사)
+
+---
+
 ## 📅 2026-03-10
 
 ### 🎯 오늘 목표 (최대 3개)

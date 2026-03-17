@@ -228,6 +228,14 @@ void ATDPlayerCharacter::OnReloadPressed()
     }
 }
 
+void ATDPlayerCharacter::OnFireNotify()
+{
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->Fire();
+    }
+}
+
 void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);

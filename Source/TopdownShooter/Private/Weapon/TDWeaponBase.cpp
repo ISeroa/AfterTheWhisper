@@ -495,6 +495,11 @@ void ATDWeaponBase::PlayWeaponSfx(USoundBase* Sound, FName AttachSocket)
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
 }
 
+void ATDWeaponBase::Fire()
+{
+	FireOnce();
+}
+
 void ATDWeaponBase::FireOnce()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Ammo=%d Reloading=%d"), AmmoInMag, bIsReloading);

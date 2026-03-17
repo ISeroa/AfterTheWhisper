@@ -41,6 +41,7 @@ public:
 
 	void SetTriggerHeld(bool bHeld);
 	void SetAimTarget(const FVector& InAimTarget) { AimTarget = InAimTarget; }
+	void Fire();
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	int32 GetAmmoInMag()  const { return AmmoInMag; }

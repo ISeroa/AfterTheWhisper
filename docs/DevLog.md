@@ -6,6 +6,77 @@
 
 ---
 
+## 📅 2026-04-02
+
+### 🎯 오늘 목표
+- AnimNotify 종속 발사 구조를 제거하고 Weapon 코드 기반으로 복구
+
+---
+
+### 완료한 작업
+
+**[1차 시도: AnimNotify → Weapon 발사 복구 (단순 복귀)]**
+- `OnFirePressed()`에서 `SetTriggerHeld(true)` 호출로 즉시 발사 처리
+- `OnFireReleased()`에서 `SetTriggerHeld(false)` 호출
+- `AnimNotify_Fire::Notify()` → no-op으로 전환
+- 몽타주 재생은 `OnFirePressed()` 시점에 `CanFire` 조건 체크 후 재생
+
+**[문제 인식: 몽타주 속도 vs FireRate 불일치]**
+- 데이터에셋의 `FireRate`가 몽타주 재생 속도보다 빠른 경우 발사가 정상 적용되지 않는 케이스 확인
+- 몽타주 중복 재생 방지 로직(`Montage_IsPlaying`)이 오히려 발사 속도를 억제할 수 있음
+- 결론: 몽타주 재생 시점에서 발사 판단을 하면 안 됨 → 몽타주와 발사 로직을 완전히 분리해야 함
+
+**[2차 수정: 완전 데이터 기반 분리 구조로 확정]**
+
+`FTDWeaponStats`에 `bIsAutomatic` 추가 (`TDWeaponPresetDA.h`):
+- 단발/연사 구분을 데이터로 관리
+
+`ATDWeaponBase` 에 `StartFire()` / `StopFire()` API 추가:
+- `StartFire()`: `FireOnce()` 즉시 호출, `bIsAutomatic == true`일 때만 `StartFireLoop()` 실행
+- `StopFire()`: `StopFireLoop()` 호출
+- `SetTriggerHeld()`: `StartFire`/`StopFire` 위임으로 하위 호환 유지
+
+`OnWeaponFired` delegate 추가 (`ATDWeaponBase`):
+- `FireOnce()` 성공(탄약 소비 + 라인트레이스 완료) 직후 broadcast
+- Weapon ↔ AnimBP 직접 결합 없이 몽타주 트리거 전달
+
+`ATDPlayerCharacter::HandleWeaponFired()` 추가:
+- `OnWeaponFired` 수신 시 `Montage_IsPlaying` 체크 후 `Montage_Play`
+- 단발: 매 발사마다 몽타주 재생 (미재생 상태이므로 항상 실행)
+- 연사: 첫 발만 재생, 이후 루프 중 이미 재생 중이면 skip
+
+`AnimNotify_Fire::Notify()` → 완전 no-op 확정:
+- 클래스 유지 (애니메이션 에셋 참조 보존), 발사 처리 없음
+
+---
+
+### 발생한 문제
+
+| 문제 | 원인 | 해결 |
+|---|---|---|
+| 1차 복귀 시 연사속도 불일치 | 몽타주 중복 재생 방지가 FireRate보다 느린 경우 발사 억제 | 몽타주-발사 완전 분리, delegate 경유 |
+
+---
+
+### 해결 방법 / 결정 사항
+- **발사 로직과 몽타주는 완전히 독립** — 발사는 `FireRate` 타이머가 제어, 몽타주는 `OnWeaponFired` delegate 수신 후 연출 전용으로만 재생
+- `bIsAutomatic`으로 단발/연사를 데이터에서 구분, 코드 분기 최소화
+- AnimNotify는 앞으로 머즐플래시·탄피 등 순수 비주얼 전용 notify로만 사용
+
+---
+
+### 구조적 메모
+- `FireOnce()` 성공 기준: `CanFire()` 통과 후 탄약 감소 + 라인트레이스 완료 시점 → 이 시점에 `OnWeaponFired.Broadcast()`
+- 몽타주 재생 책임: `ATDPlayerCharacter::HandleWeaponFired()` 단일 진입점
+- `Montage_IsPlaying` 체크는 연사 중 중복 재생 방지 + 단발에서 자연스러운 재생 보장을 동시에 처리
+
+---
+
+### ▶ 다음 작업 계획
+- Hit Impact / Hit Marker 구현
+
+---
+
 ## 📅 2026-03-17
 
 ### 🎯 오늘 목표 (최대 3개)

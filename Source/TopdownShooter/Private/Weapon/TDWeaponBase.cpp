@@ -68,6 +68,7 @@ void ATDWeaponBase::SetPartsFromPreset(UTDWeaponPresetDA* Preset, bool bClearMis
 	Range = Preset->Stats.Range;
 	Damage = Preset->Stats.Damage;
 	SpreadDeg = Preset->Stats.SpreadDeg;
+	bIsAutomatic = Preset->Stats.bIsAutomatic;
 	MagazineSize = Preset->Stats.MagazineSize;
 	ReloadTime = Preset->Stats.ReloadTime;
 	MuzzleSocketName = Preset->MuzzleSocketName;
@@ -353,19 +354,26 @@ void ATDWeaponBase::SpawnMuzzleFlash()
 }
 
 
-void ATDWeaponBase::SetTriggerHeld(bool bHeld)
+void ATDWeaponBase::StartFire()
 {
-	bTriggerHeld = bHeld;
-
-	if (bTriggerHeld)
+	bTriggerHeld = true;
+	FireOnce();
+	if (bIsAutomatic)
 	{
-		FireOnce();
 		StartFireLoop();
 	}
-	else
-	{
-		StopFireLoop();
-	}
+}
+
+void ATDWeaponBase::StopFire()
+{
+	bTriggerHeld = false;
+	StopFireLoop();
+}
+
+void ATDWeaponBase::SetTriggerHeld(bool bHeld)
+{
+	if (bHeld) StartFire();
+	else StopFire();
 }
 
 
@@ -578,4 +586,5 @@ void ATDWeaponBase::FireOnce()
 		);
 	}
 
+	OnWeaponFired.Broadcast();
 }

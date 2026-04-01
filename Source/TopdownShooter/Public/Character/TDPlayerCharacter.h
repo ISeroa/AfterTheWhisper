@@ -136,6 +136,9 @@ private:
 	UFUNCTION()
 	void HandleHealthChanged(float NewHealth, float Delta);
 
+	UFUNCTION()
+	void HandleWeaponFired();
+
 	void TestDamage();
 	void UpdateAimRotationFromPoint(float DeltaTime, const FVector& AimPoint);
 

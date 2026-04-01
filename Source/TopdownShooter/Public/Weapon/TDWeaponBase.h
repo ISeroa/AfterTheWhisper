@@ -30,6 +30,7 @@ struct FWeaponPartSpec
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, AmmoInMag, int32, MagazineSize);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReloadUIStart, float, Duration);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReloadUIStop);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFired);
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDWeaponBase : public AActor
@@ -39,6 +40,8 @@ class TOPDOWNSHOOTER_API ATDWeaponBase : public AActor
 public:	
 	ATDWeaponBase();
 
+	void StartFire();
+	void StopFire();
 	void SetTriggerHeld(bool bHeld);
 	void SetAimTarget(const FVector& InAimTarget) { AimTarget = InAimTarget; }
 	void Fire();
@@ -81,6 +84,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
 	FOnAmmoChanged OnAmmoChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
+	FOnWeaponFired OnWeaponFired;
 
 	
 
@@ -197,5 +203,6 @@ private:
 	FTimerHandle Timerhandle_FireLoop;
 	FTimerHandle Timerhandle_Reload;
 	bool bTriggerHeld = false;
+	bool bIsAutomatic = false;
 	FVector AimTarget = FVector::ZeroVector;
 };

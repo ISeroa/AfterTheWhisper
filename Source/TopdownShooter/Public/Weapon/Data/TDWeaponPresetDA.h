@@ -56,6 +56,9 @@ struct FTDWeaponStats
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Fire")
 	float SpreadDeg = 0.f;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Fire")
+	bool bIsAutomatic = false;
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Ammo")
 	int32 MagazineSize = 12;
 

@@ -129,6 +129,11 @@ void ATDPlayerCharacter::BeginPlay()
         {
             AmmoWidget->HandleAmmoChanged(CurrentWeapon->GetAmmoInMag(), CurrentWeapon->GetMagazineSize());
         }
+
+        if (CurrentWeapon)
+        {
+            CurrentWeapon->OnWeaponFired.AddDynamic(this, &ATDPlayerCharacter::HandleWeaponFired);
+        }
     }
 
     if (StatusHUDClass)
@@ -207,27 +212,13 @@ void ATDPlayerCharacter::Tick(float DeltaTime)
 void ATDPlayerCharacter::OnFirePressed()
 {
     if (!CurrentWeapon) return;
-
-    const bool bCanFire = !CurrentWeapon->IsReloading() && CurrentWeapon->GetAmmoInMag() > 0;
-
-    CurrentWeapon->SetTriggerHeld(true);
-
-    if (bCanFire)
-    {
-        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-        if (AnimInstance && FireMontage && !AnimInstance->Montage_IsPlaying(FireMontage))
-        {
-            AnimInstance->Montage_Play(FireMontage);
-        }
-    }
+    CurrentWeapon->StartFire();
 }
 
 void ATDPlayerCharacter::OnFireReleased()
 {
-    if (CurrentWeapon)
-    {
-        CurrentWeapon->SetTriggerHeld(false);
-    }
+    if (!CurrentWeapon) return;
+    CurrentWeapon->StopFire();
 }
 
 void ATDPlayerCharacter::OnReloadPressed()
@@ -351,6 +342,15 @@ void ATDPlayerCharacter::UpdateAimRotationFromPoint(float DeltaTime, const FVect
 void ATDPlayerCharacter::TestDamage()
 {
     UGameplayStatics::ApplyDamage(this, 10.f, GetController(), this, UDamageType::StaticClass());
+}
+
+void ATDPlayerCharacter::HandleWeaponFired()
+{
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    if (AnimInstance && FireMontage && !AnimInstance->Montage_IsPlaying(FireMontage))
+    {
+        AnimInstance->Montage_Play(FireMontage);
+    }
 }
 
 void ATDPlayerCharacter::HandleHealthChanged(float NewHealth, float Delta)

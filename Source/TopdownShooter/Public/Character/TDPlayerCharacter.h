@@ -27,8 +27,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	ATDWeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }
 
-	void OnFireNotify();
-	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

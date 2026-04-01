@@ -206,17 +206,28 @@ void ATDPlayerCharacter::Tick(float DeltaTime)
 
 void ATDPlayerCharacter::OnFirePressed()
 {
-    if (!CurrentWeapon || CurrentWeapon->IsReloading()) return;
+    if (!CurrentWeapon) return;
 
-    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-    if (AnimInstance && FireMontage)
+    const bool bCanFire = !CurrentWeapon->IsReloading() && CurrentWeapon->GetAmmoInMag() > 0;
+
+    CurrentWeapon->SetTriggerHeld(true);
+
+    if (bCanFire)
     {
-        AnimInstance->Montage_Play(FireMontage);
+        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+        if (AnimInstance && FireMontage && !AnimInstance->Montage_IsPlaying(FireMontage))
+        {
+            AnimInstance->Montage_Play(FireMontage);
+        }
     }
 }
 
 void ATDPlayerCharacter::OnFireReleased()
 {
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->SetTriggerHeld(false);
+    }
 }
 
 void ATDPlayerCharacter::OnReloadPressed()
@@ -224,16 +235,6 @@ void ATDPlayerCharacter::OnReloadPressed()
     if (CurrentWeapon)
     {
         CurrentWeapon->RequestReload();
-    }
-}
-
-void ATDPlayerCharacter::OnFireNotify()
-{
-    UE_LOG(LogTemp, Warning, TEXT("Fire Notify Triggered"));
-    
-    if (CurrentWeapon)
-    {
-        CurrentWeapon->Fire();
     }
 }
 

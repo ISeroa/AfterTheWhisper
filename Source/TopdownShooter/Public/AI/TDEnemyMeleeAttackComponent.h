@@ -16,6 +16,9 @@ public:
 	// 쿨다운 중이거나 AttackRange 밖이면 무시.
 	void TryAttack(AActor* Target);
 
+	// 사망 시 진행 중인 윈드업/쿨다운 타이머 즉시 정리
+	void StopAttack();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	float AttackRange = 150.f;
 

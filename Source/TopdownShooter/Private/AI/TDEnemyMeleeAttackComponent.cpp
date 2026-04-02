@@ -79,3 +79,11 @@ void UTDEnemyMeleeAttackComponent::ResetCooldown()
 {
 	bOnCooldown = false;
 }
+
+void UTDEnemyMeleeAttackComponent::StopAttack()
+{
+	GetWorld()->GetTimerManager().ClearTimer(WindupTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+	PendingTarget = nullptr;
+	bOnCooldown = false;
+}

@@ -25,7 +25,8 @@
 ### 3) Enemy (1종이라도 '게임'처럼)
 - [x] Enemy 이동 AI (ATDEnemyAIController — DirectChase + Encircle 슬롯 분산)
 - [x] Enemy Attack — 근접 공격 (UTDEnemyMeleeAttackComponent: DistSquared + WindupTime + Cooldown + ApplyDamage)
-- [ ] 피격/사망 처리 (HealthComponent 공용화)
+- [x] 사망 처리 — Enemy Death System (Ragdoll + DeathMode 분기) 구현 완료
+- [ ] 피격 피드백 (적 플래시/히트 리액션)
 - [ ] 스폰 5~10마리에도 프레임 안정 (Tick 최소화)
 
 ### 4) Minimal UI & Flow

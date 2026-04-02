@@ -24,5 +24,5 @@ protected:
 
 public:	
 	UFUNCTION()
-	void HandleDeath();
+	virtual void HandleDeath();
 };

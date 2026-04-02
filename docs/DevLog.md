@@ -6,6 +6,71 @@
 
 ---
 
+## 📅 2026-04-03
+
+### 🎯 오늘 목표
+- Enemy Death System 구현 — Ragdoll 전환 + 방향성 Impulse + 지연 제거
+- 향후 다른 사망 처리 방식 추가를 위한 DeathMode 분기 구조 추가
+
+---
+
+### 완료한 작업
+
+**[ATDBaseCharacter — HandleDeath virtual 전환]**
+- `HandleDeath()` 에 `virtual` 추가
+- `ATDEnemyCharacter`에서 override 시 AddDynamic 재바인딩 없이 자동으로 파생 버전 호출
+
+**[ATDEnemyCharacter — HandleDeath override 구현]**
+- `TakeDamage()` override: `FPointDamageEvent::ShotDirection` 에서 발사 방향 직접 추출 → `LastHitDirection` 저장
+- `HandleDeath()` override 구현:
+  - AI 중단: `GetController()->UnPossess()` → `ATDEnemyAIController::OnUnPossess()` 에서 RepathTimer 자동 해제
+  - 근접 공격 중단: `MeleeAttackComp->StopAttack()`
+  - 이동 중단: `DisableMovement()`
+  - 캡슐 충돌 비활성화
+  - Mesh `SimulatePhysics(true)` + `LastHitDirection` 기반 `AddImpulseToAllBodiesBelow`
+  - `SetLifeSpan(RagdollLifeTime)` 지연 제거
+
+**[UTDEnemyMeleeAttackComponent — StopAttack() 추가]**
+- `WindupTimerHandle` / `CooldownTimerHandle` 즉시 클리어
+- `PendingTarget` null, `bOnCooldown = false` 초기화
+- 사망 시 윈드업 진행 중 데미지 판정 방지
+
+**[ETDEnemyDeathMode enum + DeathMode 분기 추가]**
+- `ETDEnemyDeathMode`: `Ragdoll` / `Animation` / `ImmediateDestroy`
+- `ATDEnemyCharacter` 에 `UPROPERTY(EditDefaultsOnly)` 로 `DeathMode` 프로퍼티 추가 (기본값: `Ragdoll`)
+- `HandleDeath()` 내부에서 `switch(DeathMode)` 분기
+- `Animation` / `ImmediateDestroy` 는 placeholder 수준 (TODO)
+
+---
+
+### 발생한 문제
+
+| 문제 | 원인 | 해결 |
+|---|---|---|
+| UFUNCTION override 에러 | 파생 클래스에서 부모 UFUNCTION override 시 `UFUNCTION()` 재선언 불가 | 파생 클래스 선언에서 `UFUNCTION()` 제거 |
+| `Engine/DamageEvents.h` 없음 | UE 4.27에 존재하지 않는 경로 | `Engine/EngineTypes.h` 로 교체 (`FPointDamageEvent` 실제 선언 위치) |
+
+---
+
+### 해결 방법 / 결정 사항
+- 방향 추출은 `FPointDamageEvent::ShotDirection` 직접 사용 — 별도 데미지 시스템 수정 없이 무기 발사 방향 그대로 활용
+- DeathMode 분기는 DataAsset 없이 `EditDefaultsOnly` enum으로 BP 타입별 설정 가능하게 유지
+- AI 중단은 `UnPossess()` 단일 호출로 충분 — 컨트롤러 OnUnPossess에서 타이머 자동 정리
+
+---
+
+### 구조적 메모
+- `HandleDeath()`의 공통 처리(AI 중단/이동 중단/캡슐 비활성화)는 switch 바깥에 위치 — 모든 DeathMode에서 실행
+- `SetLifeSpan`은 switch 안에서 mode별로 호출 — mode마다 지연 시간이 다를 수 있으므로
+- Physics Asset + Mesh Collision Preset(`Ragdoll` 또는 `PhysicsActor`) 이 없으면 래그돌 무반응 — BP에서 확인 필요
+
+---
+
+### ▶ 다음 작업 계획
+- Hit Impact / Hit Marker / 피격 피드백
+
+---
+
 ## 📅 2026-04-02
 
 ### 🎯 오늘 목표

@@ -23,6 +23,7 @@ systems
  │
  ├ gameplay
  │   ├ Aim-System.md
+ │   ├ Death-System.md
  │   └ Inventory-Loot-System.md
  │
  ├ ui

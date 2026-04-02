@@ -18,7 +18,8 @@ Enemy System은 게임 내 적 캐릭터의 행동, 전투, 이동 전략을 구
 Enemy-System
  ├ EnemyAISystem.md
  ├ EnemyEncircleMovement.md
- └ EnemyAttackSystem.md (future / partially implemented)
+ ├ EnemyAttackSystem.md (future / partially implemented)
+ └ → Death-System.md (docs/systems/gameplay/)
 ```
 
 각 문서의 역할:
@@ -62,6 +63,24 @@ AIController 및 Behavior 로직이 이 영역에 해당한다.
 - 원거리 공격
 - 공격 애니메이션
 - 히트 리액션
+
+---
+
+### Death-System.md (`docs/systems/gameplay/`)
+적의 **사망 처리**를 담당한다.
+
+현재 구현:
+
+- Ragdoll 전환 (SimulatePhysics + 방향성 Impulse)
+- AI / 이동 / 공격 타이머 즉시 중단
+- `ETDEnemyDeathMode` 분기 구조 (Ragdoll / Animation / ImmediateDestroy)
+- BP `EditDefaultsOnly` 로 적 타입별 사망 방식 설정 가능
+
+향후 확장:
+
+- Animation case 구현
+- Dissolve 효과
+- Loot Drop 연결
 
 ---
 

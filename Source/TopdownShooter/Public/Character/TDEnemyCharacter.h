@@ -6,6 +6,14 @@
 
 class UTDEnemyMeleeAttackComponent;
 
+UENUM(BlueprintType)
+enum class ETDEnemyDeathMode : uint8
+{
+	Ragdoll,          // 물리 기반 래그돌 (현재 구현)
+	Animation,        // 사망 애니메이션 재생 (미구현)
+	ImmediateDestroy, // 즉시 제거 (미구현)
+};
+
 UCLASS()
 class TOPDOWNSHOOTER_API ATDEnemyCharacter : public ATDBaseCharacter
 {
@@ -16,6 +24,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UTDEnemyMeleeAttackComponent* MeleeAttackComp = nullptr;
+
+	// 이 적의 사망 처리 방식 (BP에서 적 타입별로 설정)
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	ETDEnemyDeathMode DeathMode = ETDEnemyDeathMode::Ragdoll;
 
 	// 래그돌 임펄스 세기 (BP에서 튜닝)
 	UPROPERTY(EditDefaultsOnly, Category = "Death")

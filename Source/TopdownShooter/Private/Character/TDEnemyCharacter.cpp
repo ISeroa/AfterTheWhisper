@@ -59,25 +59,38 @@ void ATDEnemyCharacter::HandleDeath()
 		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
-	// Ragdoll 전환
-	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	switch (DeathMode)
 	{
-		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		MeshComp->SetAllBodiesSimulatePhysics(true);
-		MeshComp->SetSimulatePhysics(true);
-		MeshComp->WakeAllRigidBodies();
-		MeshComp->bBlendPhysics = true;
-
-		if (!LastHitDirection.IsNearlyZero())
+	case ETDEnemyDeathMode::Ragdoll:
+		if (USkeletalMeshComponent* MeshComp = GetMesh())
 		{
-			MeshComp->AddImpulseToAllBodiesBelow(
-				LastHitDirection * RagdollImpulseStrength,
-				NAME_None,
-				/*bVelChange=*/false,
-				/*bIncludeSelf=*/true
-			);
-		}
-	}
+			MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			MeshComp->SetAllBodiesSimulatePhysics(true);
+			MeshComp->SetSimulatePhysics(true);
+			MeshComp->WakeAllRigidBodies();
+			MeshComp->bBlendPhysics = true;
 
-	SetLifeSpan(RagdollLifeTime);
+			if (!LastHitDirection.IsNearlyZero())
+			{
+				MeshComp->AddImpulseToAllBodiesBelow(
+					LastHitDirection * RagdollImpulseStrength,
+					NAME_None,
+					/*bVelChange=*/false,
+					/*bIncludeSelf=*/true
+				);
+			}
+		}
+		SetLifeSpan(RagdollLifeTime);
+		break;
+
+	case ETDEnemyDeathMode::Animation:
+		// TODO: 사망 애니메이션 재생
+		SetActorHiddenInGame(true);
+		SetLifeSpan(2.f);
+		break;
+
+	case ETDEnemyDeathMode::ImmediateDestroy:
+		Destroy();
+		break;
+	}
 }

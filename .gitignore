@@ -497,5 +497,7 @@ FodyWeavers.xsd
 GenerateSln.bat
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,unrealengine
-.claude/
+.claude/*
+!.claude/instructions.md
+/.idea/
 /docs/.obsidian

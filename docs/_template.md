@@ -1,5 +1,8 @@
 # <System Name>
 
+<!-- 파일명은 소문자 kebab-case를 사용한다. 예: weapon-audio-system.md -->
+<!-- 아래 5개 H2 섹션을 유지하고, 추가 구분은 각 섹션 안에서 H3로 작성한다. -->
+
 ## Overview
 이 시스템의 목적과 문제 정의 (2~3줄)
 

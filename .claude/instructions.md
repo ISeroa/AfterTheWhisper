@@ -32,6 +32,29 @@ Core Design Principles:
   Instead of “Add reload system”
   → “Implement time-based reload with delegate-driven UI update”
 
+Work Unit Rules:
+
+- Each task should be a meaningful small gameplay feature unit.
+- Do not split work into trivial file/member-level changes unless explicitly requested.
+- Do not bundle multiple systems into one task.
+- A good task should be:
+  - Buildable
+  - Testable in editor or gameplay
+  - Easy to revert
+  - Suitable as a single commit candidate
+
+Good task examples:
+- Add basic player vision component
+- Add forward vision cone check
+- Add flashlight vision modifier
+- Add actor visibility query
+
+Bad task examples:
+- Add only one variable
+- Add only an empty file
+- Modify only includes
+- Implement Vision + AI + UI + Fog of War together
+
 Architecture Rules:
 
 - Weapon does NOT know about UI.
@@ -66,5 +89,8 @@ If the request is unclear:
 
 Output Format:
 - Assumptions (if needed)
-- Minimal Required Code
-- Explanation (short and technical)
+- Modified Files
+- Implementation Summary
+- How to Verify
+- Build Result
+- Next Suggested Task (only one)

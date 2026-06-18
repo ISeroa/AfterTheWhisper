@@ -1,40 +1,35 @@
 # Weapon Audio System
 
 ## Overview
-권총 기준으로 발사(실내/실외), 빈 탄창(DryFire) 사운드를 데이터 에셋(WeaponPresetDA) 기반으로 연결한다.
-탄피 impact 사운드는 WeaponBase에서 재생하지 않으며, ATDCasing OnHit에서만 재생한다.
-무기별 사운드 교체는 코드 수정 없이 DA만 교체하도록 하고, WeaponBase 변경은 최소화한다
+Weapon Preset에 저장된 발사, Dry Fire 사운드를 런타임 상황에 맞게 재생하는 시스템이다.
+무기별 사운드 교체는 코드 변경 없이 DataAsset 설정으로 처리하고, 탄피 충돌음은 `ATDCasing`이 별도로 담당한다.
 
 ## Key Decisions
-- 사운드 슬롯을 FWeaponSoundSet 구조체로 묶어 WeaponPresetDA에 보관
-    - 무기 추가/교체 시 “DA만 바꾸면 끝”인 데이터 기반 확장 구조 확보
-- 실내/실외 판정은 Phase 1에서는 수동 제공(bIsIndoor)
-    - 자동 판별(볼륨/트리거)은 Phase 2로 미루고, 지금은 동작 검증/구조 안정성을 우선
-- 사운드 재생은 PlayWeaponSfx() 단일 함수로 통일
-    - Attach(소켓) 우선 + 실패 시 Location fallback으로 재생 정책을 한 곳에 고정
+- 무기 사운드는 `FWeaponSoundSet`으로 묶어 `UTDWeaponPresetDA`에 저장한다.
+- 발사음은 `ATDPlayerController::bIsIndoor` 값에 따라 Indoor와 Outdoor 슬롯을 선택한다.
+- 사운드 재생 정책은 `ATDWeaponBase::PlayWeaponSfx()`에 모은다.
+- Fire와 Dry Fire는 Muzzle Socket 부착 재생을 우선하고 실패 시 월드 위치 재생으로 fallback한다.
+- 탄피 바닥 충돌음은 Weapon이 아니라 `ATDCasing::OnHit()`에서 재생한다.
+- 사운드는 발사 시도 또는 성공 이벤트 시점에만 재생하고 Tick으로 상태를 감시하지 않는다.
 
 ## Architecture
-- WeaponPresetDA
-    - FWeaponSoundSet(FireIndoor/FireOutdoor/DryFire/CasingDrop) 보유 — CasingDrop은 WeaponBase에서 재생하지 않음
-- WeaponBase
-    - “언제 어떤 소리를 낼지”만 결정 (탄약 체크, 실내/실외 분기)
-    - 사운드 재생 자체는 PlayWeaponSfx()에 위임
-- Environment Provider(Phase 1: 수동)
-    - bIsIndoor를 PlayerController(또는 Character)에서 제공
-    - WeaponBase는 값을 “조회”만 함 (판정 로직 직접 구현 X)
-- 재생 위치(소켓)
-    - Fire/DryFire: SCK_Muzzle
-핵심 원칙:
-- WeaponBase는 DA의 사운드 “데이터”만 읽고, 오디오 시스템의 세부 재생 정책은 모른다.
-- Tick 기반 폴링 없이, 발사 시도/성공 같은 이벤트 지점에서만 호출한다.
+- `UTDWeaponPresetDA::SoundSet`은 `FireIndoor`, `FireOutdoor`, `DryFire`, `CasingDrop` 슬롯을 가진다.
+- 발사 성공 시 Controller의 Indoor 상태를 조회하여 발사음을 선택한다.
+- 탄약이 없는 발사 시도는 Dry Fire를 재생한다.
+- `PlayWeaponSfx()`는 Muzzle 제공 컴포넌트와 Socket 존재 여부를 확인한 뒤 재생 위치를 결정한다.
+- 현재 `SoundSet.CasingDrop`은 Weapon 재생 흐름에서 사용하지 않는다.
+- 실제 탄피 충돌음과 재생 횟수 제한은 `ATDCasing`의 `ImpactSound`, `MaxImpactSounds`가 담당한다.
 
 ## Trade-offs
-- Phase 1의 실내/실외는 자동 판별이 아니라 수동 값이라, 맵에 따라 토글 관리가 필요하다.
-- 탄피 impact 사운드는 ATDCasing OnHit에서 재생하므로, 충돌 지점/타이밍은 물리에 따라 결정된다.
-- Concurrency/Attenuation은 적용 가능하지만, 상세 튜닝은 Phase 2에서 진행하는 편이 안전하다.
+- 수동 `bIsIndoor` 값은 구조 검증에는 단순하지만 Level 구역이 바뀔 때 별도 갱신이 필요하다.
+- Socket 부착음은 무기 위치를 잘 따르지만 짧은 One-shot에서는 위치 재생과 체감 차이가 작을 수 있다.
+- Preset의 `CasingDrop`과 Casing Actor의 `ImpactSound`가 함께 존재해 데이터 소유권이 혼동될 여지가 있다.
+- Concurrency와 Attenuation 설정이 부족하면 다수 무기의 동시 발사에서 소리가 혼잡해질 수 있다.
 
 ## Future
-- 실내/실외 자동 판별: 트리거/오디오 볼륨 기반으로 bIsIndoor 자동 갱신
-- Reload 사운드 확장: ReloadStart/Insert/End 슬롯 추가 + 애님 노티파이 타이밍 연동
-- 탄피 바닥 사운드: ATDCasing OnHit에서 재생 — 소재별 사운드 분기 등 튜닝은 Phase 2
-- 무기별 사운드 다양화: Fire 레이어(메카닉/테일) 또는 SoundCue/MetaSound로 확장
+- Indoor 상태 자동 판정
+- Reload Start, Insert, End 사운드
+- 표면 재질별 Casing Impact
+- Concurrency와 Attenuation 튜닝
+- 미사용 `SoundSet.CasingDrop` 슬롯 정리 여부 결정
+- 관련 문서: [[weapon-system]]

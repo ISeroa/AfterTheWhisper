@@ -15,7 +15,7 @@
 
 ## Architecture
 ### Runtime Flow
-- Visibility System이 적의 가시 상태를 결정
+- Actor Visibility System이 적의 가시 상태를 적용
   - Visible: 메쉬 표시
   - Not Visible: 메쉬 숨김(완전 비가시)
 - Enemy Audio Presence는 가시 상태와 무관하게 동작
@@ -57,3 +57,4 @@
 - 적 타입별 “시그니처 사운드” 설계 (좀비/근접 생존자/원거리 생존자)
 - 생존자 손전등/무전 사운드와 Alert Level 연동 강화
 - 플레이어 상태(체력/탄약/배터리)에 따른 연출형 Ambient 빈도 조절 (Director-lite)
+- 관련 문서: [[actor-visibility-system]], [[enemy-system]]

@@ -26,3 +26,4 @@ Base
 ## Future
 - 다양한 Extraction 조건
 - 여러 탈출 지점
+- 관련 문서: [[inventory-loot-system]], [[enemy-system]]

@@ -1,0 +1,208 @@
+{
+  "main": {
+    "id": "ec1f8da62b54b34e",
+    "type": "split",
+    "children": [
+      {
+        "id": "723f429901741d69",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "63063045a8017d9a",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "그래프 뷰"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9040d471a23a0709",
+    "type": "split",
+    "children": [
+      {
+        "id": "e8f5ef969df7ee8d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "594133a0c72f1956",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "파일 탐색기"
+            }
+          },
+          {
+            "id": "a3b331c989db0652",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "검색"
+            }
+          },
+          {
+            "id": "d012ec428cd5c43a",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "북마크"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "fb81403f601e8f8e",
+    "type": "split",
+    "children": [
+      {
+        "id": "6b0398e784f928f3",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ceb3f01ef68cb6c5",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "백링크"
+            }
+          },
+          {
+            "id": "ba72f03d433d7f03",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "나가는 링크"
+            }
+          },
+          {
+            "id": "425948176d89f5c2",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "태그"
+            }
+          },
+          {
+            "id": "56071c6e67f7b444",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "모든 속성"
+            }
+          },
+          {
+            "id": "b09b64beccea067f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "개요"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:빠른 전환기 열기": false,
+      "graph:그래프 뷰 열기": false,
+      "canvas:새 캔버스 만들기": false,
+      "daily-notes:오늘의 일일 노트 열기": false,
+      "templates:템플릿 삽입": false,
+      "command-palette:명령어 팔레트 열기": false,
+      "bases:새 베이스 생성하기": false
+    }
+  },
+  "active": "63063045a8017d9a",
+  "lastOpenFiles": [
+    "future/ally-squad-ai-system.md",
+    "future/README.md",
+    "systems/README.md",
+    "_template.md",
+    "systems/ui/ammo-indicator.md",
+    "systems/gameplay/death-system.md",
+    "systems/combat/weapon-audio-system.md",
+    "systems/combat/weapon-system.md",
+    "systems/ai/enemy-system.md",
+    "future/noise-driven-encounter-system.md",
+    "future/noise-system.md",
+    "systems/ui/reload-indicator.md",
+    "systems/ui/player-hud.md",
+    "future/interaction-system.md",
+    "future/inventory-loot-system.md",
+    "systems/ai/enemy-encircle-movement.md",
+    "systems/gameplay/aim-system.md",
+    "future/aim-modifier-system.md",
+    "future/visibility-system.md",
+    "future/actor-visibility-system.md",
+    "systems/gameplay/vision-system.md",
+    "systems/gameplay/Vision_System.md",
+    "future/loot-system.md",
+    "future/flashlight-system.md",
+    "future/enemy-alert-system.md",
+    "future/enemy-audio-presence-system.md"
+  ]
+}

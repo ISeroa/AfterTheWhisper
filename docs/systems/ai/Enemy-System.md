@@ -1,141 +1,44 @@
-# Enemy-System
+# Enemy System
 
 ## Overview
-Enemy System은 게임 내 적 캐릭터의 행동, 전투, 이동 전략을 구성하는 상위 시스템이다.
+적 캐릭터의 이동, 플레이어 추적, 근접 공격, 사망 중단 흐름을 구성하는 상위 시스템이다.
+현재 구현은 `ATDEnemyAIController`의 Timer 기반 이동과 `UTDEnemyMeleeAttackComponent`의 근접 공격을 중심으로 한다.
 
-현재 Enemy 관련 기능은 여러 개의 하위 시스템으로 분리되어 있으며,
-각 문서는 독립적으로 설계되어 있지만 전체적으로 하나의 Enemy 전투 파이프라인을 형성한다.
-
-이 문서는 Enemy 관련 시스템의 **상위 개요와 문서 인덱스 역할**을 한다.
-
----
-
-## Sub Systems
-
-현재 Enemy 시스템은 다음 문서들로 구성되어 있다.
-
-```
-Enemy-System
- ├ EnemyAISystem.md
- ├ EnemyEncircleMovement.md
- ├ EnemyAttackSystem.md (future / partially implemented)
- └ → Death-System.md (docs/systems/gameplay/)
-```
-
-각 문서의 역할:
-
-### EnemyAISystem.md
-적의 **상태 관리와 행동 선택 로직**을 담당한다.
-
-예:
-- Idle
-- Alert
-- Chase
-- Combat
-
-AIController 및 Behavior 로직이 이 영역에 해당한다.
-
----
-
-### EnemyEncircleMovement.md
-적이 플레이어를 **둘러싸는 이동 전략(Encircle)**을 정의한다.
-
-핵심 목표:
-
-- 적이 한 방향에서만 몰리지 않도록 분산
-- 플레이어 주변 슬롯 기반 포지셔닝
-- 근접 공격을 위한 위치 확보
-
----
-
-### EnemyAttackSystem.md
-적의 **공격 로직과 전투 처리**를 담당한다.
-
-현재 구현:
-
-- 근접 공격 컴포넌트
-- 공격 쿨다운
-- Windup
-- 거리 체크
-
-향후 확장:
-
-- 원거리 공격
-- 공격 애니메이션
-- 히트 리액션
-
----
-
-### Death-System.md (`docs/systems/gameplay/`)
-적의 **사망 처리**를 담당한다.
-
-현재 구현:
-
-- Ragdoll 전환 (SimulatePhysics + 방향성 Impulse)
-- AI / 이동 / 공격 타이머 즉시 중단
-- `ETDEnemyDeathMode` 분기 구조 (Ragdoll / Animation / ImmediateDestroy)
-- BP `EditDefaultsOnly` 로 적 타입별 사망 방식 설정 가능
-
-향후 확장:
-
-- Animation case 구현
-- Dissolve 효과
-- Loot Drop 연결
-
----
+## Key Decisions
+- AI 이동 갱신은 Tick이 아니라 `RepathInterval` 기반 Timer를 사용한다.
+- 이동 방식은 `ETDMovementTactic`의 `DirectChase`와 `Encircle`로 구분한다.
+- 이동 목표 계산과 `MoveToLocation()` 호출은 `ATDEnemyAIController`가 담당한다.
+- 근접 공격의 Windup, 거리 재검사, 데미지, Cooldown은 `UTDEnemyMeleeAttackComponent`가 담당한다.
+- 적 사망 시 Controller를 UnPossess하여 이동 Timer를 해제하고 공격 컴포넌트의 Timer도 중단한다.
+- Behavior Tree, AI Perception, Alert 상태는 현재 구현 범위에 포함하지 않는다.
 
 ## Architecture
+- `ATDEnemyCharacter`는 `ATDEnemyAIController`를 기본 Controller로 사용하고 `UTDEnemyMeleeAttackComponent`를 소유한다.
+- `ATDEnemyAIController::OnPossess()`는 적마다 초기 실행 시점을 분산하고 반복 Timer를 시작한다.
+- Timer가 호출하는 `UpdateMoveTarget()`은 플레이어를 조회하고 이동 전술에 맞는 목표를 계산한다.
+- `DirectChase`는 플레이어 위치를 목표로 사용한다.
+- `Encircle`은 플레이어 주변 슬롯 중 비용이 가장 낮은 위치를 선택한다.
+- 이동 요청 후 `MeleeAttackComp->TryAttack(Player)`를 호출하며, 컴포넌트가 사거리와 Cooldown을 판정한다.
+- `OnUnPossess()`는 이동 Timer와 슬롯 예약 상태를 정리한다.
+- 사망 처리는 `ATDEnemyCharacter::HandleDeath()`에서 AI, 공격, 이동을 공통 중단한 뒤 Death Mode를 적용한다.
 
-Enemy 시스템 전체 구조
-
-```
-EnemyCharacter
-      |
-      v
-EnemyAIController
-      |
-      v
-AI Decision
-      |
-      |-- Encircle Movement
-      |
-      |-- Attack Component
-      |
-      `-- State Control
+```text
+ATDEnemyCharacter
+ ├─ ATDEnemyAIController
+ │   └─ Timer → 이동 목표 계산 → MoveToLocation
+ └─ UTDEnemyMeleeAttackComponent
+     └─ 거리 확인 → Windup → 재확인 → ApplyDamage → Cooldown
 ```
 
-각 적 타입은 공통 기반 클래스를 사용한다.
-
-```
-EnemyCharacter (Base C++)
-   |
-   ├ Zombie
-   ├ Melee Survivor
-   └ Ranged Survivor
-```
-
-Blueprint 파생을 통해 적 타입을 구분한다.
-
----
-
-## Design Goals
-
-Enemy 시스템 설계 목표:
-
-- **C++ 기반 공통 로직**
-- **BP 파생으로 적 타입 분리**
-- **Encircle 기반 전투 포지셔닝**
-- **컴포넌트 기반 공격 시스템**
-- **AI 상태와 이동 전략 분리**
-
----
+## Trade-offs
+- Timer 기반 구조는 단순하고 Tick 비용을 줄이지만 상태 전이가 복잡해지면 Controller 코드가 비대해질 수 있다.
+- `GetPlayerPawn(0)` 기반 추적은 싱글플레이에는 충분하지만 멀티플레이나 Target 우선순위를 지원하지 않는다.
+- 이동 갱신과 공격 시도를 같은 Timer에서 처리하므로 두 로직에 서로 다른 갱신 빈도가 필요해지면 분리가 필요하다.
+- Behavior Tree 없이 빠르게 검증할 수 있지만 Alert, Investigate, Ranged 전투가 추가되면 명시적인 상태 구조가 필요하다.
 
 ## Future
-
-향후 Enemy 시스템 확장 예정:
-
-- Ranged Combat System
-- Damage Reaction System
-- Enemy Group Coordination
-- Threat / Aggro System
-- Advanced Navigation Behaviors
+- Enemy Alert 및 AI Perception 도입
+- 원거리 공격 방식 추가
+- Target 선택 정책
+- 다수 적 성능 점검과 Encircle 조회 최적화
+- 관련 문서: [[enemy-encircle-movement]], [[death-system]], [[enemy-alert-system]]

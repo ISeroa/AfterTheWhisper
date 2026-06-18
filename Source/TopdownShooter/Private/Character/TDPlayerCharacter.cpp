@@ -15,6 +15,7 @@
 #include "UI/Widgets/TDReloadBarWidget.h"
 #include "UI/Widgets/TDPlayerStatusHUD.h"
 #include "Components/TDHealthComponent.h"
+#include "Components/TDVisionComponent.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -48,6 +49,8 @@ ATDPlayerCharacter::ATDPlayerCharacter()
     GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
     AutoPossessPlayer = EAutoReceiveInput::Player0;
+
+    VisionComponent = CreateDefaultSubobject<UTDVisionComponent>(TEXT("VisionComponent"));
 }
 
 void ATDPlayerCharacter::BeginPlay()
@@ -203,6 +206,11 @@ void ATDPlayerCharacter::Tick(float DeltaTime)
 
     // Last Rotation is SmoothedAimPoint
     UpdateAimRotationFromPoint(DeltaTime, SmoothedAimPoint);
+
+    if (VisionComponent)
+    {
+        VisionComponent->DrawDebugVision();
+    }
     if (CurrentWeapon)
     {
         CurrentWeapon->SetAimTarget(SmoothedAimPoint);

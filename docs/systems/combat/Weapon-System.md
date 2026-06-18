@@ -1,168 +1,52 @@
-# Weapon-System
+# Weapon System
 
 ## Overview
-
-Weapon System은 플레이어가 사용하는 총기의 동작을 관리하는 핵심
-시스템이다.
-
-이 시스템은 Weapon DataAsset을 통해 무기 스펙을 정의하고, 발사, 재장전,
-사운드, 이펙트 등의 기능을 통합적으로 처리한다.
-
-Weapon System은 Aim System과 연결되어 사격 정확도와 전투 감각을
-조정한다.
-
-------------------------------------------------------------------------
+플레이어 무기의 조립, 발사, 재장전, 탄약, 사운드와 발사 효과를 관리하는 시스템이다.
+`UTDWeaponPresetDA`를 무기 설정의 단일 진실 소스로 사용하고 `ATDWeaponBase`가 런타임 동작을 수행한다.
 
 ## Key Decisions
-
--   무기 데이터는 **Weapon DataAsset**으로 관리한다
--   무기 로직은 **WeaponActor 기반 구조**를 사용한다
--   발사는 **라인 트레이스 기반 히트스캔 방식**을 사용한다
--   정확도는 **SpreadDeg** 값으로 제어한다
--   사운드 및 이펙트는 WeaponActor에서 직접 처리한다
-
-------------------------------------------------------------------------
+- 무기 설정은 `UTDWeaponPresetDA`에 모으고 스탯은 항상 `Preset->Stats`를 통해 접근한다.
+- Preset 적용과 파츠 조립은 `SetPartsFromPreset()` 흐름에서 함께 초기화한다.
+- 파츠는 `ETDWeaponSlot`을 FName으로 변환하여 `PartComps` Map에서 관리한다.
+- Muzzle 위치는 `MuzzlePrioritySlot`의 `MuzzleSocketName`을 우선 사용하고 Base Mesh를 fallback으로 사용한다.
+- 발사는 Hitscan LineTrace 방식이며 `SpreadDeg`를 방향 Cone에 적용한다.
+- 자동 발사는 Trigger 상태와 `FireRate` 기반 Timer로 처리한다.
+- 발사 성공 후 탄약과 Trace 처리를 완료한 시점에 `OnWeaponFired`를 Broadcast한다.
+- UI는 Weapon의 Ammo와 Reload Delegate를 구독한다.
 
 ## Architecture
+- `UTDWeaponPresetDA`는 `FTDWeaponStats`, Sound Set, Parts, Muzzle Flash, Muzzle Socket, Casing Class를 제공한다.
+- `ATDWeaponBase`는 Preset 값을 런타임 필드에 적용하고 파츠 컴포넌트를 조립한다.
+- `StartFire()`는 Trigger를 활성화하고 가능한 경우 즉시 발사한 뒤 반복 발사 Timer를 시작한다.
+- `StopFire()`는 Trigger와 반복 Timer를 정리한다.
+- `FireOnce()`는 탄약과 Reload 상태를 검사하고 Spread가 적용된 LineTrace로 Point Damage를 전달한다.
+- 성공한 발사는 Muzzle Flash, Casing, 발사음, Ammo Delegate, `OnWeaponFired`를 발생시킨다.
+- 탄약이 없을 때는 Dry Fire를 재생하고 Reload를 요청한다.
+- Reload는 Timer 완료 또는 `NotifyReloadFinished()`를 통해 마무리할 수 있으며 취소 시 상태와 UI Delegate를 정리한다.
 
-Weapon 시스템 전체 구조
+```text
+Fire Success
+  ├─ Ammo 감소 → OnAmmoChanged
+  ├─ LineTrace → ApplyPointDamage
+  ├─ Muzzle Flash / Casing / Fire Sound
+  └─ OnWeaponFired → Character Fire Montage
 
-    WeaponDataAsset
-          |
-          v
-    WeaponActor
-          |
-          |-- Fire Logic
-          |
-          |-- Reload Logic
-          |
-          |-- Audio System
-          |
-          |-- Visual Effects
-          |
-          `-- Casing System
-
-WeaponActor는 다음 기능을 담당한다.
-
-    Fire()
-    Reload()
-    PlayWeaponSound()
-    SpawnMuzzleFlash()
-    SpawnCasing()
-
-------------------------------------------------------------------------
-
-## Weapon Data
-
-무기 스펙은 WeaponDataAsset에서 정의된다.
-
-예시 데이터 구조
-
-    WeaponName
-    Damage
-    FireRate
-    SpreadDeg
-    MagazineSize
-    ReloadTime
-
-### SpreadDeg
-
-SpreadDeg는 발사 시 탄 퍼짐 정도를 나타낸다.
-
-Aim 상태에서는 다음과 같이 계산된다.
-
-    FinalSpread = SpreadDeg * AimSpreadMultiplier
-
-------------------------------------------------------------------------
-
-## Fire Logic
-
-무기 발사는 히트스캔(Line Trace) 방식으로 처리한다.
-
-발사 과정
-
-    Input Fire
-        |
-        v
-    WeaponActor::Fire()
-        |
-        v
-    Apply Spread
-        |
-        v
-    LineTrace
-        |
-        v
-    Damage Apply
-
-히트스캔 방식의 장점
-
--   구현 단순
--   성능 효율적
--   탑다운 슈터에 적합
-
-------------------------------------------------------------------------
-
-## Reload System
-
-재장전은 WeaponActor에서 관리된다.
-
-재장전 과정
-
-    Reload Input
-         |
-         v
-    Reload Start
-         |
-         v
-    Reload Timer
-         |
-         v
-    Ammo Refill
-
-Reload UI는 별도의 UI 시스템에서 처리한다.
-
-------------------------------------------------------------------------
-
-## Audio System
-
-무기 사운드는 WeaponActor에서 재생한다.
-
-예시
-
-    Fire Sound
-    Reload Sound
-    Empty Magazine Sound
-
-사운드는 다음 방식으로 재생된다.
-
-    PlaySoundAttached
-
-------------------------------------------------------------------------
-
-## Visual Effects
-
-무기 발사 시 다음 이펙트가 발생한다.
-
-    Muzzle Flash
-    Bullet Impact
-    Shell Casing
-
-Muzzle Flash는 Niagara 시스템을 사용한다.
-
-------------------------------------------------------------------------
+Reload
+  ├─ OnReloadUIStart(Duration)
+  ├─ Timer 또는 NotifyReloadFinished
+  ├─ Ammo 보충 → OnAmmoChanged
+  └─ OnReloadUIStop
+```
 
 ## Trade-offs
-
--   히트스캔 방식은 탄속 기반 시스템보다 현실성이 낮다.
--   Spread 기반 정확도 시스템은 단순하지만 복잡한 반동 모델에는 한계가
-    있다.
-
-------------------------------------------------------------------------
+- Hitscan은 반응성과 구현이 단순하지만 탄속과 낙차를 표현하지 않는다.
+- `ATDWeaponBase`가 발사 효과와 사운드까지 조정하므로 기능이 늘면 클래스 책임이 커질 수 있다.
+- Preset 값을 런타임 필드로 복사하면 조회는 단순하지만 Preset 변경 시 재적용 시점을 명확히 관리해야 한다.
+- Timer 기반 자동 발사는 Fire Rate를 안정적으로 유지하지만 Animation 길이와 별도로 동기화해야 한다.
 
 ## Future
-
--   Recoil System 추가
--   Projectile 기반 무기 지원
--   Weapon Attachment 시스템
--   무기 모드 (Single / Burst / Auto)
+- Hit Impact와 표면 반응
+- Recoil과 Camera Shake
+- Burst 또는 Projectile 방식
+- Reload Notify State 기반 인터럽트 정교화
+- 관련 문서: [[weapon-audio-system]], [[ammo-indicator]], [[reload-indicator]], [[aim-system]]

@@ -12,7 +12,8 @@
 ## Architecture
 - Flashlight ON → Cone Vision Range 증가
 - Flashlight OFF → 기본 시야만 유지
-- AI는 Flashlight 사용 여부에 따라 Alert 증가
+- Vision System은 Flashlight 상태가 제공하는 시야 보정값만 적용
+- Enemy Alert System은 Flashlight 상태를 별도 감지 보정 입력으로 사용
 
 ## Trade-offs
 - 현실적인 광원 계산 대신 단순 Cone Light 구조 사용
@@ -21,3 +22,4 @@
 ## Future
 - Flashlight 깜빡임
 - AI가 Flashlight 직접 인식
+- 관련 문서: [[vision-system]], [[enemy-alert-system]], [[aim-modifier-system]]

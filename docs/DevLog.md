@@ -6,6 +6,69 @@
 
 ---
 
+## 📅 2026-06-18
+
+### 🎯 오늘 목표
+- UTDVisionComponent 구현 (NearVision + ConeVision 판정 + 디버그 표시)
+
+---
+
+### 완료한 작업
+
+**[UTDVisionComponent 신규 생성]**
+- `UActorComponent` 상속, `PrimaryComponentTick.bCanEverTick = false`
+- `Public/Components/TDVisionComponent.h` / `Private/Components/TDVisionComponent.cpp` 추가
+
+**[NearVision + ConeVision 판정 구현]**
+- `IsLocationInVision(FVector)` 구현
+  - 판정 기준: Z 제거 2D 기준, sqrt 없이 DistSquared2D 사용
+  - NearVisionRadius(600) 안이면 방향 무관하게 true
+  - ConeVisionDistance(1400) 밖이면 즉시 false
+  - 콘 각도 판정: `Owner->GetActorForwardVector()` 기준 2D DotProduct ≥ cos(ConeHalfAngleDeg=45)
+  - ForwardVector / ToTarget 벡터 NearlyZero 가드 처리
+
+**[디버그 표시 구현]**
+- `DrawDebugVision()` — `ATDPlayerCharacter::Tick`에서 호출, `bDebugVision` 플래그로 제어
+  - NearVision 원: Cyan
+  - 콘 중심선: Green
+  - 콘 좌우 경계선: Yellow
+  - 콘 끝부분 호 (16 세그먼트 근사): Yellow
+  - `#if !UE_BUILD_SHIPPING` 가드
+
+**[ATDPlayerCharacter 연결]**
+- 생성자에서 `CreateDefaultSubobject<UTDVisionComponent>(TEXT("VisionComponent"))`
+- `Tick`에서 `VisionComponent->DrawDebugVision()` 호출
+
+**[vision-system.md 갱신]**
+- 현재 구현 반영: VisionRadius → NearVisionRadius, Near OR Cone 판정 규칙, 변수 테이블, 판정 순서, 디버그 색상 테이블 추가
+
+---
+
+### 발생한 문제
+
+없음.
+
+---
+
+### 해결 방법 / 결정 사항
+- ConeVision 방향 기준을 AimTarget이 아닌 `GetActorForwardVector()`로 고정 — 기존 Aim 시스템과 결합 없이 판정 로직을 먼저 안정화
+- NearVision은 방향 무관하게 통과 — 후방 근거리 대상도 인지, 현실보다 게임플레이 가독성 우선
+- 콘 끝 호는 `DrawDebugArc` 대신 수동 세그먼트 루프 사용 — 2D 평면 기준 호를 명확히 제어하기 위함
+
+---
+
+### 구조적 메모
+- `UTDVisionComponent`는 Tick 없음 — 외부에서 `IsLocationInVision()`을 호출하는 조회형 컴포넌트
+- `DrawDebugVision()`은 컴포넌트 자체 Tick이 아닌 PlayerCharacter Tick에서 호출 — Shipping 빌드에서 제외
+
+---
+
+### ▶ 다음 작업 계획
+- `IsActorVisible(const AActor*)` 추가 — Actor 위치 기반으로 `IsLocationInVision()` 재사용
+- 또는 Hit Impact / Hit Marker 구현 (Phase 1 미완료 항목)
+
+---
+
 ## 📅 2026-04-03
 
 ### 🎯 오늘 목표

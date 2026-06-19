@@ -54,6 +54,47 @@ bool UTDVisionComponent::IsLocationInVision(const FVector& WorldLocation) const
 	return DotProduct >= CosHalfAngle;
 }
 
+bool UTDVisionComponent::IsActorVisible(const AActor* TargetActor) const
+{
+	const AActor* Owner = GetOwner();
+	if (!Owner || !TargetActor) return false;
+
+	const FVector TargetLoc = TargetActor->GetActorLocation();
+
+	if (!IsLocationInVision(TargetLoc)) return false;
+
+	if (!bUseLineOfSightCheck) return true;
+
+	UWorld* World = Owner->GetWorld();
+	if (!World) return false;
+
+	const FVector OwnerLoc = Owner->GetActorLocation();
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Owner);
+
+	const bool bHit = World->LineTraceSingleByChannel(HitResult, OwnerLoc, TargetLoc, VisionTraceChannel, Params);
+	const bool bVisible = !bHit || HitResult.GetActor() == TargetActor;
+
+#if !UE_BUILD_SHIPPING
+	if (bDebugVision)
+	{
+		if (bVisible)
+		{
+			DrawDebugLine(World, OwnerLoc, TargetLoc, FColor::Green, false, -1.f, 0, 2.f);
+		}
+		else
+		{
+			DrawDebugLine(World, OwnerLoc, HitResult.ImpactPoint, FColor::Red, false, -1.f, 0, 2.f);
+			DrawDebugPoint(World, HitResult.ImpactPoint, 8.f, FColor::Red, false, -1.f);
+		}
+	}
+#endif
+
+	return bVisible;
+}
+
 void UTDVisionComponent::DrawDebugVision() const
 {
 #if !UE_BUILD_SHIPPING

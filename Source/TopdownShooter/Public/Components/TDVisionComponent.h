@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Engine/EngineTypes.h"
 #include "TDVisionComponent.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -21,6 +22,14 @@ public:
 	 */
 	bool IsLocationInVision(const FVector& WorldLocation) const;
 
+	/**
+	 * TargetActor가 시야 안에 있고 LineTrace로 가리지 않으면 true.
+	 * bUseLineOfSightCheck가 false면 위치 판정만 수행한다.
+	 * bDebugVision이 켜져 있으면 호출 시점에 Green/Red 라인을 표시한다.
+	 */
+	UFUNCTION(BlueprintPure, Category = "Vision")
+	bool IsActorVisible(const AActor* TargetActor) const;
+
 	/** bDebugVision이 켜져 있을 때 원형 및 콘 디버그 라인을 그린다. ATDPlayerCharacter::Tick에서 호출한다. */
 	void DrawDebugVision() const;
 
@@ -35,6 +44,14 @@ public:
 	/** 전방 콘 시야 반각 (도, 단방향) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vision")
 	float ConeHalfAngleDeg = 45.f;
+
+	/** true면 IsActorVisible에서 LineTrace로 장애물 가림을 추가 검사한다. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vision")
+	bool bUseLineOfSightCheck = true;
+
+	/** IsActorVisible LineTrace에 사용할 Collision Channel */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vision")
+	TEnumAsByte<ECollisionChannel> VisionTraceChannel = ECC_Visibility;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vision|Debug")
 	bool bDebugVision = false;

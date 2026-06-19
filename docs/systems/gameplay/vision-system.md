@@ -1,8 +1,8 @@
 # Vision System
 
 ## Overview
-플레이어를 기준으로 특정 위치나 Actor가 현재 시야 안에 있는지 판정하는 시스템이다.
-근거리 원형(NearVision) + 전방 콘(ConeVision) 판정, 장애물 LineTrace, Actor 단위 가시성 조회(`IsActorVisible`)까지 구현 완료된 상태다.
+플레이어를 기준으로 특정 위치나 Actor가 현재 시야 안에 있는지 판정하고, 그 결과로 Enemy의 표시·숨김을 제어하는 시스템이다.
+근거리 원형(NearVision) + 전방 콘(ConeVision) 판정, 장애물 LineTrace, Actor 단위 가시성 조회(`IsActorVisible`), 고정 배치 Enemy의 주기적 표시·숨김(`UTDActorVisibilityComponent`)까지 구현 완료된 상태다.
 
 ## Key Decisions
 - 시야 판정은 `ATDPlayerCharacter`가 소유하는 `UTDVisionComponent`에서 담당한다.
@@ -16,18 +16,20 @@
 - 콘 각도 비교는 DotProduct와 cos(ConeHalfAngleDeg) 비교로 처리한다.
 - `IsActorVisible()`은 `IsLocationInVision()`을 내부에서 호출한 뒤 `bUseLineOfSightCheck`가 켜져 있으면 LineTrace로 장애물 가림을 추가 검사한다.
 - LineTrace는 NearVision과 ConeVision 모두에 동일하게 적용된다.
+- 고정 배치 Enemy의 표시·숨김은 `UTDActorVisibilityComponent`가 담당한다. 아이템·탄피로의 확장은 미구현이다.
 - 맵 지형은 기본적으로 렌더링하며, Fog 또는 Darkness 표현은 별도 렌더링 시스템의 책임으로 둔다.
-- 적, 아이템, 탄피의 실제 표시·숨김은 별도의 Actor Visibility System이 담당한다.
 - 적 AI의 플레이어 감지는 기존 `AI Perception Component`의 책임으로 유지한다.
 
 ## Architecture
+
+### UTDVisionComponent
 - `ATDPlayerCharacter`는 생성자에서 `CreateDefaultSubobject`로 `UTDVisionComponent`를 생성한다.
-- `UTDVisionComponent`는 Tick을 사용하지 않는다(`PrimaryComponentTick.bCanEverTick = false`).
+- Tick을 사용하지 않는다(`PrimaryComponentTick.bCanEverTick = false`).
 - `DrawDebugVision()`은 `ATDPlayerCharacter::Tick`에서 호출되며, `bDebugVision` 플래그로 제어된다.
 - 디버그 표시는 `#if !UE_BUILD_SHIPPING` 가드 안에서만 실행된다.
-- 코어 컴포넌트는 외부 시스템이 필요할 때 `IsLocationInVision()`을 호출하는 조회형 구조다.
+- 외부 시스템이 필요할 때 `IsLocationInVision()` / `IsActorVisible()`을 직접 호출하는 조회형 구조다.
 
-### 변수
+#### 변수
 
 | 변수 | 기본값 | 설명 |
 |---|---|---|
@@ -38,7 +40,7 @@
 | `VisionTraceChannel` | `ECC_Visibility` | `IsActorVisible` LineTrace Collision Channel |
 | `bDebugVision` | false | 디버그 표시 활성화 |
 
-### 판정 순서 (`IsLocationInVision`)
+#### 판정 순서 (`IsLocationInVision`)
 
 ```text
 1. Owner 위치 기준 2D 거리 제곱 계산 (DistSquared2D)
@@ -48,7 +50,7 @@
 5. DotProduct(ForwardNorm2D, ToTargetNorm2D) >= cos(ConeHalfAngleDeg)  →  true
 ```
 
-### 판정 순서 (`IsActorVisible`)
+#### 판정 순서 (`IsActorVisible`)
 
 ```text
 1. Owner, TargetActor 유효성 확인
@@ -61,7 +63,7 @@
 8. 다른 Actor가 먼저 맞음 → false
 ```
 
-### 디버그 표시 색상
+#### 디버그 표시 색상
 
 | 요소 | 색상 | 조건 |
 |---|---|---|
@@ -74,16 +76,51 @@
 
 디버그 표시는 모두 `#if !UE_BUILD_SHIPPING` 가드 안에서만 실행된다.
 
+---
+
+### UTDActorVisibilityComponent
+- `ATDPlayerCharacter`가 소유하며, BeginPlay에서 레벨 내 모든 `ATDEnemyCharacter`를 `GetAllActorsOfClass`로 한 번 수집한다.
+- 같은 Owner의 `UTDVisionComponent`를 `FindComponentByClass`로 캐싱한다.
+- `VisibilityUpdateInterval`(기본 0.15초) 주기의 Timer 하나로 수집된 Enemy를 일괄 갱신한다.
+- BeginPlay에서 Timer 등록 후 `UpdateVisibility()`를 즉시 1회 호출해 초기 상태를 적용한다.
+- 이전 가시 상태와 달라졌을 때만 `SetActorHiddenInGame`을 호출한다.
+- Enemy는 `TWeakObjectPtr`로 보관하며, 갱신 시마다 유효하지 않은 항목을 목록에서 제거한다.
+- `LastVisibilityState` 초기값은 `true`(레벨 배치 Actor의 기본 상태 = visible). 첫 갱신에서 시야 밖 Enemy가 즉시 숨겨진다.
+- Tick을 사용하지 않는다(`PrimaryComponentTick.bCanEverTick = false`).
+
+#### 변수
+
+| 변수 | 기본값 | 설명 |
+|---|---|---|
+| `VisibilityUpdateInterval` | 0.15f | 가시성 갱신 주기 (초) |
+
+#### 갱신 흐름
+
+```text
+BeginPlay
+ ├─ VisionComponent 캐싱 (Owner->FindComponentByClass)
+ ├─ GetAllActorsOfClass → TrackedEnemies 수집 (LastVisibilityState 초기값 true)
+ ├─ Timer 등록 (VisibilityUpdateInterval, 반복)
+ └─ UpdateVisibility() 즉시 1회 호출
+
+UpdateVisibility (Timer 콜백)
+ └─ TrackedEnemies 역순 순회
+     ├─ 유효하지 않은 항목 → RemoveAtSwap (TrackedEnemies + LastVisibilityState 동기화)
+     └─ IsActorVisible(Enemy) != LastVisibilityState[i]
+          └─ SetActorHiddenInGame(!bVisible) + 상태 갱신
+```
+
+---
+
 ### 시스템 관계
 
 ```text
 ATDPlayerCharacter
- └─ UTDVisionComponent
-     ├─ 위치 가시성 판정 (Near OR Cone) — IsLocationInVision()
-     └─ Actor 가시성 판정 (위치 판정 + LineTrace LOS) — IsActorVisible()
-
-Actor Visibility System  [미구현]
- └─ 판정 결과를 적/아이템/탄피의 렌더링 상태에 적용
+ ├─ UTDVisionComponent
+ │   ├─ 위치 가시성 판정 (Near OR Cone) — IsLocationInVision()
+ │   └─ Actor 가시성 판정 (위치 판정 + LineTrace LOS) — IsActorVisible()
+ └─ UTDActorVisibilityComponent
+     └─ 레벨 배치 Enemy 표시·숨김 (Timer 기반 주기 갱신)
 
 FogOfWar / VisionRenderer  [미구현]
  └─ 맵의 어둠, 마스크, PostProcess 표현
@@ -97,6 +134,8 @@ AI Perception
 - NearVision은 후방의 가까운 대상도 인지하게 하므로 현실적인 시야보다 게임 플레이의 가독성을 우선한다.
 - NearVision에도 LineTrace를 적용하면 벽 뒤 대상을 숨길 수 있지만, 대상 수가 많아질수록 Trace 비용이 증가한다.
 - 조회형 구조는 불필요한 Tick을 피할 수 있지만, 표시 상태를 지속적으로 갱신할 별도 시스템이 필요하다.
+- `GetAllActorsOfClass`는 BeginPlay에서 한 번만 실행하므로, 동적으로 Spawn된 적은 자동 추가되지 않는다. 고정 배치 스테이지 구성에서는 충분하다.
+- 병렬 배열(`TrackedEnemies` + `LastVisibilityState`)은 `TMap`보다 캐시 효율이 좋으나, 두 배열이 항상 같은 인덱스를 유지해야 한다는 불변식이 있다. `RemoveAtSwap`은 항상 두 배열에 동시에 적용한다.
 - 지형 렌더링과 Gameplay Entity 가시성을 분리하면 책임은 명확해지지만 최종 화면 구현에는 별도의 Fog 및 Actor Visibility 작업이 필요하다.
 
 ## Future
@@ -104,7 +143,8 @@ AI Perception
 - 손전등 On/Off 및 시야 거리·각도 보정
 - RenderTarget 또는 PostProcess 기반 Fog of War
 - 현재 가시 상태와 탐색 완료 상태의 분리
-- Actor Visibility System을 통한 적, 아이템, 탄피 표시·숨김
+- `UTDActorVisibilityComponent`: 동적 Spawn 적 대응 (RegisterActor / UnregisterActor)
+- `UTDActorVisibilityComponent`: 아이템, 탄피로 대상 확장
 - 시야 밖 적의 Audio Presence 연동
 - 필요 시 `Vision` 전용 Collision Channel 추가
-- 관련 문서: [[actor-visibility-system]], [[flashlight-system]], [[enemy-alert-system]], [[enemy-system]], [[aim-system]]
+- 관련 문서: [[flashlight-system]], [[enemy-alert-system]], [[enemy-system]], [[aim-system]]

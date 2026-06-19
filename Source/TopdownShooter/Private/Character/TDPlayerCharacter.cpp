@@ -16,6 +16,7 @@
 #include "UI/Widgets/TDPlayerStatusHUD.h"
 #include "Components/TDHealthComponent.h"
 #include "Components/TDVisionComponent.h"
+#include "Components/TDActorVisibilityComponent.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -51,6 +52,7 @@ ATDPlayerCharacter::ATDPlayerCharacter()
     AutoPossessPlayer = EAutoReceiveInput::Player0;
 
     VisionComponent = CreateDefaultSubobject<UTDVisionComponent>(TEXT("VisionComponent"));
+    ActorVisibilityComponent = CreateDefaultSubobject<UTDActorVisibilityComponent>(TEXT("ActorVisibilityComponent"));
 }
 
 void ATDPlayerCharacter::BeginPlay()

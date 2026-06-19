@@ -10,6 +10,7 @@ class UInputComponent;
 class ATDWeaponBase;
 class UTDWeaponPresetDA;
 class UTDVisionComponent;
+class UTDActorVisibilityComponent;
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDPlayerCharacter : public ATDBaseCharacter
@@ -128,6 +129,9 @@ protected:
 	//Vision
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision")
 	UTDVisionComponent* VisionComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision")
+	UTDActorVisibilityComponent* ActorVisibilityComponent = nullptr;
 
 	//Debug
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Aim")

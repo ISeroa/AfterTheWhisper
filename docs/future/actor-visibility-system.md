@@ -12,11 +12,15 @@
 - 초기 구현에서는 매 프레임 Tick이나 Actor별 Timer 대신, Actor Visibility System이 소유하는 중앙 Timer 하나를 사용할 예정이다.
 - 초기 갱신 간격은 `0.1~0.2초` 범위에서 시작하고 실제 플레이 감각과 대상 수를 기준으로 조정할 예정이다.
 - 이전 가시 상태를 캐싱하고 상태가 달라졌을 때만 표시 상태를 변경하는 구조를 우선 사용한다.
+- 관리 대상과 이전 가시 상태는 하나의 Entry로 묶어 `TArray`에 보관할 예정이다.
+- 가시성 갱신은 관리 대상 전체 순회가 필수이므로, 단일 Actor 검색에 유리한 `TSet`이나 `TMap`보다 연속 메모리 순회에 유리한 `TArray`를 우선 사용한다.
 - 첫 구현은 `ATDEnemyCharacter` 한 종류만 대상으로 검증한 뒤 아이템과 탄피로 확장할 예정이다.
 
 ## Architecture
 - 초기 구현은 Actor Visibility System이 관리 대상으로 등록된 Actor를 보관하는 구조로 시작한다.
 - Level에 미리 배치된 적은 시작 시 한 번 수집하고, 동적으로 Spawn된 적은 `RegisterActor()`로 추가하는 방식을 우선 사용한다.
+- 각 Entry는 `TWeakObjectPtr<ATDEnemyCharacter>`, 이전 가시 상태, 첫 판정 여부를 함께 보관한다.
+- `TWeakObjectPtr`를 사용하여 Destroy된 Actor를 안전하게 감지하고, 역순 순회와 `RemoveAtSwap()`으로 유효하지 않은 Entry를 제거한다.
 - 중앙 Timer가 등록된 대상을 순회하며 `UTDVisionComponent::IsActorVisible()`을 호출할 예정이다.
 - `IsActorVisible()`은 원형·콘 시야를 먼저 검사하고, 범위 밖이면 LineTrace 없이 즉시 false를 반환한다.
 - 판정 결과가 캐싱된 상태와 다를 때만 `SetActorHiddenInGame()` 또는 Mesh의 `SetVisibility()`를 호출한다.
@@ -46,10 +50,14 @@ Actor Visibility System
 - 가시성과 Gameplay 활성 상태를 분리하면 구조가 안전하지만, 보이지 않는 적도 AI와 Collision 연산을 계속 수행한다.
 - 모든 대상을 순회하는 방식은 초기 구현에는 단순하지만 대상 수가 증가하면 공간 조회 또는 등록 범위 최적화가 필요하다.
 - 낮은 빈도의 중앙 Timer는 Actor별 Timer보다 관리와 부하 제어가 쉽지만, 한 번의 갱신 시점에 조회가 몰릴 수 있다.
+- `TArray`는 전체 순회에 적합하지만 특정 Actor의 등록 여부 확인과 제거 대상 검색은 O(N)이다. 초기 적 규모와 낮은 등록·해제 빈도에서는 단순성과 순회 효율을 우선한다.
+- 적 수가 늘어났을 때 `TMap`이나 `TSet`으로 바꾸더라도 전체 가시성 순회 횟수는 줄지 않으므로, Container 변경보다 후보 대상 수를 줄이는 방식을 우선한다.
 
 ## Future
 - 아이템과 탄피로 관리 대상 확장
-- 적 수와 Spawn 경로가 늘어나면 넓은 SphereOverlap으로 플레이어 주변 후보 목록을 자동 수집하는 구조 검토
+- 적 수와 Spawn 경로가 늘어나면 Broad Phase와 Narrow Phase로 조회 단계를 분리하는 구조 검토
+- Broad Phase는 넓은 SphereOverlap으로 플레이어 주변 Enemy만 수집하여 `TArray` 후보 목록을 갱신
+- Narrow Phase는 후보 `TArray`만 순회하며 `IsActorVisible()`과 LineTrace를 수행
 - 후보 수집 반경은 `NearVisionRadius`와 `ConeVisionDistance` 중 큰 값에 여유 거리를 더해 설정
 - 후보 수집은 `0.5~1초`, 가시성 판정은 `0.1~0.2초`처럼 서로 다른 갱신 주기로 분리 가능
 - 후보 범위를 벗어난 Actor는 숨김 처리 후 관리 목록에서 제거

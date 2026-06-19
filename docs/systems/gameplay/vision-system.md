@@ -2,8 +2,7 @@
 
 ## Overview
 플레이어를 기준으로 특정 위치나 Actor가 현재 시야 안에 있는지 판정하는 시스템이다.
-현재 구현은 근거리 원형(NearVision) + 전방 콘(ConeVision) 판정과 디버그 표시까지 완료된 상태다.
-장애물 가림(LineTrace)과 Actor 단위 조회는 후속 구현 범위다.
+근거리 원형(NearVision) + 전방 콘(ConeVision) 판정, 장애물 LineTrace, Actor 단위 가시성 조회(`IsActorVisible`)까지 구현 완료된 상태다.
 
 ## Key Decisions
 - 시야 판정은 `ATDPlayerCharacter`가 소유하는 `UTDVisionComponent`에서 담당한다.
@@ -15,7 +14,8 @@
 - 거리와 각도는 높이 차이로 인한 판정 흔들림을 줄이기 위해 2D 기준으로 계산한다.
 - 거리 비교는 sqrt 없이 DistSquared2D를 사용한다.
 - 콘 각도 비교는 DotProduct와 cos(ConeHalfAngleDeg) 비교로 처리한다.
-- LineTrace가 추가되면 NearVision과 ConeVision 모두 동일한 장애물 가림 규칙을 적용한다.
+- `IsActorVisible()`은 `IsLocationInVision()`을 내부에서 호출한 뒤 `bUseLineOfSightCheck`가 켜져 있으면 LineTrace로 장애물 가림을 추가 검사한다.
+- LineTrace는 NearVision과 ConeVision 모두에 동일하게 적용된다.
 - 맵 지형은 기본적으로 렌더링하며, Fog 또는 Darkness 표현은 별도 렌더링 시스템의 책임으로 둔다.
 - 적, 아이템, 탄피의 실제 표시·숨김은 별도의 Actor Visibility System이 담당한다.
 - 적 AI의 플레이어 감지는 기존 `AI Perception Component`의 책임으로 유지한다.
@@ -34,6 +34,8 @@
 | `NearVisionRadius` | 600.f | 방향 무관 근거리 원형 시야 반경 |
 | `ConeVisionDistance` | 1400.f | 전방 콘 최대 거리 |
 | `ConeHalfAngleDeg` | 45.f | 전방 콘 반각 (도, 단방향) |
+| `bUseLineOfSightCheck` | true | `IsActorVisible`에서 LineTrace 장애물 가림 검사 활성화 |
+| `VisionTraceChannel` | `ECC_Visibility` | `IsActorVisible` LineTrace Collision Channel |
 | `bDebugVision` | false | 디버그 표시 활성화 |
 
 ### 판정 순서 (`IsLocationInVision`)
@@ -46,21 +48,39 @@
 5. DotProduct(ForwardNorm2D, ToTargetNorm2D) >= cos(ConeHalfAngleDeg)  →  true
 ```
 
+### 판정 순서 (`IsActorVisible`)
+
+```text
+1. Owner, TargetActor 유효성 확인
+2. IsLocationInVision(TargetActor 위치) 실패 → false
+3. bUseLineOfSightCheck == false → true (LineTrace 생략)
+4. Owner 위치 → TargetActor 위치 LineTrace (VisionTraceChannel)
+5. Owner만 Ignore (FCollisionQueryParams::AddIgnoredActor)
+6. Blocking Hit 없음 → true
+7. 첫 Hit Actor == TargetActor → true
+8. 다른 Actor가 먼저 맞음 → false
+```
+
 ### 디버그 표시 색상
 
-| 요소 | 색상 |
-|---|---|
-| NearVision 원 | Cyan |
-| 콘 중심선 | Green |
-| 콘 좌우 경계선 | Yellow |
-| 콘 끝부분 호 (16 세그먼트) | Yellow |
+| 요소 | 색상 | 조건 |
+|---|---|---|
+| NearVision 원 | Cyan | `DrawDebugVision()` 호출 시 |
+| 콘 중심선 | Green | `DrawDebugVision()` 호출 시 |
+| 콘 좌우 경계선 | Yellow | `DrawDebugVision()` 호출 시 |
+| 콘 끝부분 호 (16 세그먼트) | Yellow | `DrawDebugVision()` 호출 시 |
+| LOS Trace (가시) | Green Line | `IsActorVisible()` 호출 시, visible == true |
+| LOS Trace (차단) | Red Line + Hit Point | `IsActorVisible()` 호출 시, 장애물에 가림 |
+
+디버그 표시는 모두 `#if !UE_BUILD_SHIPPING` 가드 안에서만 실행된다.
 
 ### 시스템 관계
 
 ```text
 ATDPlayerCharacter
  └─ UTDVisionComponent
-     └─ 위치의 가시성 판정 (Near OR Cone)
+     ├─ 위치 가시성 판정 (Near OR Cone) — IsLocationInVision()
+     └─ Actor 가시성 판정 (위치 판정 + LineTrace LOS) — IsActorVisible()
 
 Actor Visibility System  [미구현]
  └─ 판정 결과를 적/아이템/탄피의 렌더링 상태에 적용
@@ -80,8 +100,6 @@ AI Perception
 - 지형 렌더링과 Gameplay Entity 가시성을 분리하면 책임은 명확해지지만 최종 화면 구현에는 별도의 Fog 및 Actor Visibility 작업이 필요하다.
 
 ## Future
-- `IsActorVisible(const AActor*)` 추가 — Actor 위치 기반으로 `IsLocationInVision()` 재사용
-- 장애물 LineTrace (`bUseLineOfSightCheck`, `VisionTraceChannel = ECC_Visibility`)
 - `Owner->GetActorForwardVector()` → AimTarget 기반 시야 방향 전환
 - 손전등 On/Off 및 시야 거리·각도 보정
 - RenderTarget 또는 PostProcess 기반 Fog of War

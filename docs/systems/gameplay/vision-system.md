@@ -17,11 +17,7 @@
 - `IsActorVisible()`은 `IsLocationInVision()`을 내부에서 호출한 뒤 `bUseLineOfSightCheck`가 켜져 있으면 LineTrace로 장애물 가림을 추가 검사한다.
 - LineTrace는 NearVision과 ConeVision 모두에 동일하게 적용된다.
 - 고정 배치 Enemy의 표시·숨김은 `UTDActorVisibilityComponent`가 담당한다. 아이템·탄피로의 확장은 미구현이다.
-- 시야는 대상을 밝히는 조명이 아니라, 현재 화면에 표시될 수 있는 공간적 조건으로 정의한다.
-- 공간적 가시성은 **시야 형상 안에 있음 + 장애물에 가리지 않음**으로 판정한다.
-- 맵 지형은 기본적으로 렌더링하며, 시야 밖과 벽 뒤의 Darkness 표현은 별도 `VisionRenderer`의 책임으로 둔다.
-- `VisionRenderer`는 시야 안의 색을 밝게 보정하지 않고 시야 밖만 어둡게 한다. 시야 안의 실제 밝기는 레벨 조명과 손전등이 결정한다.
-- 조도는 초기 Actor 표시·숨김 조건에 포함하지 않는다. 어두운 시야 안의 Actor는 엔진 조명 결과에 따라 어둡게 렌더링한다.
+- 맵 지형은 기본적으로 렌더링하며, Fog 또는 Darkness 표현은 별도 렌더링 시스템의 책임으로 둔다.
 - 적 AI의 플레이어 감지는 기존 `AI Perception Component`의 책임으로 유지한다.
 
 ## Architecture

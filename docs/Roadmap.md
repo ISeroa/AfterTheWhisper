@@ -80,8 +80,6 @@
 ---
 
 ## Backlog (나중에 할것)
-- [ ] Ray Fan + PostProcess 기반 벽 가림 VisionRenderer
-- [ ] SpotLight 기반 손전등과 조도/시야 책임 분리
 - [ ] 무기 2종/3종 확장
 - [ ] 인벤토리/루팅
 - [ ] 스토리/퀘스트

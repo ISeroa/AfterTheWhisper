@@ -6,6 +6,22 @@
 
 ---
 
+## 📅 2026-06-22
+
+### 완료한 작업
+- Vision, Actor Visibility, Flashlight 설계 문서 갱신
+- Spatial Visibility와 Illumination 책임 분리
+- 동적 대상은 `InVisionShape && HasLineOfSight`로 표시하고, 실제 밝기는 Unreal 조명에 맡기는 방향 확정
+- Ray Fan + Visibility Polygon + RenderTarget/PostProcess 기반 벽 가림 표현 방향 기록
+- 조도 기반 식별은 렌더링 가시성과 분리된 Recognition 계층으로 보류
+
+### 결정 사항
+- VisionRenderer는 시야 밖만 어둡게 하며 시야 안의 SceneColor를 밝게 보정하지 않는다.
+- Flashlight는 기본적으로 Vision 범위를 생성하거나 확장하는 장치가 아니라 실제 `SpotLight` 광원으로 취급한다.
+- 초기 구현에서는 조도 임계값으로 Actor를 숨기지 않는다.
+
+---
+
 ## 📅 2026-06-18
 
 ### 🎯 오늘 목표

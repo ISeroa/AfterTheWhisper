@@ -6,6 +6,41 @@
 
 ---
 
+## 📅 2026-06-22
+
+### 🎯 오늘 목표
+- 전장의 안개 기반 작업 — 벽 가림 Visibility Polygon 계산 및 시야 차단 채널 분리
+
+---
+
+### 완료한 작업
+
+**[UTDVisionRendererComponent 신규 생성]**
+- Tick 없이 0.1초 주기 Timer로 Visibility Polygon 갱신
+- 360도 128개 균등 Ray와 콘 좌우 경계 Ray를 각도순으로 계산
+- NearVision OR ConeVision 형태에 맞춰 방향별 최대 Trace 거리 결정
+- `UTDVisionComponent`의 LOS 설정과 `VisionTraceChannel` 재사용
+- 충돌 지점 또는 최대 거리 지점을 `VisibilityPolygonPoints`에 저장
+- `bDebugVisionPolygon` 활성화 시 Orange Line으로 닫힌 폴리곤 표시
+
+**[ATDPlayerCharacter 연결]**
+- 생성자에서 `UTDVisionRendererComponent`를 Default Subobject로 생성
+
+**[시야 차단 Collision 분리]**
+- `VisionObstacle` Trace Channel 추가 — 기본 반응 Ignore
+- 벽·기둥용 `VisionOccluder` Collision Preset 추가
+- 동적 대상이 Ray Fan을 가리지 않고, 명시적으로 Block한 환경 장애물만 폴리곤을 자르도록 방향 확정
+
+---
+
+### 결정 사항
+- 시야 차단 여부는 Static/Dynamic 분류가 아니라 `VisionObstacle` 응답으로 명시한다.
+- Actor LOS와 Visibility Polygon은 `UTDVisionComponent::VisionTraceChannel`을 공유한다.
+- 오늘 범위는 Visibility Polygon 계산과 디버그 검증까지로 제한한다.
+- RenderTarget, PostProcess Material, 실제 화면 Darkness, 손전등은 다음 작업으로 남긴다.
+
+---
+
 ## 📅 2026-06-18
 
 ### 🎯 오늘 목표

@@ -214,12 +214,50 @@ ATDPlayerCharacter
  └─ UTDActorVisibilityComponent
      └─ 레벨 배치 Enemy 표시·숨김 (Timer 기반 주기 갱신)
 
-FogOfWar 화면 표현  [미구현]
- └─ Visibility Polygon → RenderTarget Mask → PostProcess Darkness
+FogOfWar / VisionRenderer  [미구현]
+ ├─ Ray Fan + Visibility Polygon으로 벽 뒤 공간 차단
+ ├─ RenderTarget + PostProcess로 시야 밖 공간을 어둡게 표현
+ └─ 시야 안의 SceneColor는 유지하여 실제 조명 결과를 보존
+
+Lighting / Flashlight  [미구현]
+ ├─ 공간의 실제 밝기와 그림자 표현
+ └─ 필요 시 대상 식별(Recognition) 보정값 제공
 
 AI Perception
  └─ 적 AI의 플레이어 감지와 Alert 처리 (별도 책임)
 ```
+
+### 시야·조명·식별 책임 분리
+
+```text
+Spatial Visibility
+ ├─ InVisionShape
+ └─ HasLineOfSight
+          ↓
+화면에 표시될 수 있는가?
+          ↓
+Lighting
+ └─ Ambient / Local Light / Flashlight
+          ↓
+실제로 얼마나 밝게 보이는가?
+          ↓
+Recognition  [필요 시 추후 구현]
+ └─ UI 표시, 조준 보정, 상호작용 또는 AI 탐지 보정
+```
+
+- `UTDVisionComponent`는 Spatial Visibility만 판정한다.
+- `UTDActorVisibilityComponent`는 Spatial Visibility 결과만 동적 대상의 렌더링 상태에 적용한다.
+- Lighting은 Unreal의 실제 광원과 그림자로 표현하며, Vision 판정이 SceneColor를 밝히지 않는다.
+- 조도 기반 Recognition이 필요해질 때 별도 계층으로 추가한다. 초기 구현에서 조도 임계값으로 Actor를 즉시 숨기지 않는다.
+
+### VisionRenderer 예정 방향
+
+- 플레이어에서 여러 방향으로 Ray를 발사하여 각 방향의 최초 장애물 충돌점을 수집한다.
+- 충돌점을 연결한 Visibility Polygon을 RenderTarget에 기록한다.
+- PostProcess Material은 Visibility Polygon 바깥을 어둡게 처리한다.
+- 시야 경계는 Material에서 부드럽게 보간하되, 벽 뒤 차단 경계가 과도하게 번지지 않게 조정한다.
+- 공간 마스크와 Actor LOS는 동일한 `VisionTraceChannel` 및 장애물 규칙을 공유한다.
+- Ray Fan은 매 프레임이 아닌 낮은 주기로 갱신하고, 화면 전환은 보간하는 방향을 우선 검토한다.
 
 ## Trade-offs
 - `Owner->GetActorForwardVector()`는 AimTarget보다 플레이 의도를 덜 정확하게 반영하지만, 기존 Aim System과의 결합 없이 판정 로직을 먼저 안정화할 수 있다.
@@ -229,15 +267,14 @@ AI Perception
 - `GetAllActorsOfClass`는 BeginPlay에서 한 번만 실행하므로, 동적으로 Spawn된 적은 자동 추가되지 않는다. 고정 배치 스테이지 구성에서는 충분하다.
 - 병렬 배열(`TrackedEnemies` + `LastVisibilityState`)은 `TMap`보다 캐시 효율이 좋으나, 두 배열이 항상 같은 인덱스를 유지해야 한다는 불변식이 있다. `RemoveAtSwap`은 항상 두 배열에 동시에 적용한다.
 - 지형 렌더링과 Gameplay Entity 가시성을 분리하면 책임은 명확해지지만 최종 화면 구현에는 별도의 Fog 및 Actor Visibility 작업이 필요하다.
-- Ray Fan은 고정 개수의 Trace를 주기적으로 실행하므로 `RayCount`와 `UpdateInterval`은 실제 맵 복잡도에서 프로파일링해야 한다.
-- `VisionObstacle`은 물체의 Static/Dynamic 여부가 아니라 게임적으로 시야를 막는지에 따라 Block/Ignore를 설정한다. 닫힌 문처럼 동적이지만 시야를 막는 대상은 Block이 필요하다.
-- Actor LOS와 Visibility Polygon이 서로 다른 Trace Channel을 사용하면 적 표시와 화면 마스크가 어긋날 수 있으므로 같은 `VisionTraceChannel`을 공유한다.
+- 공간 마스크와 Actor LOS가 다른 Collision 규칙을 사용하면 어두운 공간에 Actor가 표시되거나 밝은 공간의 Actor가 숨는 불일치가 발생할 수 있다.
+- Auto Exposure가 어두운 공간을 자동으로 밝힐 수 있으므로 조명 구현 시 노출 범위를 고정하거나 제한하는 튜닝이 필요하다.
 
 ## Future
 - `Owner->GetActorForwardVector()` → AimTarget 기반 시야 방향 전환
-- 손전등 On/Off 및 시야 거리·각도 보정
-- Visibility Polygon을 RenderTarget Mask에 기록
-- PostProcess Material로 시야 밖 SceneColor 어둡게 처리
+- Ray Fan + Visibility Polygon 기반 벽 가림 마스크
+- RenderTarget + PostProcess 기반 `VisionRenderer`
+- 손전등 SpotLight 및 조도 기반 Recognition 보정
 - 현재 가시 상태와 탐색 완료 상태의 분리
 - `UTDActorVisibilityComponent`: 동적 Spawn 적 대응 (RegisterActor / UnregisterActor)
 - `UTDActorVisibilityComponent`: 아이템, 탄피로 대상 확장

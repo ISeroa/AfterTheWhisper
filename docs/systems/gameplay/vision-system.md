@@ -1,5 +1,54 @@
 # Vision System
 
+## Current Implementation Snapshot (2026-06-23)
+
+전장의 안개 1차 구현은 현재 `RenderTarget + PostProcess Material` 방식으로 동작한다.
+
+- `UTDVisionComponent`는 시야 규칙의 기준 데이터를 가진다.
+  - `NearVisionRadius`
+  - `ConeVisionDistance`
+  - `ConeHalfAngleDeg`
+  - `bUseLineOfSightCheck`
+  - `VisionTraceChannel`
+- `UTDActorVisibilityComponent`는 `UTDVisionComponent::IsActorVisible()`을 사용해 Enemy 같은 동적 대상을 숨기거나 표시한다.
+- `UTDVisionRendererComponent`는 `UTDVisionComponent`의 설정을 읽어 벽에 막힌 `VisibilityPolygonPoints`를 계산한다.
+- `UTDVisionRendererComponent::DrawToRenderTarget()`는 계산된 폴리곤을 `VisionMaskRenderTarget`에 흰색 삼각형 Fan으로 그린다.
+- `M_PP_VisionDarkness` / `MI_PP_VisionDarkness`는 `RT_VisionMask`를 읽어서 화면을 어둡게 처리한다.
+  - Mask black: 시야 밖, 어둡게 표시
+  - Mask white: 시야 안, 원래 화면 유지
+- `PostProcessVolume`에 `MI_PP_VisionDarkness`를 등록하고 `Infinite Extent (Unbound)`를 켜서 테스트 맵 전체에 적용한다.
+
+현재 구현은 “기억된 탐색 영역”을 사용하지 않는다. 정적 환경은 시야 밖이어도 어둡게 보이고, 동적 대상은 별도 Actor Visibility 시스템으로 현재 시야 밖에서 숨기는 방향이다.
+
+### Render Target Flow
+
+```text
+UTDVisionRendererComponent::UpdatePolygon
+ ├─ UTDVisionComponent 설정 읽기
+ ├─ Ray Fan LineTrace (VisionTraceChannel)
+ ├─ VisibilityPolygonPoints 갱신
+ └─ DrawToRenderTarget
+     ├─ RT_VisionMask 검정 Clear
+     ├─ Owner / Polygon Points를 화면 좌표로 투영
+     ├─ RenderTarget 크기에 맞게 좌표 스케일링
+     └─ 흰색 Triangle Fan으로 현재 시야 영역 그리기
+
+PostProcess Material
+ ├─ SceneTexture(PostProcessInput0)
+ ├─ TextureSampleParameter2D(VisionMask = RT_VisionMask)
+ └─ FinalColor = Lerp(SceneColor * DarknessAmount, SceneColor, VisionMask.R)
+```
+
+### Current Tuning Notes
+
+- `UpdateInterval = 0.1f`는 움직일 때 마스크가 뚝뚝 끊겨 보일 수 있다.
+- 테스트 결과 `UpdateInterval = 0.033f` 쪽이 체감상 더 자연스럽다.
+- `RayCount`는 우선 128을 유지한다.
+  - 시간상 끊김은 `UpdateInterval` 문제일 가능성이 크다.
+  - 경계선 모양이 각져 보일 때만 `RayCount`를 올린다.
+- 다음 최적화 후보는 “플레이어 위치/회전이 일정 이상 변했을 때만 갱신”하는 방식이다.
+- 현재 마스크 경계는 하드 엣지다. 다음 품질 개선 작업에서 Feather/Blur를 고려한다.
+
 ## Overview
 플레이어를 기준으로 특정 위치나 Actor가 현재 시야 안에 있는지 판정하고, 그 결과로 Enemy의 표시·숨김을 제어하는 시스템이다.
 근거리 원형(NearVision) + 전방 콘(ConeVision) 판정, 장애물 LineTrace, Actor 단위 가시성 조회(`IsActorVisible`), 고정 배치 Enemy의 주기적 표시·숨김(`UTDActorVisibilityComponent`)까지 구현되어 있다.

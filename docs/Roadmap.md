@@ -7,6 +7,22 @@
 
 ---
 
+## Recent Vision Progress (2026-06-23)
+- [x] Visibility Polygon 기반 RenderTarget / PostProcess 전장의 안개 1차 구현
+  - `RT_VisionMask`
+  - `M_PP_VisionDarkness` / `MI_PP_VisionDarkness`
+  - `PostProcessVolume` 적용
+  - `UTDVisionRendererComponent`에서 시야 폴리곤을 RenderTarget에 Triangle Fan으로 그리기
+
+## Next Vision Backlog
+- [ ] 전장의 안개 품질 개선
+  - 마스크 가장자리 Feather/Blur
+  - `UpdateInterval` 최적화
+  - 위치/회전 변화가 작을 때 갱신 생략
+- [ ] 조명 시스템과 시야 가독성 연동
+
+---
+
 ## Phase 1 — Playable Vertical Slice (필수)
 ### 1) Core Gameplay
 - [x] 이동/에임 안정화 (Aim 실패 시 fallback, 회전 안정)

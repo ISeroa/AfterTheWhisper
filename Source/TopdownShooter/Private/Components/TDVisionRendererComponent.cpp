@@ -3,6 +3,12 @@
 #include "Components/TDVisionRendererComponent.h"
 #include "Components/TDVisionComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/Canvas.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "CanvasItem.h"
+#include "Kismet/KismetRenderingLibrary.h"
+#include "GameFramework/PlayerController.h"
+#include "RenderUtils.h"
 
 UTDVisionRendererComponent::UTDVisionRendererComponent()
 {
@@ -123,4 +129,71 @@ void UTDVisionRendererComponent::UpdatePolygon()
 		}
 	}
 #endif
+
+	DrawToRenderTarget();
+}
+
+void UTDVisionRendererComponent::DrawToRenderTarget()
+{
+	if (!VisionMaskRenderTarget || VisibilityPolygonPoints.Num() < 2) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APlayerController* PC = World->GetFirstPlayerController();
+	if (!PC) return;
+
+	AActor* Owner = GetOwner();
+	if (!Owner) return;
+
+	// Viewport 크기 → RT 좌표 비율 계산
+	int32 ViewportW = 0, ViewportH = 0;
+	PC->GetViewportSize(ViewportW, ViewportH);
+	if (ViewportW == 0 || ViewportH == 0) return;
+
+	const float ScaleX = (float)VisionMaskRenderTarget->SizeX / (float)ViewportW;
+	const float ScaleY = (float)VisionMaskRenderTarget->SizeY / (float)ViewportH;
+
+	// 플레이어 위치 → RT 좌표
+	FVector2D OwnerScreenPos;
+	if (!PC->ProjectWorldLocationToScreen(Owner->GetActorLocation(), OwnerScreenPos, false)) return;
+	const FVector2D CenterRT(OwnerScreenPos.X * ScaleX, OwnerScreenPos.Y * ScaleY);
+
+	// 폴리곤 포인트 → RT 좌표
+	TArray<FVector2D> RTPoints;
+	RTPoints.Reserve(VisibilityPolygonPoints.Num());
+	for (const FVector& WorldPt : VisibilityPolygonPoints)
+	{
+		FVector2D ScreenPt;
+		PC->ProjectWorldLocationToScreen(WorldPt, ScreenPt, false);
+		RTPoints.Add(FVector2D(ScreenPt.X * ScaleX, ScreenPt.Y * ScaleY));
+	}
+
+	// Canvas 열기
+	UCanvas* Canvas = nullptr;
+	FVector2D CanvasSize;
+	FDrawToRenderTargetContext Context;
+	UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(World, VisionMaskRenderTarget, Canvas, CanvasSize, Context);
+
+	if (!Canvas)
+	{
+		UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(World, Context);
+		return;
+	}
+
+	// 검은 배경으로 초기화
+	FCanvasTileItem BGItem(FVector2D::ZeroVector, CanvasSize, FLinearColor::Black);
+	BGItem.BlendMode = SE_BLEND_Opaque;
+	Canvas->DrawItem(BGItem);
+
+	// 흰색 삼각형 Fan: 플레이어 위치를 중심으로 인접한 두 포인트마다 삼각형 하나
+	const int32 Num = RTPoints.Num();
+	for (int32 i = 0; i < Num; ++i)
+	{
+		FCanvasTriangleItem TriItem(CenterRT, RTPoints[i], RTPoints[(i + 1) % Num], GWhiteTexture);
+		TriItem.BlendMode = SE_BLEND_Opaque;
+		Canvas->DrawItem(TriItem);
+	}
+
+	UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(World, Context);
 }

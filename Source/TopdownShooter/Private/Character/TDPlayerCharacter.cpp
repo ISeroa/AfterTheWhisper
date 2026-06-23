@@ -17,6 +17,7 @@
 #include "Components/TDHealthComponent.h"
 #include "Components/TDVisionComponent.h"
 #include "Components/TDActorVisibilityComponent.h"
+#include "Components/TDVisionRendererComponent.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -53,6 +54,7 @@ ATDPlayerCharacter::ATDPlayerCharacter()
 
     VisionComponent = CreateDefaultSubobject<UTDVisionComponent>(TEXT("VisionComponent"));
     ActorVisibilityComponent = CreateDefaultSubobject<UTDActorVisibilityComponent>(TEXT("ActorVisibilityComponent"));
+    VisionRendererComponent = CreateDefaultSubobject<UTDVisionRendererComponent>(TEXT("VisionRendererComponent"));
 }
 
 void ATDPlayerCharacter::BeginPlay()

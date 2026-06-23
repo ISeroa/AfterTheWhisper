@@ -1,5 +1,72 @@
 # Development Log
 
+## 🗓 2026-06-23
+
+### 🎯 오늘 목표
+- 전장의 안개 화면 표현 구현
+- `RT_VisionMask`와 PostProcess Material을 연결해 현재 시야 영역만 밝게 보이도록 만들기
+
+---
+
+### 완료한 작업
+
+**[PostProcess Material 생성 및 적용]**
+- `M_PP_VisionDarkness` 생성
+- `MI_PP_VisionDarkness` 생성
+- Material Domain을 Post Process로 설정
+- `SceneTexture(PostProcessInput0)`와 `VisionMask` 텍스처 파라미터를 `Lerp`로 섞는 구조 구성
+- 기본 수식:
+
+```text
+FinalColor = Lerp(SceneColor * DarknessAmount, SceneColor, VisionMask.R)
+```
+
+- `DarknessAmount`를 통해 시야 밖 화면의 어두운 정도를 조절하도록 구성
+- 테스트용 임시 텍스처로 포스트 프로세스 적용 여부 확인
+
+**[RenderTarget 기반 Vision Mask 적용]**
+- `RT_VisionMask` 생성
+- `MI_PP_VisionDarkness`의 `VisionMask` 파라미터를 `RT_VisionMask`로 교체
+- RenderTarget이 검정 상태일 때 화면 전체가 어둡게 보이는 것 확인
+
+**[PostProcessVolume 적용]**
+- 테스트 맵에 `PostProcessVolume` 배치
+- `Infinite Extent (Unbound)` 활성화
+- `Post Process Materials`에 `MI_PP_VisionDarkness` 등록
+
+**[Visibility Polygon을 RenderTarget에 그리기]**
+- `UTDVisionRendererComponent`에 `VisionMaskRenderTarget` 연결
+- `VisibilityPolygonPoints`를 화면 좌표로 투영
+- Viewport 크기와 RenderTarget 크기 비율을 고려해 좌표 변환
+- RenderTarget을 검정으로 Clear한 뒤, 플레이어 위치를 중심으로 흰색 Triangle Fan을 그림
+- PostProcess Material이 `RT_VisionMask`를 읽어 시야 안/밖 밝기 차이를 적용하는 것 확인
+
+**[갱신 품질 조정]**
+- `UpdateInterval = 0.1f`에서는 이동/회전 시 마스크가 뚝뚝 끊겨 보이는 문제 확인
+- `UpdateInterval`을 낮추면 체감이 개선됨을 확인
+- 우선 권장값은 `0.033f`
+- `RayCount`는 당장 올리기보다 128 유지 권장
+
+---
+
+### 결정 사항
+- 현재 전장의 안개는 “기억된 탐색 영역”을 사용하지 않는다.
+- 정적 환경은 시야 밖이어도 어둡게 보이게 둔다.
+- 동적 대상은 `UTDActorVisibilityComponent`가 현재 시야 기준으로 숨긴다.
+- 화면 어둠 처리는 `RT_VisionMask + PostProcess Material`이 담당한다.
+- 조명 시스템은 아직 연결하지 않는다.
+- 오늘 범위는 전장의 안개 1차 화면 구현까지로 마무리한다.
+
+---
+
+### 남은 문제 / 다음 후보
+- 마스크 가장자리 하드 엣지 개선
+- `UpdateInterval` 최적화
+- 플레이어 위치/회전 변화가 작을 때 RenderTarget 갱신 생략
+- 조명 시스템과 시야 가독성 연동
+
+---
+
 이 문서는 하루 작업 종료 시 작성한다.
 목표는 "결정과 방향"을 기록하는 것.
 

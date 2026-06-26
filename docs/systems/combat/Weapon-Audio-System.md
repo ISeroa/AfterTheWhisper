@@ -31,6 +31,17 @@ Weapon Preset에 저장된 발사, Dry Fire 사운드를 런타임 상황에 맞
 - `ApplyPointDamage()` 성공 여부와 Impact 사운드 재생은 같은 의미가 아니다. 벽이나 바닥에 맞아도 Impact 사운드는 재생될 수 있다.
 - Hit Marker, UI성 Hit Confirm 사운드, 표면별 Physical Material 분기는 이번 범위에 포함하지 않는다.
 
+## Asset Placement
+- 총알 Impact 사운드는 캐릭터 폴더가 아니라 무기/총알 SFX로 분류한다.
+- 현재 1차 사운드 에셋은 `Content/Audio/SFX/Gun` 아래에 둔다.
+- Impact 사운드가 늘어나면 `Content/Audio/SFX/Gun/Impact` 하위 폴더로 정리한다.
+- 현재 단계에서는 `EnemyHit`, `WorldHit` 두 슬롯만 사용한다.
+- 짧은 SFX는 MP3보다 WAV import를 우선한다. 권장 형식은 16-bit PCM WAV, 44.1kHz 또는 48kHz이다.
+
+## Editor Notes
+- `FWeaponSoundSet` 같은 `USTRUCT`에 새 `UPROPERTY`를 추가한 뒤 기존 `WeaponPreset`에서 필드가 보이지 않으면 에디터를 종료하고 C++ 빌드 후 다시 연다.
+- UE 4.27에서는 Hot Reload / Live Coding만으로 DataAsset 구조체 변경이 즉시 반영되지 않을 수 있다.
+
 ## Trade-offs
 - 수동 `bIsIndoor` 값은 구조 검증에는 단순하지만 Level 구역이 바뀔 때 별도 갱신이 필요하다.
 - Socket 부착음은 무기 위치를 잘 따르지만 짧은 One-shot에서는 위치 재생과 체감 차이가 작을 수 있다.

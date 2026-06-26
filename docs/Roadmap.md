@@ -34,6 +34,8 @@
 - [X] Muzzle Flash
 - [x] 탄피 스폰 (ATDCasing) — 스폰/물리/impact sound/캐릭터 충돌 해결 완료
 - [ ] Hit Impact (표면별 아니어도 OK)
+  - [x] 1차 사운드: EnemyHit / WorldHit 분기
+  - [ ] 데칼 또는 Impact FX
 - [ ] Hit Marker (UI)
 - [ ] 피격 피드백(적 플래시/넉백/짧은 스턴 중 1개 이상)
 - [ ] Camera Shake (약하게)

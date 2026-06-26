@@ -7,6 +7,7 @@
 #include "DrawDebugHelpers.h"
 #include "Weapon/Data/TDWeaponPresetDA.h"
 #include "Weapon/TDCasing.h"
+#include "Character/TDEnemyCharacter.h"
 
 ATDWeaponBase::ATDWeaponBase()
 {
@@ -490,6 +491,19 @@ void ATDWeaponBase::FinishReload()
 }
 
 
+void ATDWeaponBase::PlayImpactSfx(const FHitResult& Hit)
+{
+	if (!CurrentPreset) return;
+
+	USoundBase* Sound = Cast<ATDEnemyCharacter>(Hit.GetActor())
+		? CurrentPreset->SoundSet.EnemyHit
+		: CurrentPreset->SoundSet.WorldHit;
+
+	if (!Sound) return;
+
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, Hit.ImpactPoint);
+}
+
 void ATDWeaponBase::PlayWeaponSfx(USoundBase* Sound, FName AttachSocket)
 {
 	if (!Sound) return;
@@ -572,6 +586,11 @@ void ATDWeaponBase::FireOnce()
 		Damage);
 
 #endif
+
+	if (bHit)
+	{
+		PlayImpactSfx(Hit);
+	}
 
 	if (bHit && Hit.GetActor() && Hit.GetActor() != OwnerActor)
 	{

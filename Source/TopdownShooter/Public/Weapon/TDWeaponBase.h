@@ -118,6 +118,7 @@ protected:
 	FVector GetShotDirection() const;
 
 	void PlayWeaponSfx(USoundBase* Sound, FName AttachSocket);
+	void PlayImpactSfx(const FHitResult& Hit);
 	void SpawnMuzzleFlash();
 	void SpawnCasing();
 

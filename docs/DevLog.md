@@ -1,5 +1,58 @@
 # Development Log
 
+## 🗓 2026-06-26
+
+### 🎯 오늘 목표
+- Hit Impact 사운드의 책임 위치 결정
+- 적 피격 사운드와 월드 충돌 사운드를 `WeaponBase` 발사 흐름에 1차 연결
+
+---
+
+### 완료한 작업
+
+**[Hit Impact Sound 설계 결정]**
+- 총알 Impact 사운드는 적 자체의 피격 반응이 아니라 "총알이 대상에 맞은 순간의 피드백"으로 정의
+- 분류 책임은 `ATDWeaponBase`가 가진다.
+- 사운드 데이터는 기존 무기 데이터 구조에 맞춰 `UTDWeaponPresetDA::SoundSet`에 둔다.
+- 적 피격 반응(플래시, 넉백, 스턴, Hit Reaction Animation)은 별도 작업으로 분리한다.
+- 표면 재질별 Physical Material 분기는 이번 범위에서 제외한다.
+
+**[Hit Impact Sound 1차 구현]**
+- `FWeaponSoundSet`에 `EnemyHit`, `WorldHit` 사운드 필드 추가 (`TDWeaponPresetDA.h`)
+- `ATDWeaponBase::PlayImpactSfx(const FHitResult&)` 헬퍼 추가 — Cast<ATDEnemyCharacter>로 적/월드 분기
+- `FireOnce()`의 LineTrace 성공 직후 `PlayImpactSfx(Hit)` 호출
+- `CurrentPreset` 또는 선택 사운드 null이면 조용히 return
+- 기존 발사음/DryFire/탄피/머즐플래시/데미지 흐름 무변경
+- `WeaponPreset`에서 `EnemyHit`, `WorldHit` 사운드를 지정한 뒤 적/벽 타격 사운드 재생 확인
+
+---
+
+### 결정 사항
+- `EnemyHit` / `WorldHit`은 `FWeaponSoundSet`의 일부로 관리한다.
+- `EnemyHit`은 "적 캐릭터가 내는 소리"가 아니라 "총알이 적에게 맞은 impact sound"로 취급한다.
+- Impact 사운드는 무기 위치나 머즐 위치가 아니라 `Hit.ImpactPoint`에서 재생한다.
+- `Hit Impact` 로드맵 항목은 사운드만으로 완료 처리하지 않고, 데칼 또는 FX까지 붙인 뒤 체크한다.
+
+---
+
+### 발생한 문제
+- `FWeaponSoundSet`에 새 `UPROPERTY`를 추가한 뒤 에디터에서 `WeaponPreset`에 필드가 바로 보이지 않았다.
+
+### 해결 방법 / 결정 사항
+- 에디터 종료 후 C++ 빌드, 에디터 재실행으로 `EnemyHit`, `WorldHit` 필드가 정상 표시됨을 확인했다.
+- UE 4.27에서 `USTRUCT` / `DataAsset` 필드 추가는 Hot Reload만으로 반영이 불안정할 수 있으므로, 구조체 필드 추가 후에는 풀 빌드와 에디터 재시작을 우선한다.
+
+---
+
+### 다음 작업 후보
+- Bullet Impact Decal 1차 구현
+  - `Hit.ImpactPoint` / `Hit.ImpactNormal` 기반으로 월드 표면에 데칼 생성
+  - 적에게는 데칼을 붙일지, 월드 표면에만 붙일지 결정 필요
+- Hit Impact Niagara FX 1차 구현
+- Hit Marker UI 구현
+
+---
+
 ## 🗓 2026-06-23
 
 ### 🎯 오늘 목표

@@ -10,6 +10,7 @@
 - 파츠는 `ETDWeaponSlot`을 FName으로 변환하여 `PartComps` Map에서 관리한다.
 - Muzzle 위치는 `MuzzlePrioritySlot`의 `MuzzleSocketName`을 우선 사용하고 Base Mesh를 fallback으로 사용한다.
 - 발사는 Hitscan LineTrace 방식이며 `SpreadDeg`를 방향 Cone에 적용한다.
+- Hitscan Impact 분류는 `ATDWeaponBase`가 담당하고, 적 대상과 월드 대상을 1차 분기한다.
 - 자동 발사는 Trigger 상태와 `FireRate` 기반 Timer로 처리한다.
 - 발사 성공 후 탄약과 Trace 처리를 완료한 시점에 `OnWeaponFired`를 Broadcast한다.
 - UI는 Weapon의 Ammo와 Reload Delegate를 구독한다.
@@ -20,14 +21,14 @@
 - `StartFire()`는 Trigger를 활성화하고 가능한 경우 즉시 발사한 뒤 반복 발사 Timer를 시작한다.
 - `StopFire()`는 Trigger와 반복 Timer를 정리한다.
 - `FireOnce()`는 탄약과 Reload 상태를 검사하고 Spread가 적용된 LineTrace로 Point Damage를 전달한다.
-- 성공한 발사는 Muzzle Flash, Casing, 발사음, Ammo Delegate, `OnWeaponFired`를 발생시킨다.
+- 성공한 발사는 Muzzle Flash, Casing, 발사음, Impact 사운드, Ammo Delegate, `OnWeaponFired`를 발생시킨다.
 - 탄약이 없을 때는 Dry Fire를 재생하고 Reload를 요청한다.
 - Reload는 Timer 완료 또는 `NotifyReloadFinished()`를 통해 마무리할 수 있으며 취소 시 상태와 UI Delegate를 정리한다.
 
 ```text
 Fire Success
   ├─ Ammo 감소 → OnAmmoChanged
-  ├─ LineTrace → ApplyPointDamage
+  ├─ LineTrace → Impact Sound → ApplyPointDamage
   ├─ Muzzle Flash / Casing / Fire Sound
   └─ OnWeaponFired → Character Fire Montage
 

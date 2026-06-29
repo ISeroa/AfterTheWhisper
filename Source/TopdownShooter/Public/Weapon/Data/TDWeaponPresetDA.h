@@ -64,6 +64,9 @@ struct FTDWeaponStats
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Reload")
 	float ReloadTime = 1.4f;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Weapon|Fire")
+	ETDStoppingPowerTier StoppingPowerTier = ETDStoppingPowerTier::None;
 };
 
 USTRUCT(BlueprintType)

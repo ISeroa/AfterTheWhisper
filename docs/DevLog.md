@@ -1,5 +1,27 @@
 # Development Log
 
+## 🗓 2026-06-29
+
+### 완료한 작업
+
+**[Hit Reaction + Hit Marker C++ 1차 구현]**
+
+- `ETDStoppingPowerTier` (None / Light / Medium / Heavy) enum을 `TDWeaponTypes.h`에 추가
+- `FTDWeaponStats`에 `StoppingPowerTier` 필드 추가 → BP DataAsset에서 무기별 조정 가능
+- `ATDWeaponBase::SetPartsFromPreset()`에서 `Preset->Stats.StoppingPowerTier`를 런타임 필드에 복사
+- `ATDWeaponBase`에 `FOnHitMarker` delegate + `OnHitMarker` 프로퍼티 추가
+- `FireOnce()`에서 적 명중 시 `Enemy->ApplyHitReaction(StoppingPowerTier)` 호출 + `OnHitMarker.Broadcast()`
+- `ATDEnemyCharacter::ApplyHitReaction()` 구현:
+  - Light: 0.15s 동안 75% 속도
+  - Medium: 0.25s 동안 50% 속도
+  - Heavy: 0.12s 이동 정지(StopMovementImmediately) 후 0.2s 동안 50% 속도
+  - 연속 피격 시 `BaseWalkSpeed` 기준으로 재적용, Timer 갱신으로 중복 곱 방지
+  - 사망 시 복구 처리 무시 (`HealthComponent->bDead` 체크)
+- Tick 미사용, AI Controller UnPossess 미사용, 공격 인터럽트 미구현 (설계 방침대로)
+- 실제 HitMarker UMG 디자인은 BP에서 `OnHitMarker` delegate를 구독하여 처리
+
+---
+
 ## 🗓 2026-06-26
 
 ### 🎯 오늘 목표

@@ -1,6 +1,7 @@
 #include "Character/TDEnemyCharacter.h"
 #include "AI/TDEnemyAIController.h"
 #include "AI/TDEnemyMeleeAttackComponent.h"
+#include "Components/TDHealthComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/EngineTypes.h"
@@ -11,6 +12,73 @@ ATDEnemyCharacter::ATDEnemyCharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	MeleeAttackComp = CreateDefaultSubobject<UTDEnemyMeleeAttackComponent>(TEXT("MeleeAttackComp"));
+}
+
+void ATDEnemyCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		BaseWalkSpeed = MoveComp->MaxWalkSpeed;
+	}
+}
+
+void ATDEnemyCharacter::ApplyHitReaction(ETDStoppingPowerTier Tier)
+{
+	if (HealthComponent && HealthComponent->bDead) return;
+	if (Tier == ETDStoppingPowerTier::None) return;
+
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp) return;
+
+	GetWorldTimerManager().ClearTimer(TimerHandle_SlowRestore);
+	GetWorldTimerManager().ClearTimer(TimerHandle_StunEnd);
+
+	switch (Tier)
+	{
+	case ETDStoppingPowerTier::Light:
+		MoveComp->MaxWalkSpeed = BaseWalkSpeed * 0.75f;
+		GetWorldTimerManager().SetTimer(TimerHandle_SlowRestore, this,
+			&ATDEnemyCharacter::RestoreWalkSpeed, 0.15f, false);
+		break;
+
+	case ETDStoppingPowerTier::Medium:
+		MoveComp->MaxWalkSpeed = BaseWalkSpeed * 0.5f;
+		GetWorldTimerManager().SetTimer(TimerHandle_SlowRestore, this,
+			&ATDEnemyCharacter::RestoreWalkSpeed, 0.25f, false);
+		break;
+
+	case ETDStoppingPowerTier::Heavy:
+		MoveComp->StopMovementImmediately();
+		MoveComp->MaxWalkSpeed = 0.f;
+		GetWorldTimerManager().SetTimer(TimerHandle_StunEnd, this,
+			&ATDEnemyCharacter::EndStunBeginSlow, 0.12f, false);
+		break;
+
+	default:
+		break;
+	}
+}
+
+void ATDEnemyCharacter::RestoreWalkSpeed()
+{
+	if (HealthComponent && HealthComponent->bDead) return;
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->MaxWalkSpeed = BaseWalkSpeed;
+	}
+}
+
+void ATDEnemyCharacter::EndStunBeginSlow()
+{
+	if (HealthComponent && HealthComponent->bDead) return;
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->MaxWalkSpeed = BaseWalkSpeed * 0.5f;
+	}
+	GetWorldTimerManager().SetTimer(TimerHandle_SlowRestore, this,
+		&ATDEnemyCharacter::RestoreWalkSpeed, 0.2f, false);
 }
 
 float ATDEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,

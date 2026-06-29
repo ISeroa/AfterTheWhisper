@@ -11,6 +11,7 @@
 - `aim-modifier-system.md`
 - `extraction-loop.md`
 - `flashlight-system.md`
+- `hit-reaction-and-hit-marker-system.md`
 - `interaction-system.md`
 - `inventory-loot-system.md`
 

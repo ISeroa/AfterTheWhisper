@@ -37,7 +37,9 @@
   - [x] 1차 사운드: EnemyHit / WorldHit 분기
   - [ ] 데칼 또는 Impact FX
 - [ ] Hit Marker (UI)
+  - [x] C++ 이벤트 훅 (OnHitMarker delegate) — BP에서 UMG 연결 필요
 - [ ] 피격 피드백(적 플래시/넉백/짧은 스턴 중 1개 이상)
+  - [x] 이동 둔화 + Heavy 이동 스턴 (ApplyHitReaction, StoppingPowerTier)
 - [ ] Camera Shake (약하게)
 
 ### 3) Enemy (1종이라도 '게임'처럼)

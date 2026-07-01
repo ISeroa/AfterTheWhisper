@@ -19,6 +19,15 @@ enum class ETDWeaponSlot : uint8
 
 };
 
+UENUM(BlueprintType)
+enum class ETDStoppingPowerTier : uint8
+{
+	None	UMETA(DisplayName = "None"),
+	Light	UMETA(DisplayName = "Light"),
+	Medium	UMETA(DisplayName = "Medium"),
+	Heavy	UMETA(DisplayName = "Heavy"),
+};
+
 FORCEINLINE FName TDSlotToName(ETDWeaponSlot Slot)
 {
 	switch (Slot)

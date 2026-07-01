@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Weapon/Types/TDWeaponTypes.h"
 #include "TDWeaponBase.generated.h"
 
 class USceneComponent;
@@ -31,6 +32,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, AmmoInMag, i
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReloadUIStart, float, Duration);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReloadUIStop);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFired);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitMarker);
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDWeaponBase : public AActor
@@ -87,6 +89,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
 	FOnWeaponFired OnWeaponFired;
+
+	UPROPERTY(BlueprintAssignable, Category = "Weapon|Events")
+	FOnHitMarker OnHitMarker;
 
 	
 
@@ -171,6 +176,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Reload")
 	float ReloadTime = 1.4f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Fire")
+	ETDStoppingPowerTier StoppingPowerTier = ETDStoppingPowerTier::None;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Reload")
 	bool bIsReloading = false;

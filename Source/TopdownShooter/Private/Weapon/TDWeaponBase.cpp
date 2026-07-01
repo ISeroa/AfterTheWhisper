@@ -608,6 +608,10 @@ void ATDWeaponBase::FireOnce()
 		if (ATDEnemyCharacter* Enemy = Cast<ATDEnemyCharacter>(Hit.GetActor()))
 		{
 			Enemy->ApplyHitReaction(StoppingPowerTier);
+
+#if !UE_BUILD_SHIPPING
+			UE_LOG(LogTemp, Warning, TEXT("[HitMarker] Broadcast Enemy=%s"), *Enemy->GetName());
+#endif
 			OnHitMarker.Broadcast();
 		}
 	}

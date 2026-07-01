@@ -118,6 +118,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UTDPlayerStatusHUD> StatusHUDClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UTDHitMarkerWidget> HitMarkerWidgetClass;
+
 	UPROPERTY()
 	UTDW_AmmoWidget* AmmoWidget = nullptr;
 
@@ -126,6 +129,9 @@ protected:
 
 	UPROPERTY()
 	UTDPlayerStatusHUD* StatusHUD = nullptr;
+
+	UPROPERTY()
+	UTDHitMarkerWidget* HitMarkerWidget = nullptr;
 
 	//Vision
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision")
@@ -151,6 +157,9 @@ private:
 
 	UFUNCTION()
 	void HandleWeaponFired();
+
+	UFUNCTION()
+	void HandleHitMarker();
 
 	void TestDamage();
 	void UpdateAimRotationFromPoint(float DeltaTime, const FVector& AimPoint);

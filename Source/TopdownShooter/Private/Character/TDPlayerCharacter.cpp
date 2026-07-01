@@ -14,6 +14,7 @@
 #include "UI/Widgets/TDW_AmmoWIdget.h"
 #include "UI/Widgets/TDReloadBarWidget.h"
 #include "UI/Widgets/TDPlayerStatusHUD.h"
+#include "UI/Widgets/TDHitMarkerWidget.h"
 #include "Components/TDHealthComponent.h"
 #include "Components/TDVisionComponent.h"
 #include "Components/TDActorVisibilityComponent.h"
@@ -158,6 +159,41 @@ void ATDPlayerCharacter::BeginPlay()
                 }
             }
         }
+    }
+
+#if !UE_BUILD_SHIPPING
+    UE_LOG(LogTemp, Warning, TEXT("[HitMarker] WidgetClass=%s"),
+        HitMarkerWidgetClass ? *HitMarkerWidgetClass->GetName() : TEXT("NULL"));
+#endif
+
+    if (HitMarkerWidgetClass)
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            HitMarkerWidget = CreateWidget<UTDHitMarkerWidget>(PC, HitMarkerWidgetClass);
+#if !UE_BUILD_SHIPPING
+            UE_LOG(LogTemp, Warning, TEXT("[HitMarker] Widget=%s"),
+                HitMarkerWidget ? *HitMarkerWidget->GetName() : TEXT("NULL"));
+#endif
+            if (HitMarkerWidget)
+            {
+                HitMarkerWidget->AddToViewport();
+                HitMarkerWidget->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
+
+                if (ATDPlayerController* TDPC = Cast<ATDPlayerController>(PC))
+                {
+                    TDPC->SetHitMarkerWidget(HitMarkerWidget);
+                }
+            }
+        }
+    }
+
+    if (CurrentWeapon && HitMarkerWidget)
+    {
+        CurrentWeapon->OnHitMarker.AddDynamic(this, &ATDPlayerCharacter::HandleHitMarker);
+#if !UE_BUILD_SHIPPING
+        UE_LOG(LogTemp, Warning, TEXT("[HitMarker] Bind OnHitMarker"));
+#endif
     }
 }
 
@@ -370,6 +406,19 @@ void ATDPlayerCharacter::HandleHealthChanged(float NewHealth, float Delta)
     if (StatusHUD && HealthComponent)
     {
         StatusHUD->SetHealth(NewHealth, HealthComponent->MaxHealth);
+    }
+}
+
+void ATDPlayerCharacter::HandleHitMarker()
+{
+#if !UE_BUILD_SHIPPING
+    UE_LOG(LogTemp, Warning, TEXT("[HitMarker] HandleHitMarker called. Widget=%s"),
+        HitMarkerWidget ? *HitMarkerWidget->GetName() : TEXT("NULL"));
+#endif
+
+    if (HitMarkerWidget)
+    {
+        HitMarkerWidget->BP_ShowHitMarker();
     }
 }
 

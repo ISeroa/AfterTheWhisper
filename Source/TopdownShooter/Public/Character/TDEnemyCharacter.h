@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Character/TDBaseCharacter.h"
+#include "Weapon/Types/TDWeaponTypes.h"
 #include "TDEnemyCharacter.generated.h"
 
 class UTDEnemyMeleeAttackComponent;
@@ -37,12 +38,25 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Death")
 	float RagdollLifeTime = 5.f;
 
+	void ApplyHitReaction(ETDStoppingPowerTier Tier);
+
 protected:
+	virtual void BeginPlay() override;
+
 	// 마지막 피격 발사 방향 (TakeDamage에서 갱신)
 	FVector LastHitDirection = FVector::ZeroVector;
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 		AController* EventInstigator, AActor* DamageCauser) override;
-	
+
 	virtual void HandleDeath() override;
+
+private:
+	float BaseWalkSpeed = 600.f;
+
+	FTimerHandle TimerHandle_SlowRestore;
+	FTimerHandle TimerHandle_StunEnd;
+
+	void RestoreWalkSpeed();
+	void EndStunBeginSlow();
 };

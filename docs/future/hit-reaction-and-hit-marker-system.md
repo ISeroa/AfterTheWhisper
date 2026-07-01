@@ -81,15 +81,57 @@ Enemy 명중
 탑다운 시점에서는 화면 중앙보다 조준점 또는 마우스 근처 표시가 자연스러울 수 있다.
 현재 Ammo Indicator와 Reload Indicator가 마우스 주변 UI 흐름을 사용하므로, Hit Marker도 같은 위치 제어 철학을 따르는 방향을 우선 검토한다.
 
+### Hit Marker Widget Notes
+
+초기 UI 표현은 별도 Texture나 Material을 사용하지 않고 Widget Blueprint에서 구성한다.
+텍스트 기반 `X` 표시는 폰트나 Rich Text 스타일 설정에 따라 보이지 않을 수 있으므로, 테스트와 1차 구현은 Border 2개를 교차시켜 X자를 만드는 방식을 우선한다.
+
+```text
+WBP_HitMarker
+  ├─ Canvas Panel  (Visible)
+  ├─ Border_A      (Visible, Angle 45)
+  └─ Border_B      (Visible, Angle -45)
+```
+
+표시/숨김은 자식 위젯이 아니라 Widget `self`의 Visibility를 제어한다.
+
+```text
+Event Construct
+  → Set Visibility(Self): Hidden
+
+BP_ShowHitMarker
+  → Set Visibility(Self): Not Hit-Testable (Self & All Children)
+  → Delay 0.08~0.15
+  → Set Visibility(Self): Hidden
+```
+
+자식 Canvas/Border를 Hidden으로 두면 `self`를 다시 보이게 해도 X자가 표시되지 않는다.
+Hit Marker는 입력을 먹으면 사격과 마우스 조작을 방해할 수 있으므로 표시 상태는 `Not Hit-Testable (Self & All Children)`을 사용한다.
+
+### Crosshair Direction
+
+최종 UI는 독립 Hit Marker보다 Crosshair 위에 Hit Marker 레이어를 겹치는 방향이 자연스럽다.
+
+```text
+WBP_Crosshair
+  ├─ Crosshair Base
+  └─ Hit Marker Layer
+```
+
+현재 Hit Marker Widget은 1차 검증용으로 유지하고, 이후 Crosshair 작업에서 `BP_ShowHitMarker()`가 Crosshair 내부 Hit Marker Layer를 켜는 구조로 흡수하는 방향을 우선 검토한다.
+
 ## Trade-offs
 - 둔화와 스턴은 명중감을 자연스럽게 만들지만, 연사 무기와 결합하면 적 접근 난이도를 크게 낮출 수 있다.
 - Heavy 스턴이 공격 Windup까지 끊으면 근접 적이 플레이어를 거의 공격하지 못할 수 있다. 1차 구현에서는 이동만 멈추고 공격 인터럽트는 보류한다.
 - Hit Marker는 리얼한 화면 톤과 다소 거리가 있을 수 있지만, 짧은 X자 표시는 명중 정보 전달용 UI로 받아들일 수 있다.
+- Widget `self`와 자식 위젯의 Visibility가 분리되어 있어, BP 구성 실수로 이벤트는 호출되지만 실제 X자가 보이지 않을 수 있다.
 - 저지력 Tier는 튜닝이 쉽지만 세밀한 수치형 반응보다 표현 폭이 좁다.
 - `ATDWeaponBase`에서 Enemy 타입을 직접 확인하면 구현은 단순하지만, 이후 다양한 피격 대상이 늘어나면 인터페이스 기반으로 분리할 필요가 있다.
 
 ## Future
 - `ITDHitReactionReceiver` 같은 인터페이스로 피격 반응 대상을 일반화한다.
+- Hit Marker를 Crosshair Widget 내부 레이어로 통합한다.
+- Hit Marker 위치를 마우스 포인터 또는 조준점 위치와 동기화한다.
 - 방어구, 약점, 치명타에 따라 Hit Marker 모양이나 Stopping Power 보정값을 다르게 적용한다.
 - Heavy Tier에서 제한적으로 공격 Windup 인터럽트를 지원한다.
 - 무기별 Stopping Power 수치를 Tier가 아닌 Curve 또는 Data Table로 확장한다.

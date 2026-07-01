@@ -1,5 +1,65 @@
 # Development Log
 
+## 🗓 2026-07-01
+
+### 🎯 오늘 목표
+- Hit Marker UI 표시 방식 검증
+- Hit Marker를 마우스 포인터/크로스헤어 피드백으로 가져갈지 방향 결정
+
+---
+
+### 완료한 작업
+
+**[Hit Marker Widget 표시 테스트]**
+- `BP_ShowHitMarker` 이벤트가 호출되는지 `Print String`으로 확인하는 테스트 흐름 정리
+- Widget `self` Visibility를 `Not Hit-Testable (Self & All Children)`로 바꾸고 Delay 후 `Hidden`으로 되돌리는 표시 흐름 검증
+- 자식 위젯을 Hidden으로 두면 `self`를 다시 보이게 해도 실제 X자가 보이지 않는 문제 확인
+- Rich Text 기반 X 표시가 보이지 않을 수 있어, Border 2개를 교차시켜 X자를 만드는 방식을 우선하기로 결정
+
+**[UI 방향 결정]**
+- Hit Marker는 독립 위치에 띄우기보다 마우스 포인터 또는 조준점 위치를 따라가게 하는 방향으로 결정
+- 이후 Crosshair를 추가할 예정이므로, 최종 구조는 Crosshair 위에 Hit Marker 레이어를 겹치는 방식이 자연스럽다고 판단
+- 현재 Hit Marker Widget은 1차 검증용으로 유지하고, 추후 `WBP_Crosshair` 또는 Aim Feedback Widget 안으로 흡수하는 방향을 검토
+
+---
+
+### 발생한 문제
+- `BP_ShowHitMarker` 이벤트와 Print String은 정상 호출되지만 X자가 보이지 않았다.
+- `Rich Text Block`만으로 X를 표시하려 했을 때 폰트/스타일/Visibility 문제를 분리하기 어려웠다.
+- Widget `self`와 실제 자식 요소의 Visibility를 동시에 Hidden으로 두면 표시 복구가 꼬였다.
+
+---
+
+### 해결 방법 / 결정 사항
+- 시작 시 숨김 처리는 Widget `self`에서 처리한다.
+- Canvas Panel, Border 같은 실제 표시 자식은 기본 `Visible` 상태로 둔다.
+- 표시 중에는 입력을 먹지 않도록 `Not Hit-Testable (Self & All Children)`을 사용한다.
+- 테스트 단계에서는 표시 시간을 `1.0초`로 길게 두고, 확인 후 `0.08~0.15초`로 줄인다.
+- Hit Marker 시각 요소는 Rich Text보다 Border 2개로 만든 얇은 X자를 우선한다.
+
+---
+
+### 미완료 / 보류
+- Hit Marker의 최종 위치를 마우스 포인터 기준으로 고정할지, 추후 Crosshair Widget 기준으로 통합할지 구현 필요
+- Crosshair 기본 UI 설계
+- Hit Marker 표시 시간, 크기, 색상 튜닝
+
+---
+
+### 구조적 메모
+- Hit Marker 이벤트 수신과 실제 UI 표시 문제는 별도로 디버깅해야 한다.
+- `Print String`이 보이면 C++/Delegate/BP 이벤트 경로는 통과한 것이고, 이후는 UMG Visibility/레이아웃 문제로 좁혀볼 수 있다.
+- Ammo/Reload UI와 마찬가지로 위치 제어는 Widget 내부 Tick보다 PlayerController 쪽에서 처리하는 방향이 일관적이다.
+
+---
+
+### ▶ 다음 작업 후보
+- Hit Marker Widget을 마우스 포인터 위치로 따라가게 연결
+- Crosshair Widget 설계
+- Hit Marker를 Crosshair 레이어로 통합할지 결정
+
+---
+
 ## 🗓 2026-06-29
 
 ### 완료한 작업

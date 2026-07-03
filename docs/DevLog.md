@@ -1,5 +1,22 @@
 # Development Log
 
+## 2026-07-03
+
+### 완료한 작업
+
+**[Crosshair System 문서화]**
+- `docs/future/crosshair-system.md` 추가
+- 가운데가 비어 있는 십자형 Crosshair를 1차 방향으로 결정
+- 기본 반투명 흰색, 조준 중 완전한 흰색 전환 가능 구조를 문서화
+- `SpreadDeg` 기반 선분 간격 변화는 1차 범위에 포함
+- RMB 정밀 조준 입력, 동적 Spread, Hit Marker 통합은 후속 작업으로 분리
+- `docs/Roadmap.md` Backlog에 Crosshair UI 1차 구현 항목 추가
+
+### 보류
+- 실제 C++/UMG 구현은 아직 진행하지 않음
+
+---
+
 ## 🗓 2026-07-01
 
 ### 🎯 오늘 목표

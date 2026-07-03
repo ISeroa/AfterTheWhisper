@@ -100,6 +100,7 @@
 ---
 
 ## Backlog (나중에 할것)
+- [ ] Crosshair UI 1차 구현 (마우스 추적형 십자형, 기본 Spread 표시)
 - [ ] Ray Fan + PostProcess 기반 벽 가림 VisionRenderer
 - [ ] SpotLight 기반 손전등과 조도/시야 책임 분리
 - [ ] 무기 2종/3종 확장

@@ -7,6 +7,7 @@
 class UTDW_AmmoWidget;
 class UTDReloadBarWidget;
 class UTDHitMarkerWidget;
+class UTDCrosshairWidget;
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDPlayerController : public APlayerController
@@ -17,6 +18,7 @@ public:
 	void SetAmmoWidget(UTDW_AmmoWidget* InWidget);
 	void SetReloadBarWidget(UTDReloadBarWidget* InWidget);
 	void SetHitMarkerWidget(UTDHitMarkerWidget* InWidget);
+	void SetCrosshairWidget(UTDCrosshairWidget* InWidget);
 
 	bool GetIsIndoor() const { return bIsIndoor; }
 
@@ -31,6 +33,9 @@ protected:
 	UPROPERTY()
 	UTDHitMarkerWidget* HitMarkerWidget = nullptr;
 
+	UPROPERTY()
+	UTDCrosshairWidget* CrosshairWidget = nullptr;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "World")
 	bool bIsIndoor = true;
 
@@ -41,5 +46,12 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
 	FVector2D HitMarkerWidgetOffset = FVector2D(0.f, 0.f);
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "UI")
+	FVector2D CrosshairWidgetOffset = FVector2D(0.f, 0.f);
+
 	FVector CachedMouseWorldLocation;
+
+#if !UE_BUILD_SHIPPING
+	float DebugCrosshairLogAccum = 0.f;
+#endif
 };

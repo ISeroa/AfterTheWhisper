@@ -54,6 +54,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	int32 GetMagazineSize() const { return MagazineSize; }
 
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	float GetSpreadDeg() const { return SpreadDeg; }
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon|Assemble")
 	FName GetHandSocketName() const { return HandSocketName; }
 

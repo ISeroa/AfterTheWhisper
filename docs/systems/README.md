@@ -19,6 +19,7 @@ systems
  │   └─ vision-system.md
  └─ ui
      ├─ ammo-indicator.md
+     ├─ crosshair-system.md
      ├─ player-hud.md
      └─ reload-indicator.md
 ```

@@ -139,6 +139,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UTDHitMarkerWidget> HitMarkerWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UTDCrosshairWidget> CrosshairWidgetClass;
+
 	UPROPERTY()
 	UTDW_AmmoWidget* AmmoWidget = nullptr;
 
@@ -150,6 +153,9 @@ protected:
 
 	UPROPERTY()
 	UTDHitMarkerWidget* HitMarkerWidget = nullptr;
+
+	UPROPERTY()
+	UTDCrosshairWidget* CrosshairWidget = nullptr;
 
 	//Vision
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision")
@@ -164,6 +170,10 @@ protected:
 	//Debug
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Aim")
 	bool bDebugAimTrace = false;
+
+#if !UE_BUILD_SHIPPING
+	float DebugCrosshairLogAccum = 0.f;
+#endif
 
 
 

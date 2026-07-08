@@ -15,6 +15,7 @@
 #include "UI/Widgets/TDReloadBarWidget.h"
 #include "UI/Widgets/TDPlayerStatusHUD.h"
 #include "UI/Widgets/TDHitMarkerWidget.h"
+#include "UI/Widgets/TDCrosshairWidget.h"
 #include "Components/TDHealthComponent.h"
 #include "Components/TDVisionComponent.h"
 #include "Components/TDActorVisibilityComponent.h"
@@ -194,6 +195,47 @@ void ATDPlayerCharacter::BeginPlay()
         UE_LOG(LogTemp, Warning, TEXT("[HitMarker] Bind OnHitMarker"));
 #endif
     }
+
+#if !UE_BUILD_SHIPPING
+    UE_LOG(LogTemp, Warning, TEXT("[Crosshair] CrosshairWidgetClass=%s"),
+        CrosshairWidgetClass ? *CrosshairWidgetClass->GetName() : TEXT("NULL"));
+#endif
+
+    if (CrosshairWidgetClass)
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            CrosshairWidget = CreateWidget<UTDCrosshairWidget>(PC, CrosshairWidgetClass);
+#if !UE_BUILD_SHIPPING
+            UE_LOG(LogTemp, Warning, TEXT("[Crosshair] CreateWidget result=%s"),
+                CrosshairWidget ? *CrosshairWidget->GetName() : TEXT("NULL"));
+#endif
+
+            if (CrosshairWidget)
+            {
+#if !UE_BUILD_SHIPPING
+                UE_LOG(LogTemp, Warning, TEXT("[Crosshair] Before AddToViewport"));
+#endif
+                CrosshairWidget->AddToViewport();
+#if !UE_BUILD_SHIPPING
+                UE_LOG(LogTemp, Warning, TEXT("[Crosshair] After AddToViewport"));
+#endif
+
+                CrosshairWidget->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
+#if !UE_BUILD_SHIPPING
+                UE_LOG(LogTemp, Warning, TEXT("[Crosshair] SetAlignmentInViewport(0.5, 0.5) called"));
+#endif
+
+                if (ATDPlayerController* TDPC = Cast<ATDPlayerController>(PC))
+                {
+                    TDPC->SetCrosshairWidget(CrosshairWidget);
+#if !UE_BUILD_SHIPPING
+                    UE_LOG(LogTemp, Warning, TEXT("[Crosshair] SetCrosshairWidget called on PlayerController"));
+#endif
+                }
+            }
+        }
+    }
 }
 
 void ATDPlayerCharacter::Tick(float DeltaTime)
@@ -254,6 +296,27 @@ void ATDPlayerCharacter::Tick(float DeltaTime)
     {
         CurrentWeapon->SetAimTarget(SmoothedAimPoint);
     }
+
+    bool bUpdatedCrosshair = false;
+    if (CrosshairWidget && CurrentWeapon)
+    {
+        CrosshairWidget->BP_UpdateCrosshair(CurrentWeapon->GetSpreadDeg(), false);
+        bUpdatedCrosshair = true;
+    }
+
+#if !UE_BUILD_SHIPPING
+    DebugCrosshairLogAccum += DeltaTime;
+    if (DebugCrosshairLogAccum >= 1.f)
+    {
+        DebugCrosshairLogAccum = 0.f;
+        UE_LOG(LogTemp, Warning,
+            TEXT("[Crosshair] Tick: CrosshairWidget=%s CurrentWeapon=%s SpreadDeg=%.2f BP_UpdateCrosshair called=%s"),
+            CrosshairWidget ? TEXT("Valid") : TEXT("NULL"),
+            CurrentWeapon ? TEXT("Valid") : TEXT("NULL"),
+            CurrentWeapon ? CurrentWeapon->GetSpreadDeg() : -1.f,
+            bUpdatedCrosshair ? TEXT("true") : TEXT("false"));
+    }
+#endif
 }
 
 void ATDPlayerCharacter::OnFirePressed()

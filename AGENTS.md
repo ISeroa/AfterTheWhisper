@@ -110,3 +110,24 @@ UAnimInstance
 - 새 기능 아이디어는 구현하지 않고 `docs/Roadmap.md` Backlog에만 기록.
 - Roadmap 체크는 기능 단위 완료 시에만.
 - DevLog는 `docs/DevLog.md`에 작업 종료 전 기록.
+
+### Git Branch Naming
+
+- `codex/` prefix는 사용하지 않는다.
+- 브랜치명은 `<type>/<scope-or-feature>` 형식을 사용한다.
+- type은 작업 성격에 따라 다음 중 하나를 사용한다.
+  - `feature/`: 새 기능
+  - `fix/`: 버그 수정
+  - `docs/`: 문서 작업
+  - `refactor/`: 동작 변경 없는 구조 정리
+  - `chore/`: 설정, 정리, 빌드 보조 작업
+  - `test/`: 테스트 추가/수정
+- 브랜치명은 소문자와 hyphen을 사용한다.
+- 한 브랜치는 게임에서 확인 가능한 작은 기능 하나를 기준으로 한다.
+- 예시:
+  - `feature/crosshair-current-spread`
+  - `feature/hit-marker-crosshair-layer`
+  - `feature/aim-modifier-rmb`
+  - `fix/crosshair-visibility`
+  - `docs/crosshair-system`
+  - `chore/cleanup-debug-logs`

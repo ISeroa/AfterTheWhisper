@@ -41,7 +41,25 @@ protected:
 
 	void OnReloadPressed();
 
+	void OnSprintPressed();
+	void OnSprintReleased();
 
+	void UpdateMoveSpeed();
+
+protected:
+	//Movement
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float WalkSpeed = 300.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float SprintSpeed = 600.f;
+
+	// 무게 시스템 도입 시 사용할 배율 (1.0f = 영향 없음)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float WeightSpeedMultiplier = 1.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bWantsToSprint = false;
 
 protected:
 	//Animation

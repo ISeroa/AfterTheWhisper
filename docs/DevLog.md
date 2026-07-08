@@ -1,5 +1,44 @@
 # Development Log
 
+## 2026-07-08
+
+### 완료한 작업
+
+**[Player Sprint 1차 구현]**
+- `feature/player-sprint` 브랜치에서 플레이어 달리기 기능을 1차 구현.
+- `Sprint` 입력 액션을 추가하고 `LeftShift`에 매핑.
+- `ATDPlayerCharacter`에 `WalkSpeed`, `SprintSpeed`, `bWantsToSprint` 상태를 분리.
+- `UpdateMoveSpeed()` 함수에서 현재 이동 상태를 기준으로 `CharacterMovement->MaxWalkSpeed`를 갱신하도록 정리.
+- 기존 `BeginPlay()`의 직접 속도 세팅을 `UpdateMoveSpeed()` 호출 구조로 변경.
+- 추후 인벤토리 무게 시스템 연동을 위해 `WeightSpeedMultiplier` 자리를 미리 마련.
+
+### 결정 사항
+- 이번 브랜치의 범위는 "Shift를 누르는 동안 실제 이동속도가 증가한다"까지로 제한.
+- BlendSpace, Run 애니메이션 연결, 스태미나, 달리기 사운드, 달리기 중 사격 제한은 별도 후속 작업으로 분리.
+- 무게 시스템은 달리기 이후 `UpdateMoveSpeed()`에 배율을 얹는 방식으로 붙이는 방향이 적절함.
+
+### 미완료 / 보류
+- 달리기 애니메이션 BlendSpace 조정.
+- 달리기 중 사격/재장전/조준 제한 여부 결정.
+- 달리기 소음 이벤트 및 스태미나 시스템.
+
+### 다음 작업 후보
+- `feature/player-sprint-animation`: 달리기 애니메이션/BlendSpace 조정.
+- `feature/inventory-weight-speed`: 인벤토리 무게에 따른 이동속도 배율 적용.
+
+---
+
+## 2026-07-03
+
+### 완료한 작업
+
+**[Branch Naming Rule 정리]**
+- 포트폴리오 프로젝트 히스토리 관리를 위해 브랜치 네이밍 규칙을 `AGENTS.md`에 추가
+- `codex/` prefix는 사용하지 않고 `feature/`, `fix/`, `docs/`, `refactor/`, `chore/`, `test/` prefix를 사용하기로 결정
+- 브랜치명은 소문자와 hyphen을 사용하고, 한 브랜치는 작은 기능 하나를 기준으로 잡는다.
+
+---
+
 ## 🗓 2026-07-01
 
 ### 🎯 오늘 목표

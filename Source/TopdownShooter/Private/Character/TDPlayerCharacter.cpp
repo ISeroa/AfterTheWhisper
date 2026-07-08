@@ -49,7 +49,6 @@ ATDPlayerCharacter::ATDPlayerCharacter()
 
     GetCharacterMovement()->bOrientRotationToMovement = false;
     GetCharacterMovement()->bUseControllerDesiredRotation = false;
-    GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
     AutoPossessPlayer = EAutoReceiveInput::Player0;
 
@@ -61,8 +60,8 @@ ATDPlayerCharacter::ATDPlayerCharacter()
 void ATDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-    GetCharacterMovement()->MaxWalkSpeed = 300.f;
+
+    UpdateMoveSpeed();
 
     if (DefaultWeaponClass)
     {
@@ -277,6 +276,24 @@ void ATDPlayerCharacter::OnReloadPressed()
     }
 }
 
+void ATDPlayerCharacter::OnSprintPressed()
+{
+    bWantsToSprint = true;
+    UpdateMoveSpeed();
+}
+
+void ATDPlayerCharacter::OnSprintReleased()
+{
+    bWantsToSprint = false;
+    UpdateMoveSpeed();
+}
+
+void ATDPlayerCharacter::UpdateMoveSpeed()
+{
+    const float BaseSpeed = bWantsToSprint ? SprintSpeed : WalkSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = BaseSpeed * WeightSpeedMultiplier;
+}
+
 void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -288,6 +305,8 @@ void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction("Fire", IE_Released, this, &ATDPlayerCharacter::OnFireReleased);
     PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ATDPlayerCharacter::OnReloadPressed);
     PlayerInputComponent->BindAction("TestDamage", IE_Pressed, this, &ATDPlayerCharacter::TestDamage);
+    PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATDPlayerCharacter::OnSprintPressed);
+    PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATDPlayerCharacter::OnSprintReleased);
 }
 
 void ATDPlayerCharacter::MoveForward(float Value)

@@ -14,6 +14,7 @@ class UTDActorVisibilityComponent;
 class UTDVisionRendererComponent;
 class UTDInventoryComponent;
 class UTDItemDataAsset;
+class ATDItemPickupActor;
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDPlayerCharacter : public ATDBaseCharacter
@@ -31,6 +32,14 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	ATDWeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	UTDInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	ATDItemPickupActor* GetFocusedPickupActor() const { return FocusedPickupActor; }
+
+	void SetFocusedPickupActor(ATDItemPickupActor* Pickup) { FocusedPickupActor = Pickup; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -50,6 +59,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Test")
 	void TestAddInventoryItem();
+
+	void OnInteractPressed();
 
 protected:
 	//Movement
@@ -191,6 +202,10 @@ protected:
 	// 테스트용 아이템 (BP에서 지정). TestAddInventoryItem으로 인벤토리에 추가
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory|Test")
 	UTDItemDataAsset* TestInventoryItem = nullptr;
+
+	// 현재 상호작용(E) 범위 안에 있는 Pickup Actor. 없으면 nullptr
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	ATDItemPickupActor* FocusedPickupActor = nullptr;
 
 	//Debug
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Aim")

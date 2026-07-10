@@ -1,5 +1,37 @@
 # Development Log
 
+## 2026-07-10
+
+### 완료한 작업
+
+**[Inventory Weight Speed 1차 구현]**
+- `feature/inventory-weight-speed` 브랜치에서 슬롯 기반 인벤토리와 무게 기반 이동속도 배율을 1차 구현.
+- `UTDItemDataAsset` 추가: `ItemID`, `DisplayName`, `Weight`, `StackMax`를 통해 아이템 기본 데이터를 관리.
+- `UTDInventoryComponent` 추가: `Slots`, `SlotCapacity`, `AddItem()`, `RemoveItem()`, `GetTotalWeight()`와 변경 이벤트를 담당.
+- `OnInventoryWeightChanged` 이벤트를 통해 플레이어 총 무게 변경을 `ATDPlayerCharacter`로 전달.
+- `WeightSpeedMultiplier`를 총 무게 기반 계산 결과값으로 정리하고, `UpdateMoveSpeed()`를 통해 걷기/달리기 속도에 반영.
+- `TestAddInventoryItem` 입력으로 테스트 아이템을 인벤토리에 추가하고 무게 반영을 확인할 수 있게 함.
+- 이동속도/무게 디버그 로그를 추가해 `TotalWeight`, `WeightSpeedMultiplier`, `MaxWalkSpeed`를 확인 가능하게 함.
+
+### 결정 사항
+- 이번 범위는 "인벤토리 총 무게가 이동속도에 반영된다"까지로 제한.
+- 인벤토리 UI, 실제 루팅 액터, 상자/컨테이너, 아이템 사용 효과는 후속 작업으로 분리.
+- `WeightSpeedMultiplier`는 직접 조정값이 아니라 계산된 현재 배율로 취급.
+- 밸런싱은 `NoPenaltyWeight`, `MaxPenaltyWeight`, `MinWeightSpeedMultiplier`로 조정.
+- `TestInventoryItem`은 지정만으로 인벤토리에 들어가지 않으며, 현재는 `O` 키로 `AddItem()`을 호출해야 실제 무게에 반영됨.
+
+### 미완료 / 보류
+- 실제 Pickup Actor와 상호작용 연결.
+- 인벤토리 UI와 현재 무게 표시.
+- 시작 인벤토리 또는 디버그 초기 지급 옵션.
+- 상자, 루팅 가방, 드랍 테이블.
+
+### 문서
+- `docs/systems/gameplay/inventory-weight-system.md` 추가.
+- `docs/Roadmap.md`에 Inventory Weight Speed 1차 구현 완료 항목 추가.
+
+---
+
 ## 2026-07-03
 
 ### 완료한 작업

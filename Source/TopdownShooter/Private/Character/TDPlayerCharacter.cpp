@@ -20,6 +20,8 @@
 #include "Components/TDVisionComponent.h"
 #include "Components/TDActorVisibilityComponent.h"
 #include "Components/TDVisionRendererComponent.h"
+#include "Inventory/TDInventoryComponent.h"
+#include "Inventory/Data/TDItemDataAsset.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -56,13 +58,23 @@ ATDPlayerCharacter::ATDPlayerCharacter()
     VisionComponent = CreateDefaultSubobject<UTDVisionComponent>(TEXT("VisionComponent"));
     ActorVisibilityComponent = CreateDefaultSubobject<UTDActorVisibilityComponent>(TEXT("ActorVisibilityComponent"));
     VisionRendererComponent = CreateDefaultSubobject<UTDVisionRendererComponent>(TEXT("VisionRendererComponent"));
+
+    InventoryComponent = CreateDefaultSubobject<UTDInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 void ATDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-    UpdateMoveSpeed();
+    if (InventoryComponent)
+    {
+        InventoryComponent->OnInventoryWeightChanged.AddDynamic(this, &ATDPlayerCharacter::HandleInventoryWeightChanged);
+        HandleInventoryWeightChanged(InventoryComponent->GetTotalWeight());
+    }
+    else
+    {
+        UpdateMoveSpeed();
+    }
 
     if (DefaultWeaponClass)
     {
@@ -288,6 +300,8 @@ void ATDPlayerCharacter::Tick(float DeltaTime)
     // Last Rotation is SmoothedAimPoint
     UpdateAimRotationFromPoint(DeltaTime, SmoothedAimPoint);
 
+    Debug_PrintMoveSpeed();
+
     if (VisionComponent)
     {
         VisionComponent->DrawDebugVision();
@@ -357,6 +371,46 @@ void ATDPlayerCharacter::UpdateMoveSpeed()
     GetCharacterMovement()->MaxWalkSpeed = BaseSpeed * WeightSpeedMultiplier;
 }
 
+float ATDPlayerCharacter::CalculateWeightSpeedMultiplier(float TotalWeight) const
+{
+    if (MaxPenaltyWeight <= NoPenaltyWeight)
+    {
+        return (TotalWeight > NoPenaltyWeight) ? MinWeightSpeedMultiplier : 1.f;
+    }
+
+    if (TotalWeight <= NoPenaltyWeight)
+    {
+        return 1.f;
+    }
+
+    if (TotalWeight >= MaxPenaltyWeight)
+    {
+        return MinWeightSpeedMultiplier;
+    }
+
+    const float Alpha = (TotalWeight - NoPenaltyWeight) / (MaxPenaltyWeight - NoPenaltyWeight);
+    return FMath::Lerp(1.f, MinWeightSpeedMultiplier, Alpha);
+}
+
+void ATDPlayerCharacter::HandleInventoryWeightChanged(float NewTotalWeight)
+{
+    WeightSpeedMultiplier = CalculateWeightSpeedMultiplier(NewTotalWeight);
+    UpdateMoveSpeed();
+
+#if !UE_BUILD_SHIPPING
+    UE_LOG(LogTemp, Warning,
+        TEXT("[InventoryWeight] Total=%.1f NoPenalty=%.1f MaxPenalty=%.1f MinMul=%.2f CurrentMul=%.2f MaxWalkSpeed=%.1f"),
+        NewTotalWeight, NoPenaltyWeight, MaxPenaltyWeight, MinWeightSpeedMultiplier, WeightSpeedMultiplier,
+        GetCharacterMovement()->MaxWalkSpeed);
+#endif
+}
+
+void ATDPlayerCharacter::TestAddInventoryItem()
+{
+    if (!InventoryComponent || !TestInventoryItem) return;
+    InventoryComponent->AddItem(TestInventoryItem, 1);
+}
+
 void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -370,6 +424,7 @@ void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction("TestDamage", IE_Pressed, this, &ATDPlayerCharacter::TestDamage);
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATDPlayerCharacter::OnSprintPressed);
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATDPlayerCharacter::OnSprintReleased);
+    PlayerInputComponent->BindAction("TestAddInventoryItem", IE_Pressed, this, &ATDPlayerCharacter::TestAddInventoryItem);
 }
 
 void ATDPlayerCharacter::MoveForward(float Value)
@@ -539,6 +594,32 @@ void ATDPlayerCharacter::Debug_PrintHit(const FHitResult& Hit) const
         Hit.GetComponent() ? *Hit.GetComponent()->GetName() : TEXT("None"),
         *Hit.ImpactPoint.ToString()
     );
+#endif
+}
+
+void ATDPlayerCharacter::Debug_PrintMoveSpeed()
+{
+#if !UE_BUILD_SHIPPING
+    if (!bDebugMoveSpeed) return;
+
+    const float CurrentVelocity = GetVelocity().Size2D();
+    const float MaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
+    const FString Msg = FString::Printf(
+        TEXT("[MoveSpeed] Vel=%.1f Max=%.1f Walk=%.0f Sprint=%.0f WeightMul=%.2f Sprinting=%d"),
+        CurrentVelocity, MaxWalkSpeed, WalkSpeed, SprintSpeed, WeightSpeedMultiplier, bWantsToSprint);
+
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(/*Key=*/ 9001, /*TimeToDisplay=*/ 0.f, FColor::Yellow, Msg);
+    }
+
+    DebugMoveSpeedLogAccum += GetWorld()->GetDeltaSeconds();
+    if (DebugMoveSpeedLogAccum >= 0.5f)
+    {
+        DebugMoveSpeedLogAccum = 0.f;
+        UE_LOG(LogTemp, Warning, TEXT("%s"), *Msg);
+    }
 #endif
 }
 

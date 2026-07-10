@@ -12,6 +12,8 @@ class UTDWeaponPresetDA;
 class UTDVisionComponent;
 class UTDActorVisibilityComponent;
 class UTDVisionRendererComponent;
+class UTDInventoryComponent;
+class UTDItemDataAsset;
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDPlayerCharacter : public ATDBaseCharacter
@@ -46,6 +48,9 @@ protected:
 
 	void UpdateMoveSpeed();
 
+	UFUNCTION(BlueprintCallable, Category = "Inventory|Test")
+	void TestAddInventoryItem();
+
 protected:
 	//Movement
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -54,12 +59,24 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float SprintSpeed = 600.f;
 
-	// 무게 시스템 도입 시 사용할 배율 (1.0f = 영향 없음)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	// 인벤토리 총 무게로부터 계산된 결과값 (직접 조정 X, CalculateWeightSpeedMultiplier() 참고)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	float WeightSpeedMultiplier = 1.0f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bWantsToSprint = false;
+
+	// 이 무게까지는 배율 패널티 없음 (1.0 유지)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement|Weight", meta = (ClampMin = "0.0"))
+	float NoPenaltyWeight = 20.f;
+
+	// 이 무게에서 MinWeightSpeedMultiplier에 도달
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement|Weight", meta = (ClampMin = "0.0"))
+	float MaxPenaltyWeight = 40.f;
+
+	// MaxPenaltyWeight 이상일 때 적용되는 최소 배율
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement|Weight", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MinWeightSpeedMultiplier = 0.7f;
 
 protected:
 	//Animation
@@ -167,12 +184,24 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision")
 	UTDVisionRendererComponent* VisionRendererComponent = nullptr;
 
+	//Inventory
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	UTDInventoryComponent* InventoryComponent = nullptr;
+
+	// 테스트용 아이템 (BP에서 지정). TestAddInventoryItem으로 인벤토리에 추가
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory|Test")
+	UTDItemDataAsset* TestInventoryItem = nullptr;
+
 	//Debug
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Aim")
 	bool bDebugAimTrace = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Movement")
+	bool bDebugMoveSpeed = false;
+
 #if !UE_BUILD_SHIPPING
 	float DebugCrosshairLogAccum = 0.f;
+	float DebugMoveSpeedLogAccum = 0.f;
 #endif
 
 
@@ -182,6 +211,11 @@ private:
 
 	UFUNCTION()
 	void HandleHealthChanged(float NewHealth, float Delta);
+
+	UFUNCTION()
+	void HandleInventoryWeightChanged(float NewTotalWeight);
+
+	float CalculateWeightSpeedMultiplier(float TotalWeight) const;
 
 	UFUNCTION()
 	void HandleWeaponFired();
@@ -195,4 +229,5 @@ private:
 	void Debug_PrintTraceChannel() const;
 	void Debug_PrintHit(const FHitResult& Hit) const;
 	void Debug_DrawTrace(const FVector& Start, const FVector& End, const FHitResult& Hit, bool bHit) const;
+	void Debug_PrintMoveSpeed();
 };

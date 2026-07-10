@@ -22,6 +22,7 @@
 #include "Components/TDVisionRendererComponent.h"
 #include "Inventory/TDInventoryComponent.h"
 #include "Inventory/Data/TDItemDataAsset.h"
+#include "Inventory/TDItemPickupActor.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -411,6 +412,12 @@ void ATDPlayerCharacter::TestAddInventoryItem()
     InventoryComponent->AddItem(TestInventoryItem, 1);
 }
 
+void ATDPlayerCharacter::OnInteractPressed()
+{
+    if (!FocusedPickupActor) return;
+    FocusedPickupActor->TryPickup(this);
+}
+
 void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -425,6 +432,7 @@ void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATDPlayerCharacter::OnSprintPressed);
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATDPlayerCharacter::OnSprintReleased);
     PlayerInputComponent->BindAction("TestAddInventoryItem", IE_Pressed, this, &ATDPlayerCharacter::TestAddInventoryItem);
+    PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ATDPlayerCharacter::OnInteractPressed);
 }
 
 void ATDPlayerCharacter::MoveForward(float Value)

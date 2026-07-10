@@ -1,5 +1,35 @@
 # Development Log
 
+## 2026-07-10 (2)
+
+### 완료한 작업
+
+**[Item Pickup Actor 최소 구현]**
+- `feature/item-pickup-actor` 브랜치에서 월드 배치형 Pickup Actor와 E키 상호작용을 구현.
+- `ATDItemPickupActor` 추가: `ItemData`(`UTDItemDataAsset*`), `Count`(`int32`, 최소 1로 Clamp)를 소유.
+- `USceneComponent` Root + `UStaticMeshComponent` + `USphereComponent`(`InteractionSphere`) 구조로 구성.
+- Sphere Overlap에서 `ATDPlayerCharacter::SetFocusedPickupActor()`를 호출해 상호작용 대상 등록/해제.
+- `ATDItemPickupActor::TryPickup(ATDPlayerCharacter*)`가 Picker의 `InventoryComponent->AddItem()`을 호출하고, 성공 시에만 `Destroy()`.
+- `ATDPlayerCharacter`에 `GetInventoryComponent()` getter, `FocusedPickupActor`, `OnInteractPressed()` 추가.
+- `Interact` 입력 액션을 `E` 키로 매핑하고 `SetupPlayerInputComponent`에 바인딩.
+- `[Pickup] TryPickup Item=... Count=... Result=Success/Fail` non-shipping 로그 추가.
+
+### 결정 사항
+- Pickup Actor는 "어떤 아이템을 몇 개 들고 있는지"만 책임지고, 인벤토리에 들어갈 수 있는지 판단은 `UTDInventoryComponent`에 위임.
+- 자동 획득 없이 E키 명시적 입력으로만 획득 시도.
+- 획득 실패 시 Pickup Actor는 파괴하지 않고 그대로 유지.
+- 인벤토리 UI, 상호작용 안내 UI, 상자/컨테이너, 드랍 테이블, 자동 줍기, 사운드/FX, 아이템 사용 효과는 이번 범위에서 제외.
+
+### 미완료 / 보류
+- 상호작용 가능 여부를 알려주는 UI (예: "E to pick up").
+- 상자/컨테이너, 드랍 테이블 연동.
+- Pickup 시 사운드/FX.
+
+### 문서
+- BP_TDItemPickupActor 등 Content 에셋 구성은 에디터에서 사용자가 직접 진행 예정 (C++ 구조만 우선 제공).
+
+---
+
 ## 2026-07-10
 
 ### 완료한 작업

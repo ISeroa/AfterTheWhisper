@@ -27,6 +27,7 @@
 ### 1) Core Gameplay
 - [x] 이동/에임 안정화 (Aim 실패 시 fallback, 회전 안정)
 - [x] Player Sprint 1차 구현 (LeftShift 입력, Walk/Sprint 속도 분리, `UpdateMoveSpeed()` 기반)
+- [x] Inventory Weight Speed 1차 구현 (슬롯 인벤토리, 총 무게 계산, 이동속도 배율 반영)
 - [x] 무기 기본 완성 (단발 + 연사/FireRate Timer)
 - [x] 리로드(재장전) 구현 + UI 반영
 - [x] 탄약/재장전 사운드 훅(빈 슬롯이어도 placeholder로)
@@ -107,6 +108,7 @@
 - [ ] SpotLight 기반 손전등과 조도/시야 책임 분리
 - [ ] 무기 2종/3종 확장
 - [ ] 인벤토리/루팅
+- [ ] Inventory UI / Pickup Actor / Container 연결
 - [ ] Player Sprint Animation / BlendSpace 조정
 - [ ] 스토리/퀘스트
 - [ ] 데이터 기반 전면 개편

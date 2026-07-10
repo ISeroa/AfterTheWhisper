@@ -44,5 +44,6 @@ systems
 
 - `docs/_template.md`
 - `docs/future/README.md`
+- `docs/systems/gameplay/inventory-weight-system.md`
 - `docs/DevLog.md`
 - `docs/Roadmap.md`

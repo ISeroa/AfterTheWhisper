@@ -1,5 +1,27 @@
 # Development Log
 
+## 2026-09-01
+
+### 완료한 작업
+
+**[재장전 UI 버그 수정 — 탄창 잔탄 있을 때 Reload Bar 미표시]**
+- `fix/reload-ui-partial-magazine` 브랜치에서 최소 범위 수정.
+- 원인: `ATDWeaponBase::BeginReloadUI(float Duration)`에서 `bShowReloadIndicator = (AmmoInMag == 0)` 조건 때문에 탄창에 탄약이 남은 상태(수동 재장전)에서는 `OnReloadUIStart`가 Broadcast되지 않음.
+- 수정: `BeginReloadUI()`가 항상 `bShowReloadIndicator = true`로 설정하고 `OnReloadUIStart.Broadcast(Duration)`을 호출하도록 변경.
+- `BeginReloadUI()`는 `StartReload()`에서만 호출되며, `StartReload()`는 이미 재장전 중 여부 / 탄창 풀 여부 / 예비 탄약 여부를 검사한 뒤에만 호출하므로 기존 유효성 조건과 충돌 없음.
+- `NotifyReloadFinished()` / `FinishReload()` 양쪽의 `EndReloadUI()` 중복 호출은 이번 범위에서 변경하지 않음.
+
+### 검증 항목 (PIE 실제 플레이 테스트 완료)
+- 탄창에 탄약이 남아 있을 때 R키 재장전 → UI 표시 확인. ✅
+- 탄창이 비었을 때 재장전 → UI 표시 확인. ✅
+- 탄창이 가득 찼을 때 R키 → 재장전/UI 시작 안 함 확인. ✅
+- 예비 탄약이 없을 때 R키 → 재장전/UI 시작 안 함 확인. ✅
+- 재장전 완료 후 UI 정상 숨김 확인. ✅
+- 재장전 기능 및 탄약 수치 기존과 동일하게 동작 확인. ✅
+- `build.bat` 빌드 성공 확인. ✅
+
+---
+
 ## 2026-07-10 (2)
 
 ### 완료한 작업

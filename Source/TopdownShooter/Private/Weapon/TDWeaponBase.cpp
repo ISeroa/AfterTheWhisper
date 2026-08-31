@@ -410,12 +410,8 @@ void ATDWeaponBase::EndReloadState()
 
 void ATDWeaponBase::BeginReloadUI(float Duration)
 {
-	bShowReloadIndicator = (AmmoInMag == 0);
-
-	if (bShowReloadIndicator)
-	{
-		OnReloadUIStart.Broadcast(Duration);
-	}
+	bShowReloadIndicator = true;
+	OnReloadUIStart.Broadcast(Duration);
 }
 
 void ATDWeaponBase::EndReloadUI()

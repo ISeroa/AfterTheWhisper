@@ -112,5 +112,11 @@
 - [x] Item Pickup Actor 최소 구현 (E키 상호작용, InventoryComponent::AddItem 연동)
 - [ ] Inventory UI / Container 연결
 - [ ] Player Sprint Animation / BlendSpace 조정
+- [ ] 조준 중 조준 방향을 더 보여주는 Camera Look-Ahead
+  - 조준 방향 기준 최대 Offset과 복귀 보간 적용
+  - 플레이어가 화면 가장자리에 과도하게 치우치지 않도록 제한
+- [ ] Enemy 추적 활성화 조건 추가
+  - 현재 AI의 전역 추적을 감지 반경 또는 구역 진입 기반으로 제한
+  - 시야 밖의 적이 예고 없이 장거리 추적해 진입하는 문제 개선
 - [ ] 스토리/퀘스트
 - [ ] 데이터 기반 전면 개편

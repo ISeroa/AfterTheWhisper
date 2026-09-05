@@ -57,6 +57,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	int32 GetUsedSlotCount() const;
 
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	bool HasItem(UTDItemDataAsset* Item, int32 RequiredCount = 1) const;
+
 private:
 	void BroadcastInventoryChanged();
 };

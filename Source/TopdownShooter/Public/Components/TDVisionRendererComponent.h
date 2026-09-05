@@ -46,6 +46,10 @@ private:
 	UPROPERTY()
 	UTDVisionComponent* CachedVisionComp = nullptr;
 
+	/** 레벨에 배치된 적이 시야 폴리곤용 Ray를 가리지 않도록 BeginPlay에서 캐싱한다. */
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> VisionTraceIgnoredActors;
+
 	TArray<FVector> VisibilityPolygonPoints;
 
 	FTimerHandle PolygonTimerHandle;

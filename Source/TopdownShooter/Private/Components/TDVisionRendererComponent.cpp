@@ -2,11 +2,13 @@
 
 #include "Components/TDVisionRendererComponent.h"
 #include "Components/TDVisionComponent.h"
+#include "Character/TDEnemyCharacter.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Canvas.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "CanvasItem.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "RenderUtils.h"
 
@@ -29,6 +31,13 @@ void UTDVisionRendererComponent::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("UTDVisionRendererComponent: UTDVisionComponent not found on Owner '%s'."),
 			*GetNameSafe(GetOwner()));
 		return;
+	}
+
+	TArray<AActor*> FoundEnemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATDEnemyCharacter::StaticClass(), FoundEnemies);
+	for (AActor* Enemy : FoundEnemies)
+	{
+		VisionTraceIgnoredActors.Add(Enemy);
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(
@@ -88,6 +97,13 @@ void UTDVisionRendererComponent::UpdatePolygon()
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
+	for (const TWeakObjectPtr<AActor>& IgnoredActor : VisionTraceIgnoredActors)
+	{
+		if (IgnoredActor.IsValid())
+		{
+			Params.AddIgnoredActor(IgnoredActor.Get());
+		}
+	}
 
 	const float NearRadius   = CachedVisionComp->NearVisionRadius;
 	const float ConeDist     = CachedVisionComp->ConeVisionDistance;

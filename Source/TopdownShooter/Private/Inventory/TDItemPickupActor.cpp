@@ -47,7 +47,7 @@ void ATDItemPickupActor::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedCom
 {
 	if (ATDPlayerCharacter* Player = Cast<ATDPlayerCharacter>(OtherActor))
 	{
-		Player->SetFocusedPickupActor(this);
+		Player->SetFocusedInteractableActor(this);
 	}
 }
 
@@ -55,9 +55,9 @@ void ATDItemPickupActor::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp,
 {
 	if (ATDPlayerCharacter* Player = Cast<ATDPlayerCharacter>(OtherActor))
 	{
-		if (Player->GetFocusedPickupActor() == this)
+		if (Player->GetFocusedInteractableActor() == this)
 		{
-			Player->SetFocusedPickupActor(nullptr);
+			Player->SetFocusedInteractableActor(nullptr);
 		}
 	}
 }
@@ -83,12 +83,17 @@ bool ATDItemPickupActor::TryPickup(ATDPlayerCharacter* Picker)
 
 	if (bSuccess)
 	{
-		if (Picker->GetFocusedPickupActor() == this)
+		if (Picker->GetFocusedInteractableActor() == this)
 		{
-			Picker->SetFocusedPickupActor(nullptr);
+			Picker->SetFocusedInteractableActor(nullptr);
 		}
 		Destroy();
 	}
 
 	return bSuccess;
+}
+
+bool ATDItemPickupActor::Interact_Implementation(ATDPlayerCharacter* Interactor)
+{
+	return TryPickup(Interactor);
 }

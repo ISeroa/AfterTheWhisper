@@ -2,7 +2,14 @@
 
 ## Overview
 플레이어가 아이템, 컨테이너, Door, Switch 같은 월드 Actor와 하나의 입력 흐름으로 상호작용하는 시스템이다.
-현재는 구현 전 설계이며, Player가 구체 타입을 알지 않도록 공통 Interactable Interface를 사용한다.
+공통 Interactable Interface를 통해 Player가 구체 타입을 알지 않도록 구현되어 있으며, 현재는 기존 Item Pickup만 이 구조로 연결된 상태다.
+
+## Current State
+- `ITDInteractableInterface`(`Source/TopdownShooter/Public/Interaction/TDInteractableInterface.h`)를 추가했다. `Interact(ATDPlayerCharacter* Interactor)`는 `BlueprintNativeEvent`로, C++/Blueprint 양쪽에서 구현 가능하다.
+- `ATDPlayerCharacter`는 더 이상 `ATDItemPickupActor`를 알지 않는다. `FocusedPickupActor` 대신 `AActor* FocusedInteractableActor`를 보관하고, `GetFocusedInteractableActor()` / `SetFocusedInteractableActor()`로 조회·설정한다.
+- `OnInteractPressed()`는 `FocusedInteractableActor`가 Interface를 구현했는지(`Implements<UTDInteractableInterface>()`) 확인한 뒤 `ITDInteractableInterface::Execute_Interact()`만 호출한다. 구체 타입으로 Cast하지 않는다.
+- `ATDItemPickupActor`가 `ITDInteractableInterface`를 구현한다. `Interact_Implementation()`은 기존 `TryPickup(Interactor)`를 그대로 호출하고 결과를 반환한다. `AddItem`/로그/성공 시 Destroy 동작은 변경되지 않았다.
+- Pickup의 `InteractionSphere` BeginOverlap/EndOverlap은 `FocusedInteractableActor`를 등록/해제한다. EndOverlap은 현재 Focus 대상이 자기 자신일 때만 해제한다.
 
 ## Key Decisions
 - 초기 상호작용 입력은 E 키 하나로 통합한다.
@@ -36,6 +43,10 @@ E Input
 - Overlap은 근처 대상을 찾기 쉽지만 여러 후보가 겹칠 때 우선순위 규칙이 필요하다.
 
 ## Future
+- `ATDExtractionZone` 및 승리/패배 조건
+- Door / Switch 등 다른 Interactable 구현체
+- OfficeKey 등 특정 아이템 보유 여부 검사
+- 상호작용 성공/실패 Delegate
 - Interactable Highlight
 - 후보 우선순위
 - Hold Interaction

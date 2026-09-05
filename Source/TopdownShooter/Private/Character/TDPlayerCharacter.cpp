@@ -22,7 +22,7 @@
 #include "Components/TDVisionRendererComponent.h"
 #include "Inventory/TDInventoryComponent.h"
 #include "Inventory/Data/TDItemDataAsset.h"
-#include "Inventory/TDItemPickupActor.h"
+#include "Interaction/TDInteractableInterface.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -414,8 +414,10 @@ void ATDPlayerCharacter::TestAddInventoryItem()
 
 void ATDPlayerCharacter::OnInteractPressed()
 {
-    if (!FocusedPickupActor) return;
-    FocusedPickupActor->TryPickup(this);
+    if (!FocusedInteractableActor) return;
+    if (!FocusedInteractableActor->Implements<UTDInteractableInterface>()) return;
+
+    ITDInteractableInterface::Execute_Interact(FocusedInteractableActor, this);
 }
 
 void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

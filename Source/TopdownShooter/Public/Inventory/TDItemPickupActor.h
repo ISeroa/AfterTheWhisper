@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interaction/TDInteractableInterface.h"
 #include "TDItemPickupActor.generated.h"
 
 class USceneComponent;
@@ -13,7 +14,7 @@ class UTDItemDataAsset;
 class ATDPlayerCharacter;
 
 UCLASS()
-class TOPDOWNSHOOTER_API ATDItemPickupActor : public AActor
+class TOPDOWNSHOOTER_API ATDItemPickupActor : public AActor, public ITDInteractableInterface
 {
 	GENERATED_BODY()
 
@@ -28,6 +29,8 @@ public:
 
 	// Picker의 InventoryComponent에 AddItem을 시도한다. 성공 시 이 액터는 Destroy된다.
 	bool TryPickup(ATDPlayerCharacter* Picker);
+
+	virtual bool Interact_Implementation(ATDPlayerCharacter* Interactor) override;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

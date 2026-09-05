@@ -10,6 +10,8 @@
 - `OnInteractPressed()`는 `FocusedInteractableActor`가 Interface를 구현했는지(`Implements<UTDInteractableInterface>()`) 확인한 뒤 `ITDInteractableInterface::Execute_Interact()`만 호출한다. 구체 타입으로 Cast하지 않는다.
 - `ATDItemPickupActor`가 `ITDInteractableInterface`를 구현한다. `Interact_Implementation()`은 기존 `TryPickup(Interactor)`를 그대로 호출하고 결과를 반환한다. `AddItem`/로그/성공 시 Destroy 동작은 변경되지 않았다.
 - Pickup의 `InteractionSphere` BeginOverlap/EndOverlap은 `FocusedInteractableActor`를 등록/해제한다. EndOverlap은 현재 Focus 대상이 자기 자신일 때만 해제한다.
+- `ATDExtractionZone`(`Source/TopdownShooter/Public/Interaction/TDExtractionZone.h`)이 `ITDInteractableInterface`를 구현한다. Focus 등록/해제 규칙은 `ATDItemPickupActor`와 동일하다.
+- `Interact_Implementation()`은 `RequiredItem`을 `InventoryComponent::HasItem()`으로 검사해 보유 여부를 반환한다. 현재는 성공·실패 로그(`[Extraction] Success/Required item missing`)만 출력하며, 승리 처리·레벨 이동·아이템 제거·UI는 후속 작업이다.
 
 ## Key Decisions
 - 초기 상호작용 입력은 E 키 하나로 통합한다.
@@ -43,7 +45,7 @@ E Input
 - Overlap은 근처 대상을 찾기 쉽지만 여러 후보가 겹칠 때 우선순위 규칙이 필요하다.
 
 ## Future
-- `ATDExtractionZone` 및 승리/패배 조건
+- Extraction 성공에 따른 승리/패배 조건 및 레벨 처리
 - Door / Switch 등 다른 Interactable 구현체
 - OfficeKey 등 특정 아이템 보유 여부 검사
 - 상호작용 성공/실패 Delegate

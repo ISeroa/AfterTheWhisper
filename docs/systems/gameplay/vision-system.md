@@ -12,7 +12,7 @@
   - `VisionTraceChannel`
 - `UTDActorVisibilityComponent`는 `UTDVisionComponent::IsActorVisible()`을 사용해 Enemy 같은 동적 대상을 숨기거나 표시한다.
 - `UTDVisionRendererComponent`는 `UTDVisionComponent`의 설정을 읽어 벽에 막힌 `VisibilityPolygonPoints`를 계산한다.
-- 레벨에 미리 배치된 Enemy는 BeginPlay에서 수집해 Visibility Polygon용 Ray의 Ignore 목록에 넣는다. 적의 몸이 벽처럼 시야 마스크를 자르지 않게 하기 위한 처리다.
+- Enemy와 낮은 가구는 `VisionObstacle`을 기본 Ignore하므로 Visibility Polygon용 Ray의 별도 Ignore 목록에서 관리하지 않는다.
 - `UTDVisionRendererComponent::DrawToRenderTarget()`는 계산된 폴리곤을 `VisionMaskRenderTarget`에 흰색 삼각형 Fan으로 그린다.
 - `M_PP_VisionDarkness` / `MI_PP_VisionDarkness`는 `RT_VisionMask`를 읽어서 화면을 어둡게 처리한다.
   - Mask black: 시야 밖, 어둡게 표시
@@ -72,7 +72,8 @@ PostProcess Material
 - Enemy, Player, 허리 높이의 책상, 의자, 탄피, 아이템, 작은 장식물은 `VisionObstacle`을 Ignore하여 Visibility Polygon을 자르지 않게 한다.
 - 오브젝트의 실제 Collision 높이를 자동 판정 기준으로 사용하지 않는다. 시야 차단 여부는 오브젝트의 게임플레이 역할에 따라 명시적으로 지정한다.
 - 고정 배치 Enemy의 표시·숨김은 `UTDActorVisibilityComponent`가 담당한다. 아이템·탄피로의 확장은 미구현이다.
-- 런타임 Spawn Enemy는 월드의 Actor Spawn 이벤트를 받아 `UTDVisionRendererComponent`의 Ignore 목록과 `UTDActorVisibilityComponent`의 추적 목록에 자동 등록하는 방향으로 확장한다.
+- 런타임 Spawn Enemy는 월드의 Actor Spawn 이벤트를 받아 `UTDActorVisibilityComponent`의 추적 목록에 자동 등록하는 방향으로 확장한다.
+- `VisionObstacle` 전용 채널에서는 Enemy가 기본적으로 Ignore되므로, `UTDVisionRendererComponent`가 Enemy 목록을 별도로 관리하지 않는 것을 최종 방향으로 삼는다.
 - 맵 지형은 기본적으로 렌더링하며, Fog 또는 Darkness 표현은 별도 렌더링 시스템의 책임으로 둔다.
 - 적 AI의 플레이어 감지는 기존 `AI Perception Component`의 책임으로 유지한다.
 
@@ -98,6 +99,69 @@ PostProcess Material
 - 열린 문짝과 문틀
 
 낮은 가구는 이동과 총알 Collision에는 계속 영향을 줄 수 있지만, Visibility Polygon은 자르지 않는다. 총알 Trace가 사용하는 `Visibility`와 공간 시야가 사용하는 `VisionObstacle`을 분리해 두 규칙이 서로 영향을 주지 않게 한다.
+
+#### BP_VisionOccluder
+
+현재 Office Floor에서는 렌더링 및 물리 Collision을 담당하는 Geometry Brush와 시야 차단 영역을 분리한다. `BP_VisionOccluder`는 보이는 Mesh 없이 `Box Collision`만 소유하며, 맵 제작자가 실제로 시야를 가릴 영역을 명시적으로 배치한다.
+
+`Box Collision` 기본 설정:
+
+```text
+Collision Enabled = Query Only
+Collision Presets = Custom
+Object Type = WorldStatic
+VisionObstacle = Block
+나머지 채널 = Ignore
+Generate Overlap Events = false
+Can Ever Affect Navigation = false
+```
+
+배치 규칙:
+
+- 외벽과 방 사이 내벽의 형태를 따라 배치한다.
+- 문이 있는 벽은 문 공간을 비우고 좌우 Occluder로 나눈다.
+- 열린 문짝, 문틀, 책상, 의자에는 배치하지 않는다.
+- Player·AI 이동, 총알 Trace와 NavMesh에는 영향을 주지 않는다.
+- 레벨의 `Structures/VisionOccluders` 폴더에서 인스턴스를 관리한다.
+- 향후 벽 Mesh가 변경되더라도 시야 차단 영역은 독립적으로 조정할 수 있게 유지한다.
+
+#### Reveal Padding 결정
+
+PostProcess 마스크가 충돌점에서 정확히 끝나면 벽이나 문틀이 밝은 영역과 어두운 영역 사이에서 시각적으로 잘릴 수 있다. 이를 완화하기 위해 Ray가 충돌한 지점에서 진행 방향으로 밝은 영역을 조금 연장하는 `RevealPadding`을 추가한다.
+
+```text
+PaddedDistance = Min(HitDistance + RevealPadding, MaxDistance)
+HitPoint = VisionOrigin + RayDirection * PaddedDistance
+```
+
+- 전역 기본값은 `40~50cm`에서 시작한다.
+- `BP_VisionOccluder` 인스턴스가 개별 값을 Override할 수 있는 구조를 목표로 한다.
+- 얇은 문은 `20~30cm`, 일반 벽은 `40~60cm`, 두꺼운 벽과 기둥은 `70~100cm`를 초기 기준으로 사용한다.
+- Padding이 너무 크면 벽 뒤 바닥이나 모서리 너머가 밝게 새므로 필요한 만큼만 적용한다.
+- 현재 시야 원점의 높이는 유지하며, 원점 보정보다 충돌 객체별 Padding 조정을 우선한다.
+- 이 항목은 설계 결정이며 아직 코드에는 구현되지 않았다.
+
+#### 설계 결정 기록
+
+문제:
+
+- Geometry Brush와 일반 Static Mesh의 `Visibility` Collision을 공간 시야에 그대로 사용하자 Enemy, 책상, 의자도 벽처럼 긴 검은 영역을 만들었다.
+- Enemy를 Renderer의 Ignore 목록에 넣는 임시 처리는 레벨 배치 Enemy만 처리하며, 런타임 Spawn과 목록 동기화 책임이 추가됐다.
+- 총알 Trace도 `Visibility`를 사용하므로 낮은 가구와 Enemy의 `Visibility` 응답을 단순히 Ignore로 바꾸면 전투 Collision에 영향을 줄 수 있었다.
+
+결정:
+
+- 렌더링 Mesh 및 물리 Collision과 게임플레이 시야 차단 표현을 분리한다.
+- `BP_VisionOccluder`만 `VisionObstacle`을 Block하고 나머지 Actor는 기본 Ignore한다.
+- `UTDVisionRendererComponent`는 Enemy나 환경 Actor 목록을 알지 않고 `VisionObstacle` Trace 결과만 사용한다.
+- Spawn Enemy 등록은 렌더링 마스크가 아니라 Actor 전체 표시·숨김을 담당하는 `UTDActorVisibilityComponent`에만 둔다.
+
+결과:
+
+- 낮은 가구는 이동과 총알을 막으면서도 플레이어 시야를 불필요하게 자르지 않는다.
+- Enemy가 배치 또는 Spawn 방식과 관계없이 Visibility Polygon을 가리지 않는다.
+- 환경 Mesh를 교체해도 시야 차단 영역을 독립적으로 유지하고 조정할 수 있다.
+- 별도 Occluder 배치 비용이 생기지만, 탑다운 전투 가독성과 충돌 규칙의 예측 가능성을 우선한다.
 
 ### UTDVisionComponent
 - `ATDPlayerCharacter`는 생성자에서 `CreateDefaultSubobject`로 `UTDVisionComponent`를 생성한다.
@@ -159,7 +223,7 @@ PostProcess Material
 - `ATDPlayerCharacter`가 `CreateDefaultSubobject`로 소유한다.
 - Tick을 사용하지 않고 `UpdateInterval` 주기의 중앙 Timer로 Visibility Polygon을 갱신한다.
 - 같은 Owner의 `UTDVisionComponent`를 BeginPlay에서 찾아 캐싱하고, 컴포넌트가 없으면 Warning 로그 후 갱신을 시작하지 않는다.
-- BeginPlay에서 레벨에 배치된 `ATDEnemyCharacter`를 수집해 Visibility Polygon용 LineTrace의 Ignore 목록에 저장한다.
+- Enemy나 환경 Actor 목록을 수집하지 않으며, `VisionObstacle` Collision 응답만으로 시야 차단 대상을 구분한다.
 - 360도를 `RayCount`만큼 균등 샘플링하고 콘 좌우 경계 Ray 2개를 추가한다.
 - 전방 콘 안의 Ray는 `Max(NearVisionRadius, ConeVisionDistance)`, 콘 밖의 Ray는 `NearVisionRadius`를 최대 거리로 사용한다.
 - `bUseLineOfSightCheck`가 활성화된 경우 `UTDVisionComponent::VisionTraceChannel`로 LineTrace하여 최초 Blocking Hit 지점에서 폴리곤을 자른다.
@@ -179,14 +243,13 @@ PostProcess Material
 ```text
 BeginPlay
  ├─ 같은 Owner의 UTDVisionComponent 캐싱
- ├─ 기존 Enemy 수집 → VisionTraceIgnoredActors 등록
  └─ Timer 등록 (UpdateInterval, 반복)
 
 UpdatePolygon
  ├─ 360도 균등 각도 + 콘 좌우 경계 각도 생성 및 정렬
  ├─ 각 방향이 전방 콘 안인지 판정
  ├─ Near 또는 Cone 최대 거리 결정
- ├─ Owner와 등록된 Enemy를 Ignore한 VisionTraceChannel LineTrace
+ ├─ Owner를 Ignore한 VisionTraceChannel LineTrace
  │   ├─ Blocking Hit → ImpactPoint 저장
  │   └─ Hit 없음      → 최대 거리 지점 저장
  └─ Debug 활성화 시 인접 지점을 연결해 닫힌 폴리곤 표시
@@ -206,7 +269,7 @@ UpdatePolygon
 
 #### 동적 Spawn 대응 결정
 
-현재는 BeginPlay에 존재하는 Enemy만 수집한다. Enemy Spawner 도입 시 다음 구조로 두 컴포넌트를 함께 확장한다.
+현재는 BeginPlay에 존재하는 Enemy만 수집한다. Enemy Spawner 도입 시 `UTDActorVisibilityComponent`가 월드의 Actor Spawn 이벤트를 구독해 추적 목록을 갱신한다.
 
 ```text
 BeginPlay
@@ -214,7 +277,6 @@ BeginPlay
  └─ World Actor Spawn 이벤트 구독
 
 ATDEnemyCharacter Spawn
- ├─ UTDVisionRendererComponent Ignore 목록에 AddUnique
  └─ UTDActorVisibilityComponent TrackedEnemies에 AddUnique
      └─ 초기 가시성 즉시 계산 및 적용
 
@@ -222,7 +284,7 @@ EndPlay
  └─ Actor Spawn 이벤트 구독 해제
 ```
 
-목록은 `TWeakObjectPtr`로 유지하고 무효화된 Enemy는 갱신 과정에서 제거한다. Spawn 이벤트를 두 컴포넌트 중 하나에만 적용하면 시야 마스크와 Actor 표시 상태가 어긋날 수 있으므로 항상 함께 등록한다.
+목록은 `TWeakObjectPtr`로 유지하고 무효화된 Enemy는 갱신 과정에서 제거한다. `VisionObstacle` 전용 채널은 Enemy를 기본 Ignore하므로 `UTDVisionRendererComponent`에는 Spawn Enemy를 등록하지 않는다.
 
 #### 변수
 
@@ -323,8 +385,8 @@ Recognition  [필요 시 추후 구현]
 - RenderTarget + PostProcess 기반 `VisionRenderer`
 - 손전등 SpotLight 및 조도 기반 Recognition 보정
 - 현재 가시 상태와 탐색 완료 상태의 분리
-- `UTDVisionRendererComponent` / `UTDActorVisibilityComponent`: 월드 Actor Spawn 이벤트 기반 동적 Enemy 자동 등록
+- `UTDActorVisibilityComponent`: 월드 Actor Spawn 이벤트 기반 동적 Enemy 자동 등록
 - `UTDActorVisibilityComponent`: 아이템, 탄피로 대상 확장
 - 시야 밖 적의 Audio Presence 연동
-- `VisionOccluder` Preset을 벽·기둥용 공통 Blueprint 또는 모듈형 벽에 적용
+- Occluder별 `RevealPadding` Override 구현
 - 관련 문서: [[flashlight-system]], [[enemy-alert-system]], [[enemy-system]], [[aim-system]]

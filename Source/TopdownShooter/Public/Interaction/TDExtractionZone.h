@@ -7,6 +7,8 @@
 #include "TDExtractionZone.generated.h"
 
 class USceneComponent;
+class UBoxComponent;
+class ATDPlayerCharacter;
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDExtractionZone : public AActor
@@ -22,18 +24,33 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Extraction")
 	bool IsExtractionActive() const;
 
+	UFUNCTION(BlueprintPure, Category = "Extraction")
+	bool IsPlayerInsideExtractionArea() const;
+
 protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Extraction")
 	void OnExtractionActivated();
 
+	UFUNCTION()
+	void OnExtractionAreaBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnExtractionAreaEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
 	USceneComponent* Root = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
+	UBoxComponent* ExtractionArea = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Extraction")
 	bool bStartActive = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
 	bool bIsExtractionActive = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
+	bool bIsPlayerInsideExtractionArea = false;
 };

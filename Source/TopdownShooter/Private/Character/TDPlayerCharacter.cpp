@@ -23,6 +23,7 @@
 #include "Inventory/TDInventoryComponent.h"
 #include "Inventory/Data/TDItemDataAsset.h"
 #include "Interaction/TDInteractableInterface.h"
+#include "Core/TDGameMode.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -661,4 +662,14 @@ void ATDPlayerCharacter::Debug_DrawTrace(
         3.f
     );
 #endif
+}
+
+void ATDPlayerCharacter::HandleDeath()
+{
+    Super::HandleDeath();
+
+    ATDGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<ATDGameMode>() : nullptr;
+    if (!GameMode) return;
+
+    GameMode->CompleteGameAsDefeat();
 }

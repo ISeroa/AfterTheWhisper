@@ -36,6 +36,13 @@ void ATDExtractionZone::BeginPlay()
 	}
 }
 
+void ATDExtractionZone::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorldTimerManager().ClearTimer(ExtractionTimerHandle);
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void ATDExtractionZone::ActivateExtraction()
 {
 	if (bIsExtractionActive) return;
@@ -51,6 +58,11 @@ void ATDExtractionZone::ActivateExtraction()
 		UE_LOG(LogTemp, Warning, TEXT("[Extraction] Zone activated while player is inside"));
 	}
 #endif
+
+	if (bIsPlayerInsideExtractionArea)
+	{
+		StartExtractionTimer();
+	}
 }
 
 bool ATDExtractionZone::IsExtractionActive() const
@@ -61,6 +73,11 @@ bool ATDExtractionZone::IsExtractionActive() const
 bool ATDExtractionZone::IsPlayerInsideExtractionArea() const
 {
 	return bIsPlayerInsideExtractionArea;
+}
+
+bool ATDExtractionZone::IsExtractionCompleted() const
+{
+	return bIsExtractionCompleted;
 }
 
 void ATDExtractionZone::OnExtractionAreaBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -80,6 +97,11 @@ void ATDExtractionZone::OnExtractionAreaBeginOverlap(UPrimitiveComponent* Overla
 		UE_LOG(LogTemp, Warning, TEXT("[Extraction] Player entered inactive extraction area"));
 	}
 #endif
+
+	if (bIsExtractionActive)
+	{
+		StartExtractionTimer();
+	}
 }
 
 void ATDExtractionZone::OnExtractionAreaEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -92,4 +114,48 @@ void ATDExtractionZone::OnExtractionAreaEndOverlap(UPrimitiveComponent* Overlapp
 #if !UE_BUILD_SHIPPING
 	UE_LOG(LogTemp, Warning, TEXT("[Extraction] Player left extraction area"));
 #endif
+
+	CancelExtractionTimer();
+}
+
+void ATDExtractionZone::StartExtractionTimer()
+{
+	if (!bIsExtractionActive) return;
+	if (!bIsPlayerInsideExtractionArea) return;
+	if (bIsExtractionCompleted) return;
+	if (GetWorldTimerManager().IsTimerActive(ExtractionTimerHandle)) return;
+
+	GetWorldTimerManager().SetTimer(ExtractionTimerHandle, this, &ATDExtractionZone::CompleteExtraction, ExtractionDuration, false);
+
+#if !UE_BUILD_SHIPPING
+	UE_LOG(LogTemp, Warning, TEXT("[Extraction] Extraction timer started: %.2f seconds"), ExtractionDuration);
+#endif
+}
+
+void ATDExtractionZone::CancelExtractionTimer()
+{
+	if (!GetWorldTimerManager().IsTimerActive(ExtractionTimerHandle)) return;
+
+	GetWorldTimerManager().ClearTimer(ExtractionTimerHandle);
+
+#if !UE_BUILD_SHIPPING
+	UE_LOG(LogTemp, Warning, TEXT("[Extraction] Extraction timer cancelled"));
+#endif
+}
+
+void ATDExtractionZone::CompleteExtraction()
+{
+	GetWorldTimerManager().ClearTimer(ExtractionTimerHandle);
+
+	if (!bIsExtractionActive) return;
+	if (!bIsPlayerInsideExtractionArea) return;
+	if (bIsExtractionCompleted) return;
+
+	bIsExtractionCompleted = true;
+
+#if !UE_BUILD_SHIPPING
+	UE_LOG(LogTemp, Warning, TEXT("[Extraction] Extraction completed"));
+#endif
+
+	OnExtractionCompleted();
 }

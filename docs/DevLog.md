@@ -1,5 +1,38 @@
 # Development Log
 
+## 2026-09-06
+
+### 완료한 작업
+
+**[OfficeKey 기반 Extraction 조건 검증]**
+- 공통 Interactable Interface를 통해 `ATDExtractionZone`과 상호작용하도록 연결.
+- `UTDInventoryComponent::HasItem()`으로 `OfficeKey` 보유 여부를 확인하는 최소 흐름 구현.
+- OfficeKey 획득 후 상호작용 시 `[Extraction] Success: OfficeKey` 로그 출력 확인. ✅
+
+### 결정 사항
+
+- 모든 탈출구가 열쇠를 요구하지 않으므로 아이템 조건과 탈출 판정을 하나의 Actor 책임으로 묶지 않는다.
+- 현재 `ATDExtractionZone`의 `RequiredItem` 검사는 흐름 검증용 임시 결합으로 취급한다.
+- 후속 작업에서 아이템 조건을 별도 Extraction Activator로 옮기고, `ATDExtractionZone`은 활성 상태·체류 시간·완료 이벤트만 담당한다.
+- Office Floor에서는 `OfficeKey → Activator 상호작용 → Zone 활성화 → 일정 시간 체류 → 탈출 완료` 흐름을 사용한다.
+- 초기 데모에서는 OfficeKey를 소비하지 않으며, 체류 판정에는 Tick 대신 `TimerManager`를 사용한다.
+- 승리 UI와 레벨 종료는 Extraction Zone 내부가 아니라 탈출 완료 이벤트를 받는 상위 게임 흐름에서 처리한다.
+
+### 다음 작업
+
+1. 조건 없는 `ATDExtractionZone::ActivateExtraction()` 추가.
+2. OfficeKey 검사를 별도 Extraction Activator로 분리.
+3. Activator와 Zone을 BP에서 연결하고 활성화 검증.
+4. 탈출 영역 체류 및 이탈 시 타이머 취소 구현.
+5. 완료 이벤트를 승리 처리와 연결.
+
+### 문서
+
+- `docs/future/extraction-loop.md`에 책임 분리 구조와 단계별 구현 순서 정리.
+- `docs/future/interaction-system.md`에 Extraction Activator 역할 반영.
+
+---
+
 ## 2026-09-01
 
 ### 완료한 작업

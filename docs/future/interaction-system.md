@@ -11,7 +11,8 @@
 - `ATDItemPickupActor`가 `ITDInteractableInterface`를 구현한다. `Interact_Implementation()`은 기존 `TryPickup(Interactor)`를 그대로 호출하고 결과를 반환한다. `AddItem`/로그/성공 시 Destroy 동작은 변경되지 않았다.
 - Pickup의 `InteractionSphere` BeginOverlap/EndOverlap은 `FocusedInteractableActor`를 등록/해제한다. EndOverlap은 현재 Focus 대상이 자기 자신일 때만 해제한다.
 - `ATDExtractionZone`(`Source/TopdownShooter/Public/Interaction/TDExtractionZone.h`)이 `ITDInteractableInterface`를 구현한다. Focus 등록/해제 규칙은 `ATDItemPickupActor`와 동일하다.
-- `Interact_Implementation()`은 `RequiredItem`을 `InventoryComponent::HasItem()`으로 검사해 보유 여부를 반환한다. 현재는 성공·실패 로그(`[Extraction] Success/Required item missing`)만 출력하며, 승리 처리·레벨 이동·아이템 제거·UI는 후속 작업이다.
+- `Interact_Implementation()`은 현재 `RequiredItem`을 `InventoryComponent::HasItem()`으로 검사해 보유 여부를 반환한다. OfficeKey 보유 시 성공 로그까지 검증했지만, 이는 흐름 검증을 위한 임시 결합이다.
+- 모든 탈출이 아이템을 요구하지는 않으므로, 아이템 검사 상호작용은 별도의 Extraction Activator로 옮기고 `ATDExtractionZone`은 조건 없는 활성화와 탈출 판정만 담당하도록 분리할 예정이다.
 
 ## Key Decisions
 - 초기 상호작용 입력은 E 키 하나로 통합한다.
@@ -20,6 +21,7 @@
 - 탑다운 시점에 맞춰 짧은 거리 Trace와 근거리 Overlap 방식 중 작은 범위부터 검증한다.
 - Aim 상태에서도 상호작용을 허용한다.
 - UI는 현재 후보가 바뀔 때만 안내 문구를 갱신한다.
+- 탈출 조건을 검사하는 Interactable과 실제 탈출 영역은 분리한다. Interactable은 조건 충족 시 대상 `ATDExtractionZone::ActivateExtraction()`만 호출한다.
 
 ## Architecture
 - 입력이 발생하면 Player의 상호작용 탐지 로직이 후보 Actor를 찾는다.
@@ -36,7 +38,10 @@ E Input
   → Interact(Player)
       ├─ Pickup
       ├─ Chest / Loot Bag
-      └─ Door / Switch
+      ├─ Door / Switch
+      └─ Extraction Activator
+             → 조건 검사
+             → Extraction Zone 활성화
 ```
 
 ## Trade-offs
@@ -45,12 +50,14 @@ E Input
 - Overlap은 근처 대상을 찾기 쉽지만 여러 후보가 겹칠 때 우선순위 규칙이 필요하다.
 
 ## Future
+- Extraction Activator 분리 및 Zone 활성화 연결
+- Extraction Zone 체류 시간과 완료 이벤트
 - Extraction 성공에 따른 승리/패배 조건 및 레벨 처리
 - Door / Switch 등 다른 Interactable 구현체
-- OfficeKey 등 특정 아이템 보유 여부 검사
+- OfficeKey 외의 다양한 Extraction 활성화 조건
 - 상호작용 성공/실패 Delegate
 - Interactable Highlight
 - 후보 우선순위
 - Hold Interaction
 - 상호작용 Animation
-- 관련 문서: [[inventory-loot-system]], [[aim-modifier-system]]
+- 관련 문서: [[inventory-loot-system]], [[aim-modifier-system]], [[extraction-loop]]

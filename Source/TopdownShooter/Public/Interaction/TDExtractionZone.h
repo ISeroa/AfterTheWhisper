@@ -4,39 +4,36 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Interaction/TDInteractableInterface.h"
 #include "TDExtractionZone.generated.h"
 
 class USceneComponent;
-class USphereComponent;
-class UTDItemDataAsset;
-class ATDPlayerCharacter;
 
 UCLASS()
-class TOPDOWNSHOOTER_API ATDExtractionZone : public AActor, public ITDInteractableInterface
+class TOPDOWNSHOOTER_API ATDExtractionZone : public AActor
 {
 	GENERATED_BODY()
 
 public:
 	ATDExtractionZone();
 
-	virtual bool Interact_Implementation(ATDPlayerCharacter* Interactor) override;
+	UFUNCTION(BlueprintCallable, Category = "Extraction")
+	void ActivateExtraction();
+
+	UFUNCTION(BlueprintPure, Category = "Extraction")
+	bool IsExtractionActive() const;
 
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Extraction")
+	void OnExtractionActivated();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
 	USceneComponent* Root = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
-	USphereComponent* InteractionSphere = nullptr;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Extraction")
-	UTDItemDataAsset* RequiredItem = nullptr;
+	bool bStartActive = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
+	bool bIsExtractionActive = false;
 };

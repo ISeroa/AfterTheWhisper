@@ -115,6 +115,23 @@ int32 UTDInventoryComponent::GetUsedSlotCount() const
 	return Slots.Num();
 }
 
+bool UTDInventoryComponent::HasItem(UTDItemDataAsset* Item, int32 RequiredCount) const
+{
+	if (!Item || RequiredCount <= 0) return false;
+
+	int32 Total = 0;
+	for (const FTDInventorySlot& Slot : Slots)
+	{
+		if (Slot.Item == Item)
+		{
+			Total += Slot.Count;
+			if (Total >= RequiredCount) return true;
+		}
+	}
+
+	return false;
+}
+
 void UTDInventoryComponent::BroadcastInventoryChanged()
 {
 	OnInventoryChanged.Broadcast();

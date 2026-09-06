@@ -16,4 +16,32 @@ class TOPDOWNSHOOTER_API ATDGameMode : public AGameModeBase
 	
 public:
 	ATDGameMode();
+
+	UFUNCTION(BlueprintPure, Category = "Game State")
+	bool IsGameWon() const;
+
+	UFUNCTION(BlueprintPure, Category = "Game State")
+	bool IsGameLost() const;
+
+	UFUNCTION(BlueprintPure, Category = "Game State")
+	bool IsGameFinished() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Game State")
+	void CompleteGameAsVictory();
+
+	UFUNCTION(BlueprintCallable, Category = "Game State")
+	void CompleteGameAsDefeat();
+
+protected:
+	UFUNCTION(BlueprintImplementableEvent, Category = "Game State")
+	void OnGameWon();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Game State")
+	void OnGameLost();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game State")
+	bool bIsGameWon = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game State")
+	bool bIsGameLost = false;
 };

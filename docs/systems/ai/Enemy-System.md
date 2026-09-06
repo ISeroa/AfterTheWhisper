@@ -10,12 +10,14 @@
 - 이동 목표 계산과 `MoveToLocation()` 호출은 `ATDEnemyAIController`가 담당한다.
 - 근접 공격의 Windup, 거리 재검사, 데미지, Cooldown은 `UTDEnemyMeleeAttackComponent`가 담당한다.
 - 적 사망 시 Controller를 UnPossess하여 이동 Timer를 해제하고 공격 컴포넌트의 Timer도 중단한다.
+- 최초 감지는 `DetectionRange`, 추격 해제는 더 넓은 `LoseTargetRange`를 사용해 경계에서 상태가 반복 전환되는 것을 방지한다.
 - Behavior Tree, AI Perception, Alert 상태는 현재 구현 범위에 포함하지 않는다.
 
 ## Architecture
 - `ATDEnemyCharacter`는 `ATDEnemyAIController`를 기본 Controller로 사용하고 `UTDEnemyMeleeAttackComponent`를 소유한다.
 - `ATDEnemyAIController::OnPossess()`는 적마다 초기 실행 시점을 분산하고 반복 Timer를 시작한다.
-- Timer가 호출하는 `UpdateMoveTarget()`은 플레이어를 조회하고 이동 전술에 맞는 목표를 계산한다.
+- Timer가 호출하는 `UpdateMoveTarget()`은 플레이어와의 2D 거리를 확인하고, 감지 상태일 때만 이동 및 공격을 수행한다.
+- 기본값은 `DetectionRange = 1000`, `LoseTargetRange = 1400`이다. 감지 전에는 정지하고, 추격 해제 시 이동과 Encircle 슬롯 예약을 정리한다.
 - `DirectChase`는 플레이어 위치를 목표로 사용한다.
 - `Encircle`은 플레이어 주변 슬롯 중 비용이 가장 낮은 위치를 선택한다.
 - 이동 요청 후 `MeleeAttackComp->TryAttack(Player)`를 호출하며, 컴포넌트가 사거리와 Cooldown을 판정한다.
@@ -35,6 +37,7 @@ ATDEnemyCharacter
 - `GetPlayerPawn(0)` 기반 추적은 싱글플레이에는 충분하지만 멀티플레이나 Target 우선순위를 지원하지 않는다.
 - 이동 갱신과 공격 시도를 같은 Timer에서 처리하므로 두 로직에 서로 다른 갱신 빈도가 필요해지면 분리가 필요하다.
 - Behavior Tree 없이 빠르게 검증할 수 있지만 Alert, Investigate, Ranged 전투가 추가되면 명시적인 상태 구조가 필요하다.
+- 현재 감지는 거리만 사용하므로 벽 너머 여부나 적의 시야 방향은 판정하지 않는다.
 
 ## Future
 - Enemy Alert 및 AI Perception 도입

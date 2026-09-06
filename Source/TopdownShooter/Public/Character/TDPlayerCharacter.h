@@ -14,7 +14,6 @@ class UTDActorVisibilityComponent;
 class UTDVisionRendererComponent;
 class UTDInventoryComponent;
 class UTDItemDataAsset;
-class ATDItemPickupActor;
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDPlayerCharacter : public ATDBaseCharacter
@@ -36,10 +35,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	UTDInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
-	UFUNCTION(BlueprintPure, Category = "Inventory")
-	ATDItemPickupActor* GetFocusedPickupActor() const { return FocusedPickupActor; }
+	UFUNCTION(BlueprintPure, Category = "Interaction")
+	AActor* GetFocusedInteractableActor() const { return FocusedInteractableActor; }
 
-	void SetFocusedPickupActor(ATDItemPickupActor* Pickup) { FocusedPickupActor = Pickup; }
+	void SetFocusedInteractableActor(AActor* Interactable) { FocusedInteractableActor = Interactable; }
+
+	virtual void HandleDeath() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -203,9 +204,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory|Test")
 	UTDItemDataAsset* TestInventoryItem = nullptr;
 
-	// 현재 상호작용(E) 범위 안에 있는 Pickup Actor. 없으면 nullptr
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
-	ATDItemPickupActor* FocusedPickupActor = nullptr;
+	// 현재 상호작용(E) 범위 안에 있는 Interactable Actor. 없으면 nullptr
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	AActor* FocusedInteractableActor = nullptr;
 
 	//Debug
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug|Aim")

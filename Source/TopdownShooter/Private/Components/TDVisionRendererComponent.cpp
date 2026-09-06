@@ -9,15 +9,40 @@
 #include "Kismet/KismetRenderingLibrary.h"
 #include "GameFramework/PlayerController.h"
 #include "RenderUtils.h"
+#include "UObject/ConstructorHelpers.h"
+
+namespace
+{
+	static const TCHAR* VisionMaskRenderTargetPath = TEXT("/Game/Game/System/Vision/RenderTargets/RT_VisionMask.RT_VisionMask");
+}
 
 UTDVisionRendererComponent::UTDVisionRendererComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+
+	ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> RTFinder(VisionMaskRenderTargetPath);
+	if (RTFinder.Succeeded())
+	{
+		VisionMaskRenderTarget = RTFinder.Object;
+	}
 }
 
 void UTDVisionRendererComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (!VisionMaskRenderTarget)
+	{
+		VisionMaskRenderTarget = LoadObject<UTextureRenderTarget2D>(nullptr, VisionMaskRenderTargetPath);
+	}
+
+	if (!VisionMaskRenderTarget)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[VisionRenderer] VisionMaskRenderTarget is not assigned"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("[VisionRenderer] VisionMaskRenderTarget ready: RT_VisionMask"));
 
 	if (AActor* Owner = GetOwner())
 	{

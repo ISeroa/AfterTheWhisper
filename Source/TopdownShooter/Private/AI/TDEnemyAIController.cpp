@@ -15,6 +15,7 @@ void ATDEnemyAIController::OnPossess(APawn* InPawn)
 		*GetName(), InPawn ? *InPawn->GetName() : TEXT("NULL"));
 
 	CurrentSlotIndex = INDEX_NONE;
+	bHasDetectedPlayer = false;
 	RadiusBias = FMath::RandRange(-Jitter, Jitter);
 	UE_LOG(LogTemp, Log, TEXT("[TDEnemyAI] RadiusBias=%.1f"), RadiusBias);
 
@@ -36,6 +37,7 @@ void ATDEnemyAIController::OnUnPossess()
 {
 	UE_LOG(LogTemp, Log, TEXT("[TDEnemyAI] OnUnPossess: %s"), *GetName());
 	CurrentSlotIndex = INDEX_NONE;  // 해제 즉시 예약 취소
+	bHasDetectedPlayer = false;
 	GetWorld()->GetTimerManager().ClearTimer(RepathTimerHandle);
 	Super::OnUnPossess();
 }
@@ -131,18 +133,39 @@ FVector ATDEnemyAIController::ComputeMoveGoal(APawn* Player)
 
 void ATDEnemyAIController::UpdateMoveTarget()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[EnemyAI] UpdateMoveTarget"));
-
 	APawn* Player = GetPlayerPawn();
-	if (!Player)
+	APawn* EnemyPawn = GetPawn();
+
+	if (!Player || !EnemyPawn)
 	{
+		return;
+	}
+
+	const float Distance = FVector::Dist2D(Player->GetActorLocation(), EnemyPawn->GetActorLocation());
+
+	if (!bHasDetectedPlayer)
+	{
+		if (Distance > DetectionRange)
+		{
+			return;
+		}
+
+		bHasDetectedPlayer = true;
+		UE_LOG(LogTemp, Warning, TEXT("[EnemyAI] Player detected: Distance=%.1f"), Distance);
+	}
+	else if (Distance > LoseTargetRange)
+	{
+		bHasDetectedPlayer = false;
+		StopMovement();
+		CurrentSlotIndex = INDEX_NONE;
+		UE_LOG(LogTemp, Warning, TEXT("[EnemyAI] Player lost: Distance=%.1f"), Distance);
 		return;
 	}
 
 	const FVector Goal = ComputeMoveGoal(Player);
 	MoveToLocation(Goal, AcceptanceRadius, /*bStopOnOverlap=*/true);
 
-	if (ATDEnemyCharacter* Enemy = Cast<ATDEnemyCharacter>(GetPawn()))
+	if (ATDEnemyCharacter* Enemy = Cast<ATDEnemyCharacter>(EnemyPawn))
 	{
 		Enemy->MeleeAttackComp->TryAttack(Player);
 	}

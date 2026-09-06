@@ -16,6 +16,23 @@ ATDPlayerController::ATDPlayerController()
 	CachedMouseWorldLocation = FVector::ZeroVector;
 }
 
+void ATDPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	bShowMouseCursor = false;
+
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+
+	SetIgnoreMoveInput(false);
+	SetIgnoreLookInput(false);
+
+#if !UE_BUILD_SHIPPING
+	UE_LOG(LogTemp, Warning, TEXT("[PlayerController] Game input mode initialized"));
+#endif
+}
+
 void ATDPlayerController::PlayerTick(float DeltaTime)
 {
     Super::PlayerTick(DeltaTime);

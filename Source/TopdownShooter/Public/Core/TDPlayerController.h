@@ -24,6 +24,7 @@ public:
 
 protected:
 	ATDPlayerController();
+	virtual void BeginPlay() override;
 	virtual void PlayerTick(float DeltaTime) override;
 
 	UPROPERTY()

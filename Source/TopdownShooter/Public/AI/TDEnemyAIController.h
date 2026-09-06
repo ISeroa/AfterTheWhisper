@@ -47,6 +47,17 @@ public:
 	// 현재 선택된 슬롯 인덱스 — 다른 컨트롤러가 읽어서 중복 회피에 사용
 	int32 CurrentSlotIndex = INDEX_NONE;
 
+	// 최초로 플레이어를 발견하는 거리
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Detection", meta = (ClampMin = "0.0"))
+	float DetectionRange = 1000.f;
+
+	// 이미 발견한 플레이어의 추격을 중단하는 거리 (DetectionRange보다 커야 함, 히스테리시스)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI|Detection", meta = (ClampMin = "0.0"))
+	float LoseTargetRange = 1400.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Detection")
+	bool bHasDetectedPlayer = false;
+
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;

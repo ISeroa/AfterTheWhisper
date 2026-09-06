@@ -2,7 +2,18 @@
 
 ## Overview
 플레이어가 아이템, 컨테이너, Door, Switch 같은 월드 Actor와 하나의 입력 흐름으로 상호작용하는 시스템이다.
-현재는 구현 전 설계이며, Player가 구체 타입을 알지 않도록 공통 Interactable Interface를 사용한다.
+공통 Interactable Interface를 통해 Player가 구체 타입을 알지 않도록 구현되어 있으며, Item Pickup과 Extraction Activator가 이 구조로 연결되어 있다.
+
+## Current State
+- `ITDInteractableInterface`(`Source/TopdownShooter/Public/Interaction/TDInteractableInterface.h`)를 추가했다. `Interact(ATDPlayerCharacter* Interactor)`는 `BlueprintNativeEvent`로, C++/Blueprint 양쪽에서 구현 가능하다.
+- `ATDPlayerCharacter`는 더 이상 `ATDItemPickupActor`를 알지 않는다. `FocusedPickupActor` 대신 `AActor* FocusedInteractableActor`를 보관하고, `GetFocusedInteractableActor()` / `SetFocusedInteractableActor()`로 조회·설정한다.
+- `OnInteractPressed()`는 `FocusedInteractableActor`가 Interface를 구현했는지(`Implements<UTDInteractableInterface>()`) 확인한 뒤 `ITDInteractableInterface::Execute_Interact()`만 호출한다. 구체 타입으로 Cast하지 않는다.
+- `ATDItemPickupActor`가 `ITDInteractableInterface`를 구현한다. `Interact_Implementation()`은 기존 `TryPickup(Interactor)`를 그대로 호출하고 결과를 반환한다. `AddItem`/로그/성공 시 Destroy 동작은 변경되지 않았다.
+- Pickup의 `InteractionSphere` BeginOverlap/EndOverlap은 `FocusedInteractableActor`를 등록/해제한다. EndOverlap은 현재 Focus 대상이 자기 자신일 때만 해제한다.
+- `ATDExtractionActivator`가 `ITDInteractableInterface`와 InteractionSphere를 소유하고 Pickup과 같은 규칙으로 Focus를 등록·해제한다.
+- Activator의 `Interact_Implementation()`은 `RequiredItem`을 `InventoryComponent::HasItem()`으로 검사하고, 성공하면 `TargetExtractionZone->ActivateExtraction()`을 호출한다.
+- `TargetExtractionZone`은 `EditInstanceOnly`로 노출해 맵에 미리 배치된 특정 Zone 인스턴스를 연결한다.
+- `ATDExtractionZone`은 Interactable이나 아이템 조건을 알지 않고, 실제 탈출 영역과 체류 완료 판정만 담당한다.
 
 ## Key Decisions
 - 초기 상호작용 입력은 E 키 하나로 통합한다.
@@ -11,6 +22,7 @@
 - 탑다운 시점에 맞춰 짧은 거리 Trace와 근거리 Overlap 방식 중 작은 범위부터 검증한다.
 - Aim 상태에서도 상호작용을 허용한다.
 - UI는 현재 후보가 바뀔 때만 안내 문구를 갱신한다.
+- 탈출 조건을 검사하는 Interactable과 실제 탈출 영역은 분리한다. Interactable은 조건 충족 시 대상 `ATDExtractionZone::ActivateExtraction()`만 호출한다.
 
 ## Architecture
 - 입력이 발생하면 Player의 상호작용 탐지 로직이 후보 Actor를 찾는다.
@@ -27,7 +39,10 @@ E Input
   → Interact(Player)
       ├─ Pickup
       ├─ Chest / Loot Bag
-      └─ Door / Switch
+      ├─ Door / Switch
+      └─ Extraction Activator
+             → 조건 검사
+             → Extraction Zone 활성화
 ```
 
 ## Trade-offs
@@ -36,8 +51,12 @@ E Input
 - Overlap은 근처 대상을 찾기 쉽지만 여러 후보가 겹칠 때 우선순위 규칙이 필요하다.
 
 ## Future
+- Door / Switch 등 다른 Interactable 구현체
+- OfficeKey 외의 다양한 Extraction 활성화 조건
+- 탈출 진행 상황 UI
+- 상호작용 성공/실패 Delegate
 - Interactable Highlight
 - 후보 우선순위
 - Hold Interaction
 - 상호작용 Animation
-- 관련 문서: [[inventory-loot-system]], [[aim-modifier-system]]
+- 관련 문서: [[inventory-loot-system]], [[aim-modifier-system]], [[extraction-loop]]

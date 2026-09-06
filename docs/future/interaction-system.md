@@ -2,7 +2,7 @@
 
 ## Overview
 플레이어가 아이템, 컨테이너, Door, Switch 같은 월드 Actor와 하나의 입력 흐름으로 상호작용하는 시스템이다.
-공통 Interactable Interface를 통해 Player가 구체 타입을 알지 않도록 구현되어 있으며, 현재는 기존 Item Pickup만 이 구조로 연결된 상태다.
+공통 Interactable Interface를 통해 Player가 구체 타입을 알지 않도록 구현되어 있으며, Item Pickup과 Extraction Activator가 이 구조로 연결되어 있다.
 
 ## Current State
 - `ITDInteractableInterface`(`Source/TopdownShooter/Public/Interaction/TDInteractableInterface.h`)를 추가했다. `Interact(ATDPlayerCharacter* Interactor)`는 `BlueprintNativeEvent`로, C++/Blueprint 양쪽에서 구현 가능하다.
@@ -10,9 +10,10 @@
 - `OnInteractPressed()`는 `FocusedInteractableActor`가 Interface를 구현했는지(`Implements<UTDInteractableInterface>()`) 확인한 뒤 `ITDInteractableInterface::Execute_Interact()`만 호출한다. 구체 타입으로 Cast하지 않는다.
 - `ATDItemPickupActor`가 `ITDInteractableInterface`를 구현한다. `Interact_Implementation()`은 기존 `TryPickup(Interactor)`를 그대로 호출하고 결과를 반환한다. `AddItem`/로그/성공 시 Destroy 동작은 변경되지 않았다.
 - Pickup의 `InteractionSphere` BeginOverlap/EndOverlap은 `FocusedInteractableActor`를 등록/해제한다. EndOverlap은 현재 Focus 대상이 자기 자신일 때만 해제한다.
-- `ATDExtractionZone`(`Source/TopdownShooter/Public/Interaction/TDExtractionZone.h`)이 `ITDInteractableInterface`를 구현한다. Focus 등록/해제 규칙은 `ATDItemPickupActor`와 동일하다.
-- `Interact_Implementation()`은 현재 `RequiredItem`을 `InventoryComponent::HasItem()`으로 검사해 보유 여부를 반환한다. OfficeKey 보유 시 성공 로그까지 검증했지만, 이는 흐름 검증을 위한 임시 결합이다.
-- 모든 탈출이 아이템을 요구하지는 않으므로, 아이템 검사 상호작용은 별도의 Extraction Activator로 옮기고 `ATDExtractionZone`은 조건 없는 활성화와 탈출 판정만 담당하도록 분리할 예정이다.
+- `ATDExtractionActivator`가 `ITDInteractableInterface`와 InteractionSphere를 소유하고 Pickup과 같은 규칙으로 Focus를 등록·해제한다.
+- Activator의 `Interact_Implementation()`은 `RequiredItem`을 `InventoryComponent::HasItem()`으로 검사하고, 성공하면 `TargetExtractionZone->ActivateExtraction()`을 호출한다.
+- `TargetExtractionZone`은 `EditInstanceOnly`로 노출해 맵에 미리 배치된 특정 Zone 인스턴스를 연결한다.
+- `ATDExtractionZone`은 Interactable이나 아이템 조건을 알지 않고, 실제 탈출 영역과 체류 완료 판정만 담당한다.
 
 ## Key Decisions
 - 초기 상호작용 입력은 E 키 하나로 통합한다.
@@ -50,11 +51,9 @@ E Input
 - Overlap은 근처 대상을 찾기 쉽지만 여러 후보가 겹칠 때 우선순위 규칙이 필요하다.
 
 ## Future
-- Extraction Activator 분리 및 Zone 활성화 연결
-- Extraction Zone 체류 시간과 완료 이벤트
-- Extraction 성공에 따른 승리/패배 조건 및 레벨 처리
 - Door / Switch 등 다른 Interactable 구현체
 - OfficeKey 외의 다양한 Extraction 활성화 조건
+- 탈출 진행 상황 UI
 - 상호작용 성공/실패 Delegate
 - Interactable Highlight
 - 후보 우선순위

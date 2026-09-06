@@ -8,11 +8,13 @@
 
 ## Current State
 
-- `ATDExtractionZone`이 `ITDInteractableInterface`를 구현한다.
-- `RequiredItem`과 `UTDInventoryComponent::HasItem()`을 이용한 OfficeKey 보유 검사가 동작한다.
-- OfficeKey가 있을 때 `[Extraction] Success: OfficeKey` 로그가 출력되는 것까지 검증했다.
-- 현재 아이템 검사는 전체 흐름을 빠르게 확인하기 위한 임시 결합이며, 활성화 기능을 추가하기 전에 별도 Activator로 분리할 예정이다.
-- 탈출 영역 활성화, 체류 시간 판정, 완료 이벤트와 승리 UI는 아직 구현하지 않았다.
+- `ATDExtractionActivator`가 `ITDInteractableInterface`를 구현하고 `RequiredItem` 보유 여부를 검사한다.
+- Office Floor의 Activator는 `OfficeKey` 조건을 통과하면 맵에 배치된 `ATDExtractionZone` 인스턴스의 `ActivateExtraction()`을 호출한다.
+- `ATDExtractionZone`은 아이템과 인벤토리를 모르며 활성 상태, Box Overlap, 체류 Timer와 완료 상태만 관리한다.
+- 활성화된 영역에 `ExtractionDuration` 동안 머무르면 완료되고, 중간에 나가면 Timer가 취소되어 다시 처음부터 진행한다.
+- `OnExtractionCompleted`를 통해 `ATDGameMode::CompleteGameAsVictory()`를 호출한다.
+- 승리 시 `WBP_ExtractionSuccess`를 표시하고 게임을 일시정지한다. Restart 버튼은 Pause를 해제하고 현재 레벨을 다시 시작한다.
+- 플레이어 사망은 `ATDGameMode::CompleteGameAsDefeat()`로 전달되며, 승리와 패배 상태는 상호 배타적으로 처리한다.
 
 ## Key Decisions
 
@@ -78,17 +80,18 @@ OfficeKey 획득
 - 입력 제한 또는 레벨 전환
 - 결과 및 획득물 정산
 
-## Implementation Steps
+## Implemented Flow
 
-1. `ATDExtractionZone`에 조건 없는 활성화 상태와 `ActivateExtraction()`을 추가한다.
-2. 현재 Zone에 들어 있는 `RequiredItem` 검사 책임을 별도의 Activator로 옮긴다.
-3. Office Floor BP에서 Activator가 대상 Extraction Zone을 참조하도록 연결한다.
-4. OfficeKey 유무에 따른 활성화 성공·실패를 로그로 검증한다.
-5. Zone에 별도의 탈출 영역과 체류 타이머를 추가한다.
-6. 영역 이탈 시 타이머가 취소되는지 검증한다.
-7. 탈출 완료 이벤트를 승리 상태 및 UI에 연결한다.
+1. OfficeKey Pickup과 Activator 상호작용
+2. `UTDInventoryComponent::HasItem()` 조건 검사
+3. 배치된 Extraction Zone 인스턴스 활성화
+4. Extraction Area 진입 시 one-shot Timer 시작
+5. 영역 이탈 시 Timer 취소 및 진행 초기화
+6. 체류 완료 시 GameMode 승리 상태 전환
+7. 승리 UI 표시, UI Only 입력, 게임 Pause
+8. Restart 버튼으로 Pause 해제 및 레벨 재시작
 
-각 단계는 플레이에서 독립적으로 확인한 뒤 다음 단계로 넘어간다.
+`ATDPlayerController::BeginPlay()`는 재시작 시 커서를 숨기고 Game Only 입력으로 복구한다.
 
 ## Trade-offs
 

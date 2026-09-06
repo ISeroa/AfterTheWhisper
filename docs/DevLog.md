@@ -1,5 +1,44 @@
 # Development Log
 
+## 2026-09-07
+
+### 완료한 작업
+
+**[Office Floor 플레이 가능 루프 완성]**
+- `ATDExtractionActivator`로 OfficeKey 조건 검사와 Extraction Zone 활성화를 분리.
+- 맵에 배치된 Activator가 `EditInstanceOnly` 참조를 통해 대상 Zone을 활성화하도록 연결.
+- `ATDExtractionZone`에 Box Overlap과 `TimerManager` 기반 체류 판정 추가.
+- 탈출 영역을 중간에 벗어나면 Timer가 취소되고 재진입 시 처음부터 진행하도록 구현.
+- `ATDGameMode`에 상호 배타적인 승리·패배 상태와 BP 이벤트 추가.
+- 승리 UI와 Game Over UI에서 게임을 Pause하고 Restart할 수 있는 흐름 구성.
+- `ATDPlayerController::BeginPlay()`에서 Restart 후 Game Only 입력과 숨겨진 커서를 복구.
+- `ATDEnemyAIController`에 `DetectionRange = 1000`, `LoseTargetRange = 1400` 거리 기반 감지 추가.
+- Office Floor의 적 배치를 보강하고 전체 승리·패배 흐름을 실제 플레이로 검증.
+
+**[Vision Mask 참조 복구]**
+- BP에서 `VisionMaskRenderTarget` 참조가 유실돼 `RT_VisionMask`가 검게 유지되는 문제 확인.
+- `UTDVisionRendererComponent`가 `RT_VisionMask` 기본 참조와 BeginPlay fallback을 사용하도록 보강.
+- PostProcess 시야 마스크가 다시 정상 출력되는 것 확인. ✅
+
+### 결정 사항
+
+- 탈출 조건은 Activator, 탈출 영역과 체류 판정은 Zone, 최종 결과는 GameMode가 담당한다.
+- OfficeKey는 Activator의 조건이며 Zone의 고정 요구사항이 아니다.
+- 종료 UI가 표시된 동안 AI와 게임 상태가 진행되지 않도록 Pause를 사용한다.
+- Restart 시 PlayerController가 입력 모드를 명시적으로 초기화한다.
+- AI 감지는 이번 데모에서 거리 기반 최소 구조로 제한하고 AI Perception은 도입하지 않는다.
+
+### 검증 완료
+
+- OfficeKey 미보유/보유에 따른 Activator 실패·성공. ✅
+- Zone 활성화, 진입·이탈, 체류 완료. ✅
+- 승리 UI, Pause, Restart 및 입력 복구. ✅
+- 플레이어 사망, Game Over UI, Pause, Restart. ✅
+- AI 감지·추격 시작과 거리 이탈 시 추격 중단. ✅
+- Vision Render Target 및 PostProcess 표시. ✅
+
+---
+
 ## 2026-09-06
 
 ### 완료한 작업

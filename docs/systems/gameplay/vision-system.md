@@ -14,6 +14,7 @@
 - `UTDVisionRendererComponent`는 `UTDVisionComponent`의 설정을 읽어 벽에 막힌 `VisibilityPolygonPoints`를 계산한다.
 - Enemy와 낮은 가구는 `VisionObstacle`을 기본 Ignore하므로 Visibility Polygon용 Ray의 별도 Ignore 목록에서 관리하지 않는다.
 - `UTDVisionRendererComponent::DrawToRenderTarget()`는 계산된 폴리곤을 `VisionMaskRenderTarget`에 흰색 삼각형 Fan으로 그린다.
+- `VisionMaskRenderTarget` 참조가 BP에서 유실되어 마스크가 검게 유지되는 상황을 방지하기 위해 `RT_VisionMask`를 C++ 기본값으로 지정하고, `BeginPlay()`에서 null이면 동일 경로로 다시 로드한다.
 - `M_PP_VisionDarkness` / `MI_PP_VisionDarkness`는 `RT_VisionMask`를 읽어서 화면을 어둡게 처리한다.
   - Mask black: 시야 밖, 어둡게 표시
   - Mask white: 시야 안, 원래 화면 유지
@@ -75,7 +76,7 @@ PostProcess Material
 - 런타임 Spawn Enemy는 월드의 Actor Spawn 이벤트를 받아 `UTDActorVisibilityComponent`의 추적 목록에 자동 등록하는 방향으로 확장한다.
 - `VisionObstacle` 전용 채널에서는 Enemy가 기본적으로 Ignore되므로, `UTDVisionRendererComponent`가 Enemy 목록을 별도로 관리하지 않는 것을 최종 방향으로 삼는다.
 - 맵 지형은 기본적으로 렌더링하며, Fog 또는 Darkness 표현은 별도 렌더링 시스템의 책임으로 둔다.
-- 적 AI의 플레이어 감지는 기존 `AI Perception Component`의 책임으로 유지한다.
+- 적 AI의 플레이어 감지는 렌더링용 시야와 분리하며, 현재는 `ATDEnemyAIController`의 거리 기반 감지 상태가 담당한다.
 
 ## Architecture
 

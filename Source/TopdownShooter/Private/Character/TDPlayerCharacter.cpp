@@ -250,6 +250,19 @@ void ATDPlayerCharacter::BeginPlay()
             }
         }
     }
+
+    if (InteractionPromptWidgetClass && !InteractionPromptWidget)
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            InteractionPromptWidget = CreateWidget<UUserWidget>(PC, InteractionPromptWidgetClass);
+            if (InteractionPromptWidget)
+            {
+                InteractionPromptWidget->AddToViewport(20);
+                InteractionPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
+            }
+        }
+    }
 }
 
 void ATDPlayerCharacter::Tick(float DeltaTime)
@@ -419,6 +432,18 @@ void ATDPlayerCharacter::OnInteractPressed()
     if (!FocusedInteractableActor->Implements<UTDInteractableInterface>()) return;
 
     ITDInteractableInterface::Execute_Interact(FocusedInteractableActor, this);
+}
+
+void ATDPlayerCharacter::SetFocusedInteractableActor(AActor* Interactable)
+{
+    if (FocusedInteractableActor == Interactable) return;
+
+    FocusedInteractableActor = Interactable;
+
+    if (InteractionPromptWidget)
+    {
+        InteractionPromptWidget->SetVisibility(FocusedInteractableActor ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+    }
 }
 
 void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -666,6 +691,11 @@ void ATDPlayerCharacter::Debug_DrawTrace(
 
 void ATDPlayerCharacter::HandleDeath()
 {
+    if (InteractionPromptWidget)
+    {
+        InteractionPromptWidget->SetVisibility(ESlateVisibility::Collapsed);
+    }
+
     Super::HandleDeath();
 
     ATDGameMode* GameMode = GetWorld() ? GetWorld()->GetAuthGameMode<ATDGameMode>() : nullptr;

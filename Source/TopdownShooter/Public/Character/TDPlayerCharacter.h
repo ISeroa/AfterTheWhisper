@@ -14,6 +14,7 @@ class UTDActorVisibilityComponent;
 class UTDVisionRendererComponent;
 class UTDInventoryComponent;
 class UTDItemDataAsset;
+class UUserWidget;
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDPlayerCharacter : public ATDBaseCharacter
@@ -38,7 +39,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Interaction")
 	AActor* GetFocusedInteractableActor() const { return FocusedInteractableActor; }
 
-	void SetFocusedInteractableActor(AActor* Interactable) { FocusedInteractableActor = Interactable; }
+	void SetFocusedInteractableActor(AActor* Interactable);
 
 	virtual void HandleDeath() override;
 
@@ -170,6 +171,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UTDCrosshairWidget> CrosshairWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Interaction")
+	TSubclassOf<UUserWidget> InteractionPromptWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* InteractionPromptWidget = nullptr;
 
 	UPROPERTY()
 	UTDW_AmmoWidget* AmmoWidget = nullptr;

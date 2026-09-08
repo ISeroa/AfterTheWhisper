@@ -10,6 +10,25 @@ AfterTheWisper는 아포칼립스 이후의 폐쇄된 장소를 탐사하고, �
 
 > Office Floor 진입 → 탐색 및 전투 → OfficeKey 획득 → 탈출 장치 활성화 → 탈출 영역 체류 → Extraction Success
 
+## 플레이 영상
+
+[![AfterTheWisper Office Floor 플레이 영상](https://img.youtube.com/vi/IQyjGwUscz8/maxresdefault.jpg)](https://youtu.be/IQyjGwUscz8)
+
+- 영상 길이: 1분 21초
+- Office Floor 탐색부터 전투, 중요 물품 획득, 탈출까지 현재 데모의 전체 플레이 루프를 확인할 수 있다.
+
+## 게임플레이
+
+| 시야 시스템 | 시야 차단 |
+|---|---|
+| ![근거리 및 전방 시야](docs/images/gameplay-vision-overview.jpg) | ![공간 구조에 따른 시야 차단](docs/images/gameplay-vision-occlusion.jpg) |
+| 중요 물품 상호작용 | 탈출 방향 안내 |
+| ![OfficeKey 상호작용](docs/images/gameplay-keycard-interaction.jpg) | ![탈출 지점 방향과 거리 표시](docs/images/gameplay-extraction-navigation.jpg) |
+| 탈출 카운트다운 | 적 위치 선정 디버그 |
+| ![탈출 영역 체류 카운트다운](docs/images/gameplay-extraction-countdown.jpg) | ![적 포위 이동 위치 선정](docs/images/technical-enemy-positioning-debug.jpg) |
+
+마지막 이미지는 적들이 플레이어 주변의 점유 상태를 확인하고 서로 겹치지 않는 접근 위치를 선택하는 과정을 시각화한 개발용 디버그 화면이다. 초록색 표시는 해당 적이 선택한 이동 목표 지점이다.
+
 ## 개발 환경
 
 - Unreal Engine 4.27
@@ -46,8 +65,10 @@ AfterTheWisper는 아포칼립스 이후의 폐쇄된 장소를 탐사하고, �
 
 - Timer 기반 이동 목표 갱신
 - 플레이어 직접 추격과 Encircle 이동 전술
+- 주변 적의 공간 점유를 고려한 접근 위치 선정
 - 거리 기반 플레이어 감지 및 추격 해제
-- Windup과 Cooldown을 포함한 근접 공격
+- 공격 대상 방향 정렬과 이동 잠금을 포함한 근접 공격 애니메이션
+- AnimNotifyState와 공격 Hitbox를 연동한 근접 피해 판정
 - 피격 강도에 따른 감속과 짧은 이동 중단
 - Ragdoll 기반 사망 처리
 
@@ -77,6 +98,8 @@ AfterTheWisper는 아포칼립스 이후의 폐쇄된 장소를 탐사하고, �
 - OfficeKey 보유 시 탈출 지점 활성화
 - Box Overlap 기반 탈출 영역 진입·이탈 감지
 - Timer 기반 체류 판정과 이탈 시 진행 취소
+- 실제 체류 타이머와 동기화된 3.0초 탈출 카운트다운 UI
+- 단축키 입력 시 5초 동안 표시되는 탈출 지점 방향 및 거리 안내
 - 상호 배타적인 승리·패배 상태
 - Extraction Success 및 Game Over UI
 - 결과 화면 중 게임 일시정지
@@ -125,6 +148,7 @@ ATDExtractionActivator는 OfficeKey 같은 활성화 조건을 검사하고, ATD
 | R | 재장전 |
 | Left Shift | 달리기 |
 | E | 아이템 획득 및 장치 상호작용 |
+| O | 탈출 지점 방향과 거리 표시 |
 | 결과 화면의 Restart | 현재 레벨 다시 시작 |
 
 ## 실행 및 빌드

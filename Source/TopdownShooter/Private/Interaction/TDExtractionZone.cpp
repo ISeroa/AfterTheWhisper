@@ -39,6 +39,12 @@ void ATDExtractionZone::BeginPlay()
 void ATDExtractionZone::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorldTimerManager().ClearTimer(ExtractionTimerHandle);
+	GetWorldTimerManager().ClearTimer(ExtractionUIUpdateTimerHandle);
+
+	if (OverlappingPlayer.IsValid())
+	{
+		OverlappingPlayer->HideExtractionCountdown();
+	}
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -86,6 +92,7 @@ void ATDExtractionZone::OnExtractionAreaBeginOverlap(UPrimitiveComponent* Overla
 	if (!Player) return;
 
 	bIsPlayerInsideExtractionArea = true;
+	OverlappingPlayer = Player;
 
 #if !UE_BUILD_SHIPPING
 	if (bIsExtractionActive)
@@ -127,6 +134,13 @@ void ATDExtractionZone::StartExtractionTimer()
 
 	GetWorldTimerManager().SetTimer(ExtractionTimerHandle, this, &ATDExtractionZone::CompleteExtraction, ExtractionDuration, false);
 
+	if (OverlappingPlayer.IsValid())
+	{
+		OverlappingPlayer->ShowExtractionCountdown(ExtractionDuration);
+	}
+
+	GetWorldTimerManager().SetTimer(ExtractionUIUpdateTimerHandle, this, &ATDExtractionZone::UpdateExtractionCountdownUI, ExtractionUIUpdateInterval, true);
+
 #if !UE_BUILD_SHIPPING
 	UE_LOG(LogTemp, Warning, TEXT("[Extraction] Extraction timer started: %.2f seconds"), ExtractionDuration);
 #endif
@@ -137,10 +151,27 @@ void ATDExtractionZone::CancelExtractionTimer()
 	if (!GetWorldTimerManager().IsTimerActive(ExtractionTimerHandle)) return;
 
 	GetWorldTimerManager().ClearTimer(ExtractionTimerHandle);
+	GetWorldTimerManager().ClearTimer(ExtractionUIUpdateTimerHandle);
+
+	if (OverlappingPlayer.IsValid())
+	{
+		OverlappingPlayer->HideExtractionCountdown();
+	}
 
 #if !UE_BUILD_SHIPPING
 	UE_LOG(LogTemp, Warning, TEXT("[Extraction] Extraction timer cancelled"));
 #endif
+}
+
+void ATDExtractionZone::UpdateExtractionCountdownUI()
+{
+	if (!OverlappingPlayer.IsValid())
+	{
+		return;
+	}
+
+	const float RemainingTime = FMath::Max(GetWorldTimerManager().GetTimerRemaining(ExtractionTimerHandle), 0.0f);
+	OverlappingPlayer->UpdateExtractionCountdown(RemainingTime);
 }
 
 void ATDExtractionZone::CompleteExtraction()
@@ -152,6 +183,18 @@ void ATDExtractionZone::CompleteExtraction()
 	if (bIsExtractionCompleted) return;
 
 	bIsExtractionCompleted = true;
+
+	if (OverlappingPlayer.IsValid())
+	{
+		OverlappingPlayer->UpdateExtractionCountdown(0.0f);
+	}
+
+	GetWorldTimerManager().ClearTimer(ExtractionUIUpdateTimerHandle);
+
+	if (OverlappingPlayer.IsValid())
+	{
+		OverlappingPlayer->HideExtractionCountdown();
+	}
 
 #if !UE_BUILD_SHIPPING
 	UE_LOG(LogTemp, Warning, TEXT("[Extraction] Extraction completed"));

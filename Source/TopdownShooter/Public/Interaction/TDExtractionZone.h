@@ -49,6 +49,7 @@ protected:
 	void StartExtractionTimer();
 	void CancelExtractionTimer();
 	void CompleteExtraction();
+	void UpdateExtractionCountdownUI();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
 	USceneComponent* Root = nullptr;
@@ -71,5 +72,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extraction")
 	bool bIsExtractionCompleted = false;
 
+	// UI 카운트다운 갱신 주기 (게임 판정 타이머와는 별개)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Extraction", meta = (ClampMin = "0.01"))
+	float ExtractionUIUpdateInterval = 0.1f;
+
 	FTimerHandle ExtractionTimerHandle;
+	FTimerHandle ExtractionUIUpdateTimerHandle;
+
+	// 진입한 플레이어 참조 (UI 갱신 대상)
+	TWeakObjectPtr<ATDPlayerCharacter> OverlappingPlayer;
 };

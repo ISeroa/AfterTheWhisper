@@ -16,6 +16,7 @@ class UTDInventoryComponent;
 class UTDItemDataAsset;
 class UUserWidget;
 class UTDNavigationIndicatorWidget;
+class UTDExtractionCountdownWidget;
 class ATDExtractionZone;
 
 UCLASS()
@@ -46,6 +47,10 @@ public:
 	virtual void HandleDeath() override;
 
 	void ShowNavigationGuide();
+
+	void ShowExtractionCountdown(float RemainingTime);
+	void UpdateExtractionCountdown(float RemainingTime);
+	void HideExtractionCountdown();
 
 protected:
 	// Called when the game starts or when spawned
@@ -191,6 +196,12 @@ protected:
 
 	UPROPERTY()
 	ATDExtractionZone* NavigationTarget = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UTDExtractionCountdownWidget> ExtractionCountdownWidgetClass;
+
+	UPROPERTY()
+	UTDExtractionCountdownWidget* ExtractionCountdownWidget = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NavigationGuide", meta = (ClampMin = "0.1"))
 	float NavigationDisplayDuration = 5.f;

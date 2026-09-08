@@ -55,6 +55,7 @@
 ### 4) Minimal UI & Flow
 - [x] 체력 UI (UTDPlayerStatusHUD — HealthComponent 델리게이트 연결)
 - [x] 탄약 UI (UTDW_AmmoWidget — 파이 인디케이터, 마우스 추적)
+- [x] 탈출구 방향 안내 UI (O 입력, 방향·거리 표시, 5초 후 페이드아웃)
 - [x] Game Over → Restart
 - [x] Victory 조건(OfficeKey로 탈출 지점 활성화 → 일정 시간 체류)
 

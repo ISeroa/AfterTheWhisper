@@ -4,6 +4,9 @@
 #include "Components/ActorComponent.h"
 #include "TDEnemyMeleeAttackComponent.generated.h"
 
+// 실제 공격이 받아들여져 윈드업이 시작되는 시점에 Broadcast. C++ 전용(BlueprintAssignable 아님).
+DECLARE_MULTICAST_DELEGATE(FTDOnMeleeAttackStarted);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TOPDOWNSHOOTER_API UTDEnemyMeleeAttackComponent : public UActorComponent
 {
@@ -18,6 +21,9 @@ public:
 
 	// 사망 시 진행 중인 윈드업/쿨다운 타이머 즉시 정리
 	void StopAttack();
+
+	// EnemyCharacter가 AddUObject로 구독해 공격 시작 시점(Montage 재생 등)을 처리
+	FTDOnMeleeAttackStarted OnMeleeAttackStarted;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Attack")
 	float AttackRange = 150.f;

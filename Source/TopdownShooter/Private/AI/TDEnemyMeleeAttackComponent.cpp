@@ -28,6 +28,8 @@ void UTDEnemyMeleeAttackComponent::TryAttack(AActor* Target)
 	bOnCooldown = true;
 	PendingTarget = Target;
 
+	OnMeleeAttackStarted.Broadcast();
+
 	GetWorld()->GetTimerManager().SetTimer(
 		WindupTimerHandle,
 		this,

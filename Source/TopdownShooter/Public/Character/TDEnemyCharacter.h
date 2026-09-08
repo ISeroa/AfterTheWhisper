@@ -6,6 +6,7 @@
 #include "TDEnemyCharacter.generated.h"
 
 class UTDEnemyMeleeAttackComponent;
+class UAnimMontage;
 
 UENUM(BlueprintType)
 enum class ETDEnemyDeathMode : uint8
@@ -40,8 +41,13 @@ public:
 
 	void ApplyHitReaction(ETDStoppingPowerTier Tier);
 
+	// 근접 공격 시작 시 재생할 Montage (Blueprint에서 지정)
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* AttackMontage = nullptr;
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	// 마지막 피격 발사 방향 (TakeDamage에서 갱신)
 	FVector LastHitDirection = FVector::ZeroVector;
@@ -59,4 +65,6 @@ private:
 
 	void RestoreWalkSpeed();
 	void EndStunBeginSlow();
+
+	void HandleMeleeAttackStarted();
 };

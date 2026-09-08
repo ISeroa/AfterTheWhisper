@@ -5,6 +5,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/EngineTypes.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
 
 ATDEnemyCharacter::ATDEnemyCharacter()
 {
@@ -22,6 +24,57 @@ void ATDEnemyCharacter::BeginPlay()
 	{
 		BaseWalkSpeed = MoveComp->MaxWalkSpeed;
 	}
+
+	if (MeleeAttackComp)
+	{
+		MeleeAttackComp->OnMeleeAttackStarted.AddUObject(this, &ATDEnemyCharacter::HandleMeleeAttackStarted);
+	}
+}
+
+void ATDEnemyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (MeleeAttackComp)
+	{
+		MeleeAttackComp->OnMeleeAttackStarted.RemoveAll(this);
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void ATDEnemyCharacter::HandleMeleeAttackStarted()
+{
+	if (!AttackMontage)
+	{
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Warning, TEXT("[EnemyAttack] AttackMontage is not assigned"));
+#endif
+		return;
+	}
+
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp)
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = MeshComp->GetAnimInstance();
+	if (!AnimInstance)
+	{
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Warning, TEXT("[EnemyAttack] AnimInstance is null"));
+#endif
+		return;
+	}
+
+	if (AnimInstance->Montage_IsPlaying(AttackMontage))
+	{
+		return;
+	}
+
+	AnimInstance->Montage_Play(AttackMontage);
+#if !UE_BUILD_SHIPPING
+	UE_LOG(LogTemp, Log, TEXT("[EnemyAttack] Attack montage started: %s"), *AttackMontage->GetName());
+#endif
 }
 
 void ATDEnemyCharacter::ApplyHitReaction(ETDStoppingPowerTier Tier)

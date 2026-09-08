@@ -24,13 +24,13 @@ public:
 	ETDMovementTactic MovementTactic = ETDMovementTactic::DirectChase;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	float AcceptanceRadius = 20.f;
+	float AcceptanceRadius = 60.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Encircle")
-	float EncircleRadius = 110.f;
+	float EncircleRadius = 280.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Encircle")
-	float Jitter = 10.f;
+	float Jitter = 30.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI|Encircle", meta = (ClampMin = "1"))
 	int32 NumSlots = 12;

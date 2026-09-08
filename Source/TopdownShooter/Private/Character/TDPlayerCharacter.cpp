@@ -26,6 +26,7 @@
 #include "Interaction/TDExtractionZone.h"
 #include "Core/TDGameMode.h"
 #include "UI/Widgets/TDNavigationIndicatorWidget.h"
+#include "UI/Widgets/TDExtractionCountdownWidget.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -268,6 +269,19 @@ void ATDPlayerCharacter::BeginPlay()
         }
     }
 
+    if (ExtractionCountdownWidgetClass && !ExtractionCountdownWidget)
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            ExtractionCountdownWidget = CreateWidget<UTDExtractionCountdownWidget>(PC, ExtractionCountdownWidgetClass);
+            if (ExtractionCountdownWidget)
+            {
+                ExtractionCountdownWidget->AddToViewport(20);
+                ExtractionCountdownWidget->HideCountdown();
+            }
+        }
+    }
+
     UE_LOG(LogTemp, Log, TEXT("[Navigation] Widget class assigned: %s"),
         NavigationIndicatorWidgetClass ? *NavigationIndicatorWidgetClass->GetName() : TEXT("NULL"));
 
@@ -498,6 +512,27 @@ void ATDPlayerCharacter::SetFocusedInteractableActor(AActor* Interactable)
     {
         InteractionPromptWidget->SetVisibility(FocusedInteractableActor ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
     }
+}
+
+void ATDPlayerCharacter::ShowExtractionCountdown(float RemainingTime)
+{
+    if (!ExtractionCountdownWidget) return;
+
+    ExtractionCountdownWidget->ShowCountdown(RemainingTime);
+}
+
+void ATDPlayerCharacter::UpdateExtractionCountdown(float RemainingTime)
+{
+    if (!ExtractionCountdownWidget) return;
+
+    ExtractionCountdownWidget->UpdateCountdown(RemainingTime);
+}
+
+void ATDPlayerCharacter::HideExtractionCountdown()
+{
+    if (!ExtractionCountdownWidget) return;
+
+    ExtractionCountdownWidget->HideCountdown();
 }
 
 void ATDPlayerCharacter::ShowNavigationGuide()

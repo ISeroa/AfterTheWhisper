@@ -15,6 +15,8 @@ class UTDVisionRendererComponent;
 class UTDInventoryComponent;
 class UTDItemDataAsset;
 class UUserWidget;
+class UTDNavigationIndicatorWidget;
+class ATDExtractionZone;
 
 UCLASS()
 class TOPDOWNSHOOTER_API ATDPlayerCharacter : public ATDBaseCharacter
@@ -43,9 +45,12 @@ public:
 
 	virtual void HandleDeath() override;
 
+	void ShowNavigationGuide();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	virtual void Tick(float DeltaTime) override;
 
@@ -178,6 +183,24 @@ protected:
 	UPROPERTY()
 	UUserWidget* InteractionPromptWidget = nullptr;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI|NavigationGuide")
+	TSubclassOf<UTDNavigationIndicatorWidget> NavigationIndicatorWidgetClass;
+
+	UPROPERTY()
+	UTDNavigationIndicatorWidget* NavigationIndicatorWidget = nullptr;
+
+	UPROPERTY()
+	ATDExtractionZone* NavigationTarget = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|NavigationGuide", meta = (ClampMin = "0.1"))
+	float NavigationDisplayDuration = 5.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|NavigationGuide", meta = (ClampMin = "0.1"))
+	float NavigationFadeStartTime = 4.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI|NavigationGuide", meta = (ClampMin = "0.01"))
+	float NavigationUpdateInterval = 0.05f;
+
 	UPROPERTY()
 	UTDW_AmmoWidget* AmmoWidget = nullptr;
 
@@ -253,4 +276,15 @@ private:
 	void Debug_PrintHit(const FHitResult& Hit) const;
 	void Debug_DrawTrace(const FVector& Start, const FVector& End, const FHitResult& Hit, bool bHit) const;
 	void Debug_PrintMoveSpeed();
+
+	void UpdateNavigationGuide();
+	void BeginNavigationGuideFadeOut();
+	void HideNavigationGuide();
+
+	FTimerHandle NavigationUpdateTimerHandle;
+	FTimerHandle NavigationFadeTimerHandle;
+	FTimerHandle NavigationHideTimerHandle;
+
+	// [Navigation] ShowNavigationGuide() 직후 첫 UpdateNavigationGuide() 호출에서만 상세 계산 로그를 출력하기 위한 플래그
+	bool bNavigationGuideDebugFirstUpdate = false;
 };

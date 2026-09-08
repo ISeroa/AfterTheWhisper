@@ -23,7 +23,9 @@
 #include "Inventory/TDInventoryComponent.h"
 #include "Inventory/Data/TDItemDataAsset.h"
 #include "Interaction/TDInteractableInterface.h"
+#include "Interaction/TDExtractionZone.h"
 #include "Core/TDGameMode.h"
+#include "UI/Widgets/TDNavigationIndicatorWidget.h"
 
 // Sets default values
 ATDPlayerCharacter::ATDPlayerCharacter()
@@ -67,6 +69,8 @@ ATDPlayerCharacter::ATDPlayerCharacter()
 void ATDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+    UE_LOG(LogTemp, Log, TEXT("[Navigation] BeginPlay started"));
 
     if (InventoryComponent)
     {
@@ -263,6 +267,56 @@ void ATDPlayerCharacter::BeginPlay()
             }
         }
     }
+
+    UE_LOG(LogTemp, Log, TEXT("[Navigation] Widget class assigned: %s"),
+        NavigationIndicatorWidgetClass ? *NavigationIndicatorWidgetClass->GetName() : TEXT("NULL"));
+
+    if (NavigationIndicatorWidgetClass)
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            UE_LOG(LogTemp, Log, TEXT("[Navigation] PlayerController found"));
+
+            NavigationIndicatorWidget = CreateWidget<UTDNavigationIndicatorWidget>(PC, NavigationIndicatorWidgetClass);
+            if (NavigationIndicatorWidget)
+            {
+                UE_LOG(LogTemp, Log, TEXT("[Navigation] NavigationIndicatorWidget created"));
+                NavigationIndicatorWidget->AddToViewport(20);
+                UE_LOG(LogTemp, Log, TEXT("[Navigation] NavigationIndicatorWidget added to viewport"));
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: Failed to create navigation widget"));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: PlayerController is null"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: NavigationIndicatorWidgetClass is null"));
+    }
+
+    NavigationTarget = Cast<ATDExtractionZone>(UGameplayStatics::GetActorOfClass(GetWorld(), ATDExtractionZone::StaticClass()));
+    if (!NavigationTarget)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Navigation] ERROR: Extraction target was not found"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("[Navigation] Extraction target found: %s"), *NavigationTarget->GetName());
+    }
+}
+
+void ATDPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    GetWorldTimerManager().ClearTimer(NavigationUpdateTimerHandle);
+    GetWorldTimerManager().ClearTimer(NavigationFadeTimerHandle);
+    GetWorldTimerManager().ClearTimer(NavigationHideTimerHandle);
+
+    Super::EndPlay(EndPlayReason);
 }
 
 void ATDPlayerCharacter::Tick(float DeltaTime)
@@ -446,6 +500,130 @@ void ATDPlayerCharacter::SetFocusedInteractableActor(AActor* Interactable)
     }
 }
 
+void ATDPlayerCharacter::ShowNavigationGuide()
+{
+    UE_LOG(LogTemp, Log, TEXT("[Navigation] NavigationGuide input received"));
+    UE_LOG(LogTemp, Log, TEXT("[Navigation] ShowNavigationGuide called"));
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("[Navigation] ShowNavigationGuide called"));
+    }
+
+    if (!NavigationTarget || !NavigationIndicatorWidget)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: %s"),
+            !NavigationTarget ? TEXT("Extraction target was not found") : TEXT("NavigationIndicatorWidget is null"));
+        return;
+    }
+
+    GetWorldTimerManager().ClearTimer(NavigationUpdateTimerHandle);
+    GetWorldTimerManager().ClearTimer(NavigationFadeTimerHandle);
+    GetWorldTimerManager().ClearTimer(NavigationHideTimerHandle);
+
+    NavigationIndicatorWidget->ShowIndicator();
+
+    bNavigationGuideDebugFirstUpdate = true;
+    UpdateNavigationGuide();
+
+    GetWorldTimerManager().SetTimer(NavigationUpdateTimerHandle, this, &ATDPlayerCharacter::UpdateNavigationGuide, NavigationUpdateInterval, true);
+    GetWorldTimerManager().SetTimer(NavigationFadeTimerHandle, this, &ATDPlayerCharacter::BeginNavigationGuideFadeOut, NavigationFadeStartTime, false);
+    GetWorldTimerManager().SetTimer(NavigationHideTimerHandle, this, &ATDPlayerCharacter::HideNavigationGuide, NavigationDisplayDuration, false);
+}
+
+void ATDPlayerCharacter::UpdateNavigationGuide()
+{
+    const bool bLogDetails = bNavigationGuideDebugFirstUpdate;
+    bNavigationGuideDebugFirstUpdate = false;
+
+    if (!NavigationTarget || !NavigationIndicatorWidget)
+    {
+        if (bLogDetails)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: %s"),
+                !NavigationTarget ? TEXT("Extraction target was not found") : TEXT("NavigationIndicatorWidget is null"));
+        }
+        return;
+    }
+
+    APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!PC)
+    {
+        if (bLogDetails)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: PlayerController is null"));
+        }
+        return;
+    }
+
+    FVector2D PlayerScreenPosition;
+    FVector2D TargetScreenPosition;
+
+    if (!PC->ProjectWorldLocationToScreen(GetActorLocation(), PlayerScreenPosition))
+    {
+        if (bLogDetails)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: Player world location projection failed"));
+        }
+        return;
+    }
+    if (bLogDetails)
+    {
+        UE_LOG(LogTemp, Log, TEXT("[Navigation] Player projection success"));
+    }
+
+    if (!PC->ProjectWorldLocationToScreen(NavigationTarget->GetActorLocation(), TargetScreenPosition))
+    {
+        if (bLogDetails)
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: Target world location projection failed"));
+        }
+        return;
+    }
+    if (bLogDetails)
+    {
+        UE_LOG(LogTemp, Log, TEXT("[Navigation] Target projection success"));
+    }
+
+    FVector2D Direction = TargetScreenPosition - PlayerScreenPosition;
+    Direction.Normalize();
+
+    const float DistanceMeters = FVector::Dist2D(GetActorLocation(), NavigationTarget->GetActorLocation()) / 100.f;
+
+    if (bLogDetails)
+    {
+        UE_LOG(LogTemp, Log, TEXT("[Navigation] Direction=(%.2f, %.2f), Distance=%.1fm"), Direction.X, Direction.Y, DistanceMeters);
+    }
+
+    NavigationIndicatorWidget->UpdateIndicator(Direction, DistanceMeters);
+}
+
+void ATDPlayerCharacter::BeginNavigationGuideFadeOut()
+{
+    if (!NavigationIndicatorWidget)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: NavigationIndicatorWidget is null in BeginNavigationGuideFadeOut"));
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("[Navigation] Fade out started"));
+    NavigationIndicatorWidget->BeginFadeOut();
+}
+
+void ATDPlayerCharacter::HideNavigationGuide()
+{
+    GetWorldTimerManager().ClearTimer(NavigationUpdateTimerHandle);
+
+    if (NavigationIndicatorWidget)
+    {
+        NavigationIndicatorWidget->HideIndicator();
+        UE_LOG(LogTemp, Log, TEXT("[Navigation] Indicator hidden"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Navigation] ERROR: NavigationIndicatorWidget is null in HideNavigationGuide"));
+    }
+}
+
 void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -461,6 +639,7 @@ void ATDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATDPlayerCharacter::OnSprintReleased);
     PlayerInputComponent->BindAction("TestAddInventoryItem", IE_Pressed, this, &ATDPlayerCharacter::TestAddInventoryItem);
     PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &ATDPlayerCharacter::OnInteractPressed);
+    PlayerInputComponent->BindAction("NavigationGuide", IE_Pressed, this, &ATDPlayerCharacter::ShowNavigationGuide);
 }
 
 void ATDPlayerCharacter::MoveForward(float Value)

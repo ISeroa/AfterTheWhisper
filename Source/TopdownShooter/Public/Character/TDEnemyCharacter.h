@@ -7,6 +7,8 @@
 
 class UTDEnemyMeleeAttackComponent;
 class UAnimMontage;
+class USphereComponent;
+class UPrimitiveComponent;
 
 UENUM(BlueprintType)
 enum class ETDEnemyDeathMode : uint8
@@ -45,6 +47,21 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* AttackMontage = nullptr;
 
+	// 근접 공격 판정용 Sphere. 기본은 NoCollision — SetAttackHitboxEnabled()로 켜고 끔
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USphereComponent* AttackHitbox = nullptr;
+
+	// AttackHitbox를 부착할 Mesh 소켓 이름 (적 BP마다 지정, 예: hand_r). 기본은 미지정
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|AttackHitbox")
+	FName AttackHitboxSocketName = NAME_None;
+
+	// 외부(BP/AnimNotify 등)에서 Hitbox Collision을 켜고 끔
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetAttackHitboxEnabled(bool bEnabled);
+
+	// AttackMontage 재생 중인지 여부. AI가 이동 명령을 보내기 전에 검사
+	bool IsPerformingAttack() const { return bIsPerformingAttack; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -66,5 +83,13 @@ private:
 	void RestoreWalkSpeed();
 	void EndStunBeginSlow();
 
-	void HandleMeleeAttackStarted();
+	void HandleMeleeAttackStarted(AActor* Target);
+	void HandleAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	// AttackMontage 재생 중이면 true. AI 이동 갱신이 이 상태를 검사해 MoveToLocation/TryAttack을 막음
+	bool bIsPerformingAttack = false;
+
+	UFUNCTION()
+	void OnAttackHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

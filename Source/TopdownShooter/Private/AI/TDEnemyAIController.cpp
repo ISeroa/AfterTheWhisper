@@ -141,6 +141,15 @@ void ATDEnemyAIController::UpdateMoveTarget()
 		return;
 	}
 
+	if (ATDEnemyCharacter* Enemy = Cast<ATDEnemyCharacter>(EnemyPawn))
+	{
+		if (Enemy->IsPerformingAttack())
+		{
+			StopMovement();
+			return;
+		}
+	}
+
 	const float Distance = FVector::Dist2D(Player->GetActorLocation(), EnemyPawn->GetActorLocation());
 
 	if (!bHasDetectedPlayer)

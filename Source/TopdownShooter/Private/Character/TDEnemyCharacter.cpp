@@ -7,6 +7,10 @@
 #include "Engine/EngineTypes.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/SphereComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "AIController.h"
 
 ATDEnemyCharacter::ATDEnemyCharacter()
 {
@@ -14,6 +18,14 @@ ATDEnemyCharacter::ATDEnemyCharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	MeleeAttackComp = CreateDefaultSubobject<UTDEnemyMeleeAttackComponent>(TEXT("MeleeAttackComp"));
+
+	AttackHitbox = CreateDefaultSubobject<USphereComponent>(TEXT("AttackHitbox"));
+	AttackHitbox->SetupAttachment(GetMesh());
+	AttackHitbox->SetSphereRadius(45.0f);
+	AttackHitbox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AttackHitbox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	AttackHitbox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	AttackHitbox->SetGenerateOverlapEvents(true);
 }
 
 void ATDEnemyCharacter::BeginPlay()
@@ -29,6 +41,41 @@ void ATDEnemyCharacter::BeginPlay()
 	{
 		MeleeAttackComp->OnMeleeAttackStarted.AddUObject(this, &ATDEnemyCharacter::HandleMeleeAttackStarted);
 	}
+
+	if (!AttackHitbox || !GetMesh())
+	{
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Warning, TEXT("[EnemyAttack] Failed to attach AttackHitbox: component or mesh is null"));
+#endif
+	}
+	else if (AttackHitboxSocketName == NAME_None)
+	{
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Warning, TEXT("[EnemyAttack] AttackHitboxSocketName is not assigned"));
+#endif
+	}
+	else if (!GetMesh()->DoesSocketExist(AttackHitboxSocketName))
+	{
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Warning, TEXT("[EnemyAttack] AttackHitbox socket not found: %s"), *AttackHitboxSocketName.ToString());
+#endif
+	}
+	else
+	{
+		AttackHitbox->AttachToComponent(
+			GetMesh(),
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+			AttackHitboxSocketName
+		);
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Log, TEXT("[EnemyAttack] AttackHitbox attached to socket: %s"), *AttackHitboxSocketName.ToString());
+#endif
+	}
+
+	if (AttackHitbox)
+	{
+		AttackHitbox->OnComponentBeginOverlap.AddDynamic(this, &ATDEnemyCharacter::OnAttackHitboxBeginOverlap);
+	}
 }
 
 void ATDEnemyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -38,11 +85,65 @@ void ATDEnemyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		MeleeAttackComp->OnMeleeAttackStarted.RemoveAll(this);
 	}
 
+	if (AttackHitbox)
+	{
+		AttackHitbox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	bIsPerformingAttack = false;
+
 	Super::EndPlay(EndPlayReason);
 }
 
-void ATDEnemyCharacter::HandleMeleeAttackStarted()
+void ATDEnemyCharacter::SetAttackHitboxEnabled(bool bEnabled)
 {
+	if (!AttackHitbox)
+	{
+		return;
+	}
+
+	if (bEnabled)
+	{
+		AttackHitbox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Log, TEXT("[EnemyAttack] AttackHitbox enabled"));
+#endif
+	}
+	else
+	{
+		AttackHitbox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Log, TEXT("[EnemyAttack] AttackHitbox disabled"));
+#endif
+	}
+}
+
+void ATDEnemyCharacter::OnAttackHitboxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!OtherActor)
+	{
+		return;
+	}
+
+	if (OtherActor == GetOwner() || OtherActor == this)
+	{
+		return;
+	}
+
+	if (MeleeAttackComp)
+	{
+		MeleeAttackComp->TryApplyHit(OtherActor);
+	}
+}
+
+void ATDEnemyCharacter::HandleMeleeAttackStarted(AActor* Target)
+{
+	if (!IsValid(Target))
+	{
+		return;
+	}
+
 	if (!AttackMontage)
 	{
 #if !UE_BUILD_SHIPPING
@@ -71,9 +172,82 @@ void ATDEnemyCharacter::HandleMeleeAttackStarted()
 		return;
 	}
 
-	AnimInstance->Montage_Play(AttackMontage);
+	if (AAIController* AIController = Cast<AAIController>(GetController()))
+	{
+		AIController->StopMovement();
+	}
+
+	FVector Direction = Target->GetActorLocation() - GetActorLocation();
+	Direction.Z = 0.0f;
+
+	if (!Direction.IsNearlyZero())
+	{
+		FRotator FacingRotation = Direction.Rotation();
+		FacingRotation.Pitch = 0.0f;
+		FacingRotation.Roll = 0.0f;
+		SetActorRotation(FacingRotation);
+	}
+
+#if !UE_BUILD_SHIPPING
+	UE_LOG(LogTemp, Log, TEXT("[EnemyAttack] Facing target: Target=%s, Yaw=%.2f"),
+		*Target->GetName(), GetActorRotation().Yaw);
+#endif
+
+	bIsPerformingAttack = true;
+
+	const float MontageLength = AnimInstance->Montage_Play(AttackMontage);
+	if (MontageLength <= 0.0f)
+	{
+		bIsPerformingAttack = false;
+
+		if (MeleeAttackComp)
+		{
+			MeleeAttackComp->FinishAttack();
+		}
+
+#if !UE_BUILD_SHIPPING
+		UE_LOG(LogTemp, Warning, TEXT("[EnemyAttack] Failed to play attack montage"));
+#endif
+		return;
+	}
+
 #if !UE_BUILD_SHIPPING
 	UE_LOG(LogTemp, Log, TEXT("[EnemyAttack] Attack montage started: %s"), *AttackMontage->GetName());
+#endif
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindUObject(this, &ATDEnemyCharacter::HandleAttackMontageEnded);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
+}
+
+void ATDEnemyCharacter::HandleAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage != AttackMontage)
+	{
+		return;
+	}
+
+	bIsPerformingAttack = false;
+
+	if (AttackHitbox)
+	{
+		AttackHitbox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if (MeleeAttackComp)
+	{
+		MeleeAttackComp->FinishAttack();
+	}
+
+#if !UE_BUILD_SHIPPING
+	if (bInterrupted)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[EnemyAttack] Attack montage interrupted"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("[EnemyAttack] Attack montage ended"));
+	}
 #endif
 }
 
@@ -166,6 +340,14 @@ void ATDEnemyCharacter::HandleDeath()
 	{
 		MeleeAttackComp->StopAttack();
 	}
+
+	// 사망 시 AttackHitbox가 켜져 있을 가능성 방지
+	if (AttackHitbox)
+	{
+		AttackHitbox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	bIsPerformingAttack = false;
 
 	// 이동 중단
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())

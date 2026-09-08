@@ -1,5 +1,49 @@
 # Development Log
 
+## 2026-09-08
+
+### 완료한 작업
+
+**[탈출구 방향 안내 UI 구현]**
+- `O` 입력 시 탈출 지점의 화면상 방향과 거리를 표시하는 Navigation Indicator를 추가.
+- 회색 `>` 방향 기호와 거리 텍스트를 플레이어 주변에 배치해 FPS 방향성 인디케이터와 유사한 형태로 구성.
+- `ATDPlayerCharacter`에서 첫 번째 `ATDExtractionZone`을 안내 대상으로 찾고, 월드 위치를 화면 좌표로 투영해 방향을 계산.
+- 표시 중에만 Timer로 위치와 거리를 갱신하고, 4초 후 페이드아웃을 시작해 5초 후 숨기도록 구성.
+- `O`를 다시 누르면 표시 시간을 초기화하도록 처리.
+- 실제 플레이에서 방향, 거리, 표시 시간과 페이드아웃 동작 확인. ✅
+
+### 발생한 문제
+- `NavigationIndicatorWidgetClass` 설정이 클래스 디폴트에 나타나지 않음.
+  - `Navigation` 카테고리명이 `ACharacter`/`APawn` 계열의 숨김 카테고리와 충돌한 것이 원인.
+  - 카테고리를 `UI|NavigationGuide`로 변경한 뒤 정상 노출 확인.
+- 입력과 방향 계산은 정상인데 위젯이 화면에 표시되지 않음.
+  - 단계별 로그에서 `HorizontalBox_Indicator`가 `NULL`인 것을 확인.
+  - 플레이어 BP에 실제 UMG Blueprint가 아니라 C++ 부모 클래스 `UTDNavigationIndicatorWidget`을 지정해 Widget Tree가 없는 빈 위젯이 생성된 것이 원인.
+
+### 해결 방법 / 결정 사항
+- 플레이어 BP의 `NavigationIndicatorWidgetClass`에 실제 UMG 위젯 Blueprint를 지정해 `BindWidget` 연결을 복구.
+- 위젯 표시 문제는 입력 → 위젯 생성 → 목표 탐색 → 좌표 투영 → 내부 Widget 바인딩 순서로 로그를 나눠 확인.
+- 탈출구 안내는 퀘스트 목표 UI와 분리하고, 플레이어가 필요할 때만 호출하는 보조 탐색 기능으로 유지.
+- 상시 Tick 대신 표시 시간 동안만 Timer 기반으로 갱신.
+- 현재 데모에서는 게임 시작 시 기본 탈출 지점을 자동 등록한다.
+- 추후 추가 탈출 지점이 활성화되면 활성화 주체가 해당 지점을 전달해 `NavigationTarget`을 갱신하도록 확장한다. 인디케이터가 매번 월드 전체를 검색하지는 않는다.
+
+### 구조적 메모
+- `CreateWidget()` 성공만으로 UMG Widget Tree와 `BindWidget` 연결까지 성공했다고 판단하면 안 된다.
+- C++ 부모 위젯 클래스와 해당 클래스를 부모로 둔 UMG Blueprint는 역할이 다르다. 화면 요소가 필요한 경우 실제 UMG Blueprint 클래스를 생성 대상으로 지정해야 한다.
+- 엔진 기본 클래스에서 숨기는 이름과 사용자 정의 Details 카테고리 이름이 충돌할 수 있으므로 범용적인 `Navigation` 대신 기능 범위가 명확한 이름을 사용한다.
+
+### 미완료 / 보류
+- 화면 뒤쪽 목표에 대한 방향 보정과 화면 가장자리 Clamp.
+- 복수 탈출구 및 활성 탈출구 선택 구조.
+- 검증용 Navigation 상세 로그 정리.
+- `WBP_NavigationIdicator` 에셋 이름 오타 정리.
+
+### 문서
+- `docs/systems/ui/navigation-indicator.md`에 현재 구조, 설계 결정과 트러블슈팅 기록.
+
+---
+
 ## 2026-09-07
 
 ### 완료한 작업

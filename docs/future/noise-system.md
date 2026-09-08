@@ -22,9 +22,9 @@
 
 ```text
 Weapon / Environment / Movement
-  → Noise Event(Location, Loudness, Radius, Type)
-      ├─ Enemy Alert System
-      └─ Noise-Driven Encounter System
+  -> Noise Event(Location, Loudness, Radius, Type)
+      |-- Enemy Alert System
+      `-- Noise-Driven Encounter System
 ```
 
 ## Trade-offs

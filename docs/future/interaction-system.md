@@ -6,11 +6,11 @@
 
 ## Current State
 - `ITDInteractableInterface`(`Source/TopdownShooter/Public/Interaction/TDInteractableInterface.h`)를 추가했다. `Interact(ATDPlayerCharacter* Interactor)`는 `BlueprintNativeEvent`로, C++/Blueprint 양쪽에서 구현 가능하다.
-- `ATDPlayerCharacter`는 더 이상 `ATDItemPickupActor`를 알지 않는다. `FocusedPickupActor` 대신 `AActor* FocusedInteractableActor`를 보관하고, `GetFocusedInteractableActor()` / `SetFocusedInteractableActor()`로 조회·설정한다.
+- `ATDPlayerCharacter`는 더 이상 `ATDItemPickupActor`를 알지 않는다. `FocusedPickupActor` 대신 `AActor* FocusedInteractableActor`를 보관하고, `GetFocusedInteractableActor()` / `SetFocusedInteractableActor()`로 조회/설정한다.
 - `OnInteractPressed()`는 `FocusedInteractableActor`가 Interface를 구현했는지(`Implements<UTDInteractableInterface>()`) 확인한 뒤 `ITDInteractableInterface::Execute_Interact()`만 호출한다. 구체 타입으로 Cast하지 않는다.
 - `ATDItemPickupActor`가 `ITDInteractableInterface`를 구현한다. `Interact_Implementation()`은 기존 `TryPickup(Interactor)`를 그대로 호출하고 결과를 반환한다. `AddItem`/로그/성공 시 Destroy 동작은 변경되지 않았다.
 - Pickup의 `InteractionSphere` BeginOverlap/EndOverlap은 `FocusedInteractableActor`를 등록/해제한다. EndOverlap은 현재 Focus 대상이 자기 자신일 때만 해제한다.
-- `ATDExtractionActivator`가 `ITDInteractableInterface`와 InteractionSphere를 소유하고 Pickup과 같은 규칙으로 Focus를 등록·해제한다.
+- `ATDExtractionActivator`가 `ITDInteractableInterface`와 InteractionSphere를 소유하고 Pickup과 같은 규칙으로 Focus를 등록/해제한다.
 - Activator의 `Interact_Implementation()`은 `RequiredItem`을 `InventoryComponent::HasItem()`으로 검사하고, 성공하면 `TargetExtractionZone->ActivateExtraction()`을 호출한다.
 - `TargetExtractionZone`은 `EditInstanceOnly`로 노출해 맵에 미리 배치된 특정 Zone 인스턴스를 연결한다.
 - `ATDExtractionZone`은 Interactable이나 아이템 조건을 알지 않고, 실제 탈출 영역과 체류 완료 판정만 담당한다.
@@ -29,20 +29,20 @@
 - 후보가 Interactable Interface를 구현했으면 `Interact(Player)`를 호출한다.
 - Pickup, Chest, Loot Bag, Door, Switch는 각자 Interface 동작을 구현한다.
 - Player Character는 결과 데이터나 구체 Actor 구현을 직접 알지 않는다.
-- 지속적인 후보 강조가 필요하면 낮은 빈도의 탐지 또는 후보 진입·이탈 이벤트를 사용한다.
+- 지속적인 후보 강조가 필요하면 낮은 빈도의 탐지 또는 후보 진입/이탈 이벤트를 사용한다.
 - 기본 흐름은 다음과 같다.
 
 ```text
 E Input
-  → Interaction Detection
-  → Interactable Interface 확인
-  → Interact(Player)
-      ├─ Pickup
-      ├─ Chest / Loot Bag
-      ├─ Door / Switch
-      └─ Extraction Activator
-             → 조건 검사
-             → Extraction Zone 활성화
+  -> Interaction Detection
+  -> Interactable Interface 확인
+  -> Interact(Player)
+      |-- Pickup
+      |-- Chest / Loot Bag
+      |-- Door / Switch
+      `-- Extraction Activator
+             -> 조건 검사
+             -> Extraction Zone 활성화
 ```
 
 ## Trade-offs

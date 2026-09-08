@@ -17,11 +17,11 @@ Noise Event를 입력으로 받아 기존 적의 행동 변화와 제한적인 �
 
 ```text
 Noise System
-  → Noise Event
-  → Encounter Director
-      ├─ 주변 Zombie 반응 요청
-      ├─ Survivor 전술 상태 변경 요청
-      └─ 조건 충족 시 Zombie Reinforcement
+  -> Noise Event
+  -> Encounter Director
+      |-- 주변 Zombie 반응 요청
+      |-- Survivor 전술 상태 변경 요청
+      `-- 조건 충족 시 Zombie Reinforcement
 ```
 
 ### Zombie Reaction

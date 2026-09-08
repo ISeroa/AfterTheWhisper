@@ -20,33 +20,33 @@
 
 ### 탈출 조건과 탈출 판정 분리
 
-`ATDExtractionZone`은 특정 아이템이나 인벤토리 규칙을 알지 않는다. Zone은 활성 상태, 플레이어 진입·이탈, 체류 시간, 탈출 완료만 책임진다.
+`ATDExtractionZone`은 특정 아이템이나 인벤토리 규칙을 알지 않는다. Zone은 활성 상태, 플레이어 진입/이탈, 체류 시간, 탈출 완료만 책임진다.
 
-탈출 조건은 별도의 Activator가 판단한다. Office Floor에서는 열쇠를 검사하는 상호작용 장치를 사용하지만, 다른 Location에서는 처음부터 활성화하거나 스위치·발전기 같은 탐사 조건을 사용할 수 있다.
+탈출 조건은 별도의 Activator가 판단한다. Office Floor에서는 열쇠를 검사하는 상호작용 장치를 사용하지만, 다른 Location에서는 처음부터 활성화하거나 스위치/발전기 같은 탐사 조건을 사용할 수 있다.
 
 ```text
 Extraction Condition
-  ├─ OfficeKey를 사용하는 잠긴 장치
-  ├─ 발전기 또는 스위치 작동
-  └─ 조건 없음
-          ↓
+  |-- OfficeKey를 사용하는 잠긴 장치
+  |-- 발전기 또는 스위치 작동
+  `-- 조건 없음
+          v
 ActivateExtraction()
-          ↓
+          v
 Extraction Zone
-  → 플레이어 진입
-  → 일정 시간 체류
-  → 탈출 완료
+  -> 플레이어 진입
+  -> 일정 시간 체류
+  -> 탈출 완료
 ```
 
 ### Office Floor 데모 흐름
 
 ```text
 OfficeKey 획득
-  → 비상계단 장치와 상호작용
-  → Activator가 OfficeKey 보유 여부 확인
-  → 연결된 Extraction Zone 활성화
-  → 탈출 영역에 일정 시간 머무름
-  → 탈출 성공
+  -> 비상계단 장치와 상호작용
+  -> Activator가 OfficeKey 보유 여부 확인
+  -> 연결된 Extraction Zone 활성화
+  -> 탈출 영역에 일정 시간 머무름
+  -> 탈출 성공
 ```
 
 - OfficeKey는 활성화 조건이며, `ATDExtractionZone` 자체의 고정 요구사항이 아니다.

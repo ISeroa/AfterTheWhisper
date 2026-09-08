@@ -21,13 +21,13 @@
 
 ```text
 Ammo 변경
-  → OnAmmoChanged(AmmoInMag, MagazineSize)
-  → UTDW_AmmoWidget::HandleAmmoChanged()
-  → BP_UpdateAmmo()
+  -> OnAmmoChanged(AmmoInMag, MagazineSize)
+  -> UTDW_AmmoWidget::HandleAmmoChanged()
+  -> BP_UpdateAmmo()
 
 PlayerController::PlayerTick()
-  → Mouse Position + MouseOffset
-  → SetPositionInViewport()
+  -> Mouse Position + MouseOffset
+  -> SetPositionInViewport()
 ```
 
 ## Trade-offs
@@ -39,5 +39,5 @@ PlayerController::PlayerTick()
 - 캐시 필드 적용 또는 제거
 - 화면 가장자리 위치 보정
 - 무기 교체 시 Widget 재바인딩 검증
-- 탄약 부족 상태의 색상·Animation 피드백
+- 탄약 부족 상태의 색상/Animation 피드백
 - 관련 문서: [[weapon-system]], [[reload-indicator]], [[player-hud]]

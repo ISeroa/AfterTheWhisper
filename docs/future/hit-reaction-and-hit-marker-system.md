@@ -38,13 +38,13 @@ Heavy
 
 ```text
 권총 / SMG
-  → Light
+  -> Light
 
 소총
-  → Medium
+  -> Medium
 
 샷건 / 대구경 권총 / 저격총
-  → Heavy
+  -> Heavy
 ```
 
 ## Architecture
@@ -59,23 +59,23 @@ Heavy
 
 ```text
 Weapon FireOnce
-  ├─ LineTrace
-  ├─ Enemy 명중
-  │   ├─ ApplyPointDamage
-  │   ├─ Enemy.ApplyHitReaction(StoppingPowerTier)
-  │   └─ OnHitMarker.Broadcast()
-  └─ World 명중
-      └─ Impact Sound
+  |-- LineTrace
+  |-- Enemy 명중
+  |   |-- ApplyPointDamage
+  |   |-- Enemy.ApplyHitReaction(StoppingPowerTier)
+  |   `-- OnHitMarker.Broadcast()
+  |-- World 명중
+      `-- Impact Sound
 ```
 
 ### Hit Marker Flow
 
 ```text
 Enemy 명중
-  → Weapon OnHitMarker
-  → PlayerCharacter 또는 HUD Widget이 수신
-  → X자 Hit Marker 표시
-  → 0.08~0.12초 후 숨김
+  -> Weapon OnHitMarker
+  -> PlayerCharacter 또는 HUD Widget이 수신
+  -> X자 Hit Marker 표시
+  -> 0.08~0.12초 후 숨김
 ```
 
 탑다운 시점에서는 화면 중앙보다 조준점 또는 마우스 근처 표시가 자연스러울 수 있다.
@@ -88,21 +88,21 @@ Enemy 명중
 
 ```text
 WBP_HitMarker
-  ├─ Canvas Panel  (Visible)
-  ├─ Border_A      (Visible, Angle 45)
-  └─ Border_B      (Visible, Angle -45)
+  |-- Canvas Panel  (Visible)
+  |-- Border_A      (Visible, Angle 45)
+  |-- Border_B      (Visible, Angle -45)
 ```
 
 표시/숨김은 자식 위젯이 아니라 Widget `self`의 Visibility를 제어한다.
 
 ```text
 Event Construct
-  → Set Visibility(Self): Hidden
+  -> Set Visibility(Self): Hidden
 
 BP_ShowHitMarker
-  → Set Visibility(Self): Not Hit-Testable (Self & All Children)
-  → Delay 0.08~0.15
-  → Set Visibility(Self): Hidden
+  -> Set Visibility(Self): Not Hit-Testable (Self & All Children)
+  -> Delay 0.08~0.15
+  -> Set Visibility(Self): Hidden
 ```
 
 자식 Canvas/Border를 Hidden으로 두면 `self`를 다시 보이게 해도 X자가 표시되지 않는다.
@@ -114,8 +114,8 @@ Hit Marker는 입력을 먹으면 사격과 마우스 조작을 방해할 수 �
 
 ```text
 WBP_Crosshair
-  ├─ Crosshair Base
-  └─ Hit Marker Layer
+  |-- Crosshair Base
+  `-- Hit Marker Layer
 ```
 
 현재 Hit Marker Widget은 1차 검증용으로 유지하고, 이후 Crosshair 작업에서 `BP_ShowHitMarker()`가 Crosshair 내부 Hit Marker Layer를 켜는 구조로 흡수하는 방향을 우선 검토한다.

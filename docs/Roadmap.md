@@ -23,7 +23,7 @@
 
 ---
 
-## Phase 1 — Playable Vertical Slice (필수)
+## Phase 1 - Playable Vertical Slice (필수)
 ### 1) Core Gameplay
 - [x] 이동/에임 안정화 (Aim 실패 시 fallback, 회전 안정)
 - [x] Player Sprint 1차 구현 (LeftShift 입력, Walk/Sprint 속도 분리, `UpdateMoveSpeed()` 기반)
@@ -35,34 +35,34 @@
 
 ### 2) Combat Feel (손맛 = 포트폴리오 핵심)
 - [X] Muzzle Flash
-- [x] 탄피 스폰 (ATDCasing) — 스폰/물리/impact sound/캐릭터 충돌 해결 완료
+- [x] 탄피 스폰 (ATDCasing) - 스폰/물리/impact sound/캐릭터 충돌 해결 완료
 - [ ] Hit Impact (표면별 아니어도 OK)
   - [x] 1차 사운드: EnemyHit / WorldHit 분기
   - [ ] 데칼 또는 Impact FX
 - [ ] Hit Marker (UI)
-  - [x] C++ 이벤트 훅 (OnHitMarker delegate) — BP에서 UMG 연결 필요
+  - [x] C++ 이벤트 훅 (OnHitMarker delegate) - BP에서 UMG 연결 필요
 - [ ] 피격 피드백(적 플래시/넉백/짧은 스턴 중 1개 이상)
   - [x] 이동 둔화 + Heavy 이동 스턴 (ApplyHitReaction, StoppingPowerTier)
 - [ ] Camera Shake (약하게)
 
 ### 3) Enemy (1종이라도 '게임'처럼)
-- [x] Enemy 이동 AI (ATDEnemyAIController — DirectChase + Encircle 슬롯 분산)
-- [x] Enemy Attack — 근접 공격 (UTDEnemyMeleeAttackComponent: DistSquared + WindupTime + Cooldown + ApplyDamage)
-- [x] 사망 처리 — Enemy Death System (Ragdoll + DeathMode 분기) 구현 완료
+- [x] Enemy 이동 AI (ATDEnemyAIController - DirectChase + Encircle 슬롯 분산)
+- [x] Enemy Attack - 근접 공격 (UTDEnemyMeleeAttackComponent: DistSquared + WindupTime + Cooldown + ApplyDamage)
+- [x] 사망 처리 - Enemy Death System (Ragdoll + DeathMode 분기) 구현 완료
 - [ ] 피격 피드백 (적 플래시/히트 리액션)
 - [ ] 스폰 5~10마리에도 프레임 안정 (Tick 최소화)
 
 ### 4) Minimal UI & Flow
-- [x] 체력 UI (UTDPlayerStatusHUD — HealthComponent 델리게이트 연결)
-- [x] 탄약 UI (UTDW_AmmoWidget — 파이 인디케이터, 마우스 추적)
-- [x] 탈출구 방향 안내 UI (O 입력, 방향·거리 표시, 5초 후 페이드아웃)
-- [x] Game Over → Restart
-- [x] Victory 조건(OfficeKey로 탈출 지점 활성화 → 일정 시간 체류)
+- [x] 체력 UI (UTDPlayerStatusHUD - HealthComponent 델리게이트 연결)
+- [x] 탄약 UI (UTDW_AmmoWidget - 파이 인디케이터, 마우스 추적)
+- [x] 탈출구 방향 안내 UI (O 입력, 방향/거리 표시, 5초 후 페이드아웃)
+- [x] Game Over -> Restart
+- [x] Victory 조건(OfficeKey로 탈출 지점 활성화 -> 일정 시간 체류)
 
 ### 5) Stage 1 제작
 - [x] Office Floor 탐사 공간 + 장애물 배치
 - [ ] 적 웨이브 또는 구간 스폰
-- [x] 시작→전투→OfficeKey 획득→탈출/게임오버 흐름 완성
+- [x] 시작->전투->OfficeKey 획득->탈출/게임오버 흐름 완성
 
 완료 기준:
 - 처음 실행해서 5분 플레이해도 버그/막힘 없이 진행 가능
@@ -70,7 +70,7 @@
 
 ---
 
-## Phase 2 — Polish Pass
+## Phase 2 - Polish Pass
 ### 1) 오디오/비주얼 정리
 - [ ] BGM 1개, SFX 세트(발사/피격/사망/리로드)
 - [ ] 간단한 화면 효과(피격 시 vignette/붉은 플래시)
@@ -87,7 +87,7 @@
 
 ---
 
-## Phase 3 — Portfolio Packaging (제출용 마감)
+## Phase 3 - Portfolio Packaging (제출용 마감)
 - [ ] 버그 정리 리스트 운영(치명/중간/사소)
 - [ ] 성능 점검 (Stat Unit, Stat FPS, GPU/CPU 병목 확인)
 - [ ] 조작감 마감 (입력 반응성/카메라 흔들림/시야)

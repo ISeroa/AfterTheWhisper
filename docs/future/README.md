@@ -35,9 +35,9 @@
 
 ```text
 Future Design Document
-  → 작은 기능 단위 구현
-  → 코드 기준으로 문서 교정
-  → docs/systems의 적절한 카테고리로 이동
+  -> 작은 기능 단위 구현
+  -> 코드 기준으로 문서 교정
+  -> docs/systems의 적절한 카테고리로 이동
 ```
 
 - 일부만 구현된 경우 구현된 핵심 시스템은 `systems`에 두고 미구현 확장은 별도 `future` 문서로 유지한다.

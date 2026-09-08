@@ -20,25 +20,25 @@
   - Mask white: 시야 안, 원래 화면 유지
 - `PostProcessVolume`에 `MI_PP_VisionDarkness`를 등록하고 `Infinite Extent (Unbound)`를 켜서 테스트 맵 전체에 적용한다.
 
-현재 구현은 “기억된 탐색 영역”을 사용하지 않는다. 정적 환경은 시야 밖이어도 어둡게 보이고, 동적 대상은 별도 Actor Visibility 시스템으로 현재 시야 밖에서 숨기는 방향이다.
+현재 구현은 "기억된 탐색 영역"을 사용하지 않는다. 정적 환경은 시야 밖이어도 어둡게 보이고, 동적 대상은 별도 Actor Visibility 시스템으로 현재 시야 밖에서 숨기는 방향이다.
 
 ### Render Target Flow
 
 ```text
 UTDVisionRendererComponent::UpdatePolygon
- ├─ UTDVisionComponent 설정 읽기
- ├─ Ray Fan LineTrace (VisionTraceChannel)
- ├─ VisibilityPolygonPoints 갱신
- └─ DrawToRenderTarget
-     ├─ RT_VisionMask 검정 Clear
-     ├─ Owner / Polygon Points를 화면 좌표로 투영
-     ├─ RenderTarget 크기에 맞게 좌표 스케일링
-     └─ 흰색 Triangle Fan으로 현재 시야 영역 그리기
+ |-- UTDVisionComponent 설정 읽기
+ |-- Ray Fan LineTrace (VisionTraceChannel)
+ |-- VisibilityPolygonPoints 갱신
+ |-- DrawToRenderTarget
+     |-- RT_VisionMask 검정 Clear
+     |-- Owner / Polygon Points를 화면 좌표로 투영
+     |-- RenderTarget 크기에 맞게 좌표 스케일링
+     `-- 흰색 Triangle Fan으로 현재 시야 영역 그리기
 
 PostProcess Material
- ├─ SceneTexture(PostProcessInput0)
- ├─ TextureSampleParameter2D(VisionMask = RT_VisionMask)
- └─ FinalColor = Lerp(SceneColor * DarknessAmount, SceneColor, VisionMask.R)
+ |-- SceneTexture(PostProcessInput0)
+ |-- TextureSampleParameter2D(VisionMask = RT_VisionMask)
+ |-- FinalColor = Lerp(SceneColor * DarknessAmount, SceneColor, VisionMask.R)
 ```
 
 ### Current Tuning Notes
@@ -48,17 +48,17 @@ PostProcess Material
 - `RayCount`는 우선 128을 유지한다.
   - 시간상 끊김은 `UpdateInterval` 문제일 가능성이 크다.
   - 경계선 모양이 각져 보일 때만 `RayCount`를 올린다.
-- 다음 최적화 후보는 “플레이어 위치/회전이 일정 이상 변했을 때만 갱신”하는 방식이다.
+- 다음 최적화 후보는 "플레이어 위치/회전이 일정 이상 변했을 때만 갱신"하는 방식이다.
 - 현재 마스크 경계는 하드 엣지다. 다음 품질 개선 작업에서 Feather/Blur를 고려한다.
 
 ## Overview
-플레이어를 기준으로 특정 위치나 Actor가 현재 시야 안에 있는지 판정하고, 그 결과로 Enemy의 표시·숨김을 제어하는 시스템이다.
-근거리 원형(NearVision) + 전방 콘(ConeVision) 판정, 장애물 LineTrace, Actor 단위 가시성 조회(`IsActorVisible`), 고정 배치 Enemy의 주기적 표시·숨김(`UTDActorVisibilityComponent`)까지 구현되어 있다.
+플레이어를 기준으로 특정 위치나 Actor가 현재 시야 안에 있는지 판정하고, 그 결과로 Enemy의 표시/숨김을 제어하는 시스템이다.
+근거리 원형(NearVision) + 전방 콘(ConeVision) 판정, 장애물 LineTrace, Actor 단위 가시성 조회(`IsActorVisible`), 고정 배치 Enemy의 주기적 표시/숨김(`UTDActorVisibilityComponent`)까지 구현되어 있다.
 `UTDVisionRendererComponent`가 Ray Fan 기반 Visibility Polygon을 RenderTarget에 기록하며, PostProcess Material이 폴리곤 바깥을 어둡게 표현한다.
 
 ## Key Decisions
 - 시야 판정은 `ATDPlayerCharacter`가 소유하는 `UTDVisionComponent`에서 담당한다.
-- `UTDVisionComponent`는 판정 결과만 제공하며, Actor의 Mesh 표시·숨김을 직접 제어하지 않는다.
+- `UTDVisionComponent`는 판정 결과만 제공하며, Actor의 Mesh 표시/숨김을 직접 제어하지 않는다.
 - 판정 규칙은 **NearVision OR ConeVision**이다. 둘 중 하나를 통과하면 visible 후보다.
 - `NearVisionRadius` 안이면 전방 방향과 무관하게 visible 후보로 처리한다.
 - `NearVisionRadius` 밖이면 `ConeVisionDistance` + `ConeHalfAngleDeg` 기반 전방 콘을 검사한다.
@@ -72,7 +72,7 @@ PostProcess Material
 - `VisionObstacle`의 기본 반응은 Ignore이며, 벽과 큰 기둥처럼 사람의 시야 높이까지 실제로 막는 대상만 `VisionOccluder` Collision Preset으로 Block한다.
 - Enemy, Player, 허리 높이의 책상, 의자, 탄피, 아이템, 작은 장식물은 `VisionObstacle`을 Ignore하여 Visibility Polygon을 자르지 않게 한다.
 - 오브젝트의 실제 Collision 높이를 자동 판정 기준으로 사용하지 않는다. 시야 차단 여부는 오브젝트의 게임플레이 역할에 따라 명시적으로 지정한다.
-- 고정 배치 Enemy의 표시·숨김은 `UTDActorVisibilityComponent`가 담당한다. 아이템·탄피로의 확장은 미구현이다.
+- 고정 배치 Enemy의 표시/숨김은 `UTDActorVisibilityComponent`가 담당한다. 아이템/탄피로의 확장은 미구현이다.
 - 런타임 Spawn Enemy는 월드의 Actor Spawn 이벤트를 받아 `UTDActorVisibilityComponent`의 추적 목록에 자동 등록하는 방향으로 확장한다.
 - `VisionObstacle` 전용 채널에서는 Enemy가 기본적으로 Ignore되므로, `UTDVisionRendererComponent`가 Enemy 목록을 별도로 관리하지 않는 것을 최종 방향으로 삼는다.
 - 맵 지형은 기본적으로 렌더링하며, Fog 또는 Darkness 표현은 별도 렌더링 시스템의 책임으로 둔다.
@@ -122,7 +122,7 @@ Can Ever Affect Navigation = false
 - 외벽과 방 사이 내벽의 형태를 따라 배치한다.
 - 문이 있는 벽은 문 공간을 비우고 좌우 Occluder로 나눈다.
 - 열린 문짝, 문틀, 책상, 의자에는 배치하지 않는다.
-- Player·AI 이동, 총알 Trace와 NavMesh에는 영향을 주지 않는다.
+- Player/AI 이동, 총알 Trace와 NavMesh에는 영향을 주지 않는다.
 - 레벨의 `Structures/VisionOccluders` 폴더에서 인스턴스를 관리한다.
 - 향후 벽 Mesh가 변경되더라도 시야 차단 영역은 독립적으로 조정할 수 있게 유지한다.
 
@@ -155,7 +155,7 @@ HitPoint = VisionOrigin + RayDirection * PaddedDistance
 - 렌더링 Mesh 및 물리 Collision과 게임플레이 시야 차단 표현을 분리한다.
 - `BP_VisionOccluder`만 `VisionObstacle`을 Block하고 나머지 Actor는 기본 Ignore한다.
 - `UTDVisionRendererComponent`는 Enemy나 환경 Actor 목록을 알지 않고 `VisionObstacle` Trace 결과만 사용한다.
-- Spawn Enemy 등록은 렌더링 마스크가 아니라 Actor 전체 표시·숨김을 담당하는 `UTDActorVisibilityComponent`에만 둔다.
+- Spawn Enemy 등록은 렌더링 마스크가 아니라 Actor 전체 표시/숨김을 담당하는 `UTDActorVisibilityComponent`에만 둔다.
 
 결과:
 
@@ -186,23 +186,23 @@ HitPoint = VisionOrigin + RayDirection * PaddedDistance
 
 ```text
 1. Owner 위치 기준 2D 거리 제곱 계산 (DistSquared2D)
-2. DistSq2D <= NearVisionRadius²  →  true  (방향 무관)
-3. DistSq2D >  ConeVisionDistance²  →  false (콘 거리 초과)
+2. DistSq2D <= NearVisionRadius^2  ->  true  (방향 무관)
+3. DistSq2D >  ConeVisionDistance^2  ->  false (콘 거리 초과)
 4. ForwardVector 2D 추출, NearlyZero 가드
-5. DotProduct(ForwardNorm2D, ToTargetNorm2D) >= cos(ConeHalfAngleDeg)  →  true
+5. DotProduct(ForwardNorm2D, ToTargetNorm2D) >= cos(ConeHalfAngleDeg)  ->  true
 ```
 
 #### 판정 순서 (`IsActorVisible`)
 
 ```text
 1. Owner, TargetActor 유효성 확인
-2. IsLocationInVision(TargetActor 위치) 실패 → false
-3. bUseLineOfSightCheck == false → true (LineTrace 생략)
-4. Owner 위치 → TargetActor 위치 LineTrace (VisionTraceChannel)
+2. IsLocationInVision(TargetActor 위치) 실패 -> false
+3. bUseLineOfSightCheck == false -> true (LineTrace 생략)
+4. Owner 위치 -> TargetActor 위치 LineTrace (VisionTraceChannel)
 5. Owner만 Ignore (FCollisionQueryParams::AddIgnoredActor)
-6. Blocking Hit 없음 → true
-7. 첫 Hit Actor == TargetActor → true
-8. 다른 Actor가 먼저 맞음 → false
+6. Blocking Hit 없음 -> true
+7. 첫 Hit Actor == TargetActor -> true
+8. 다른 Actor가 먼저 맞음 -> false
 ```
 
 #### 디버그 표시 색상
@@ -243,17 +243,17 @@ HitPoint = VisionOrigin + RayDirection * PaddedDistance
 
 ```text
 BeginPlay
- ├─ 같은 Owner의 UTDVisionComponent 캐싱
- └─ Timer 등록 (UpdateInterval, 반복)
+ |-- 같은 Owner의 UTDVisionComponent 캐싱
+ |-- Timer 등록 (UpdateInterval, 반복)
 
 UpdatePolygon
- ├─ 360도 균등 각도 + 콘 좌우 경계 각도 생성 및 정렬
- ├─ 각 방향이 전방 콘 안인지 판정
- ├─ Near 또는 Cone 최대 거리 결정
- ├─ Owner를 Ignore한 VisionTraceChannel LineTrace
- │   ├─ Blocking Hit → ImpactPoint 저장
- │   └─ Hit 없음      → 최대 거리 지점 저장
- └─ Debug 활성화 시 인접 지점을 연결해 닫힌 폴리곤 표시
+ |-- 360도 균등 각도 + 콘 좌우 경계 각도 생성 및 정렬
+ |-- 각 방향이 전방 콘 안인지 판정
+ |-- Near 또는 Cone 최대 거리 결정
+ |-- Owner를 Ignore한 VisionTraceChannel LineTrace
+ |   |-- Blocking Hit -> ImpactPoint 저장
+ |   `-- Hit 없음      -> 최대 거리 지점 저장
+ |-- Debug 활성화 시 인접 지점을 연결해 닫힌 폴리곤 표시
 ```
 
 ---
@@ -274,15 +274,15 @@ UpdatePolygon
 
 ```text
 BeginPlay
- ├─ 기존 Enemy 수집
- └─ World Actor Spawn 이벤트 구독
+ |-- 기존 Enemy 수집
+ |-- World Actor Spawn 이벤트 구독
 
 ATDEnemyCharacter Spawn
- └─ UTDActorVisibilityComponent TrackedEnemies에 AddUnique
-     └─ 초기 가시성 즉시 계산 및 적용
+ |-- UTDActorVisibilityComponent TrackedEnemies에 AddUnique
+     `-- 초기 가시성 즉시 계산 및 적용
 
 EndPlay
- └─ Actor Spawn 이벤트 구독 해제
+ |-- Actor Spawn 이벤트 구독 해제
 ```
 
 목록은 `TWeakObjectPtr`로 유지하고 무효화된 Enemy는 갱신 과정에서 제거한다. `VisionObstacle` 전용 채널은 Enemy를 기본 Ignore하므로 `UTDVisionRendererComponent`에는 Spawn Enemy를 등록하지 않는다.
@@ -297,16 +297,16 @@ EndPlay
 
 ```text
 BeginPlay
- ├─ VisionComponent 캐싱 (Owner->FindComponentByClass)
- ├─ GetAllActorsOfClass → TrackedEnemies 수집 (LastVisibilityState 초기값 true)
- ├─ Timer 등록 (VisibilityUpdateInterval, 반복)
- └─ UpdateVisibility() 즉시 1회 호출
+ |-- VisionComponent 캐싱 (Owner->FindComponentByClass)
+ |-- GetAllActorsOfClass -> TrackedEnemies 수집 (LastVisibilityState 초기값 true)
+ |-- Timer 등록 (VisibilityUpdateInterval, 반복)
+ |-- UpdateVisibility() 즉시 1회 호출
 
 UpdateVisibility (Timer 콜백)
- └─ TrackedEnemies 역순 순회
-     ├─ 유효하지 않은 항목 → RemoveAtSwap (TrackedEnemies + LastVisibilityState 동기화)
-     └─ IsActorVisible(Enemy) != LastVisibilityState[i]
-          └─ SetActorHiddenInGame(!bVisible) + 상태 갱신
+ |-- TrackedEnemies 역순 순회
+     |-- 유효하지 않은 항목 -> RemoveAtSwap (TrackedEnemies + LastVisibilityState 동기화)
+     `-- IsActorVisible(Enemy) != LastVisibilityState[i]
+          `-- SetActorHiddenInGame(!bVisible) + 상태 갱신
 ```
 
 ---
@@ -315,43 +315,43 @@ UpdateVisibility (Timer 콜백)
 
 ```text
 ATDPlayerCharacter
- ├─ UTDVisionComponent
- │   ├─ 위치 가시성 판정 (Near OR Cone) — IsLocationInVision()
- │   └─ Actor 가시성 판정 (위치 판정 + LineTrace LOS) — IsActorVisible()
- ├─ UTDVisionRendererComponent
- │   └─ Ray Fan + VisionObstacle Trace → Visibility Polygon 계산 및 Debug 표시
- └─ UTDActorVisibilityComponent
-     └─ 레벨 배치 Enemy 표시·숨김 (Timer 기반 주기 갱신)
+ |-- UTDVisionComponent
+ |   |-- 위치 가시성 판정 (Near OR Cone) - IsLocationInVision()
+ |   `-- Actor 가시성 판정 (위치 판정 + LineTrace LOS) - IsActorVisible()
+ |-- UTDVisionRendererComponent
+ |   `-- Ray Fan + VisionObstacle Trace -> Visibility Polygon 계산 및 Debug 표시
+ |-- UTDActorVisibilityComponent
+     `-- 레벨 배치 Enemy 표시/숨김 (Timer 기반 주기 갱신)
 
 FogOfWar / VisionRenderer  [미구현]
- ├─ Ray Fan + Visibility Polygon으로 벽 뒤 공간 차단
- ├─ RenderTarget + PostProcess로 시야 밖 공간을 어둡게 표현
- └─ 시야 안의 SceneColor는 유지하여 실제 조명 결과를 보존
+ |-- Ray Fan + Visibility Polygon으로 벽 뒤 공간 차단
+ |-- RenderTarget + PostProcess로 시야 밖 공간을 어둡게 표현
+ |-- 시야 안의 SceneColor는 유지하여 실제 조명 결과를 보존
 
 Lighting / Flashlight  [미구현]
- ├─ 공간의 실제 밝기와 그림자 표현
- └─ 필요 시 대상 식별(Recognition) 보정값 제공
+ |-- 공간의 실제 밝기와 그림자 표현
+ |-- 필요 시 대상 식별(Recognition) 보정값 제공
 
 AI Perception
- └─ 적 AI의 플레이어 감지와 Alert 처리 (별도 책임)
+ |-- 적 AI의 플레이어 감지와 Alert 처리 (별도 책임)
 ```
 
-### 시야·조명·식별 책임 분리
+### 시야/조명/식별 책임 분리
 
 ```text
 Spatial Visibility
- ├─ InVisionShape
- └─ HasLineOfSight
-          ↓
+ |-- InVisionShape
+ |-- HasLineOfSight
+          v
 화면에 표시될 수 있는가?
-          ↓
+          v
 Lighting
- └─ Ambient / Local Light / Flashlight
-          ↓
+ |-- Ambient / Local Light / Flashlight
+          v
 실제로 얼마나 밝게 보이는가?
-          ↓
+          v
 Recognition  [필요 시 추후 구현]
- └─ UI 표시, 조준 보정, 상호작용 또는 AI 탐지 보정
+ `-- UI 표시, 조준 보정, 상호작용 또는 AI 탐지 보정
 ```
 
 - `UTDVisionComponent`는 Spatial Visibility만 판정한다.
@@ -381,7 +381,7 @@ Recognition  [필요 시 추후 구현]
 - Auto Exposure가 어두운 공간을 자동으로 밝힐 수 있으므로 조명 구현 시 노출 범위를 고정하거나 제한하는 튜닝이 필요하다.
 
 ## Future
-- `Owner->GetActorForwardVector()` → AimTarget 기반 시야 방향 전환
+- `Owner->GetActorForwardVector()` -> AimTarget 기반 시야 방향 전환
 - Ray Fan + Visibility Polygon 기반 벽 가림 마스크
 - RenderTarget + PostProcess 기반 `VisionRenderer`
 - 손전등 SpotLight 및 조도 기반 Recognition 보정

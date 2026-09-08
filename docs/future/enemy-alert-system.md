@@ -10,7 +10,7 @@
 
 ## Architecture
 ```text
-Idle → Suspicious → Alert → Combat
+Idle -> Suspicious -> Alert -> Combat
 ```
 
 - 각 단계는 조사, 추적, 공격 같은 AI 행동 선택에 영향을 준다.

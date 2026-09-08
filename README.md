@@ -8,7 +8,7 @@ AfterTheWisper는 아포칼립스 이후의 폐쇄된 장소를 탐사하고, �
 
 현재 데모에서는 사무실 형태의 Office Floor를 탐색한다. 플레이어는 적을 피해하거나 처치하면서 OfficeKey를 획득하고, 비상계단의 장치를 활성화한 뒤 탈출 영역을 일정 시간 지켜야 한다. 탈출에 성공하거나 플레이어가 사망하면 결과 화면이 표시되며 같은 레벨을 다시 시작할 수 있다.
 
-> Office Floor 진입 → 탐색 및 전투 → OfficeKey 획득 → 탈출 장치 활성화 → 탈출 영역 체류 → Extraction Success
+> Office Floor 진입 -> 탐색 및 전투 -> OfficeKey 획득 -> 탈출 장치 활성화 -> 탈출 영역 체류 -> Extraction Success
 
 ## 플레이 영상
 
@@ -49,7 +49,7 @@ AfterTheWisper는 아포칼립스 이후의 폐쇄된 장소를 탐사하고, �
 - 수동 및 탄창 소진 시 재장전
 - 재장전 진행 UI
 - 총구 화염, 탄피 배출과 충돌음
-- 실내·실외 발사음 분리
+- 실내/실외 발사음 분리
 - 체력 및 탄약 HUD
 - 인벤토리 무게에 따른 이동속도 변화
 
@@ -80,7 +80,7 @@ AfterTheWisper는 아포칼립스 이후의 폐쇄된 장소를 탐사하고, �
 - Ray Fan으로 Visibility Polygon 계산
 - Render Target과 Post Process Material을 이용한 시야 밖 암전
 - 적과 낮은 가구가 불필요하게 시야를 자르지 않도록 분리된 충돌 정책
-- 동적 Actor의 시야 여부에 따른 표시·숨김
+- 동적 Actor의 시야 여부에 따른 표시/숨김
 
 ### 아이템과 상호작용
 
@@ -96,11 +96,11 @@ AfterTheWisper는 아포칼립스 이후의 폐쇄된 장소를 탐사하고, �
 - 탈출 조건 검사와 탈출 영역 판정의 책임 분리
 - Activator에서 맵에 배치된 Extraction Zone 인스턴스 참조
 - OfficeKey 보유 시 탈출 지점 활성화
-- Box Overlap 기반 탈출 영역 진입·이탈 감지
+- Box Overlap 기반 탈출 영역 진입/이탈 감지
 - Timer 기반 체류 판정과 이탈 시 진행 취소
 - 실제 체류 타이머와 동기화된 3.0초 탈출 카운트다운 UI
 - 단축키 입력 시 5초 동안 표시되는 탈출 지점 방향 및 거리 안내
-- 상호 배타적인 승리·패배 상태
+- 상호 배타적인 승리/패배 상태
 - Extraction Success 및 Game Over UI
 - 결과 화면 중 게임 일시정지
 - Restart 후 게임 입력과 마우스 커서 상태 복구
@@ -136,7 +136,7 @@ ATDExtractionActivator는 OfficeKey 같은 활성화 조건을 검사하고, ATD
 
 ### 이벤트 기반 UI
 
-탄약, 재장전, 체력과 게임 결과는 Delegate 또는 Blueprint Event를 통해 UI에 전달한다. 결과 화면은 GameMode의 승리·패배 상태를 기준으로 표시된다.
+탄약, 재장전, 체력과 게임 결과는 Delegate 또는 Blueprint Event를 통해 UI에 전달한다. 결과 화면은 GameMode의 승리/패배 상태를 기준으로 표시된다.
 
 ## 조작법
 

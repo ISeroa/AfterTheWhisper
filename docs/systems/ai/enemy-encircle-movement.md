@@ -16,7 +16,7 @@
 - 슬롯 위치는 다음 계산을 사용한다.
 
 ```text
-Angle   = SlotIndex * (2π / NumSlots)
+Angle   = SlotIndex * (2pi / NumSlots)
 Dir     = WorldForward * cos(Angle) + WorldRight * sin(Angle)
 SlotPos = PlayerLocation + Dir * (EncircleRadius + RadiusBias)
 ```
@@ -44,6 +44,6 @@ Cost = Dist2D(SelfLocation, SlotPos)
 ## Future
 - 주변 적 목록 캐싱 또는 Coordinator 기반 슬롯 예약
 - 도달 불가능한 슬롯 제외
-- 근접·원거리 적 타입별 반경 프리셋
+- 근접/원거리 적 타입별 반경 프리셋
 - 슬롯 유지 비용을 추가하여 과도한 목표 변경 방지
 - 관련 문서: [[enemy-system]]

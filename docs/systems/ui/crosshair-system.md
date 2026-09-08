@@ -44,26 +44,26 @@
 
 ```text
 ATDWeaponBase
-  └─ GetSpreadDeg()
+  |-- GetSpreadDeg()
 
 ATDPlayerCharacter
-  ├─ CrosshairWidgetClass
-  ├─ CrosshairWidget 생성
-  └─ BP_UpdateCrosshair(SpreadDeg, false)
+  |-- CrosshairWidgetClass
+  |-- CrosshairWidget 생성
+  |-- BP_UpdateCrosshair(SpreadDeg, false)
 
 ATDPlayerController
-  ├─ SetCrosshairWidget()
-  └─ Mouse Position + CrosshairWidgetOffset
+  |-- SetCrosshairWidget()
+  |-- Mouse Position + CrosshairWidgetOffset
 
 UTDCrosshairWidget
-  └─ BP_UpdateCrosshair(float SpreadDeg, bool bIsAiming)
+  |-- BP_UpdateCrosshair(float SpreadDeg, bool bIsAiming)
 
 WBP_Crosshair
-  └─ CrosshairRoot
-      ├─ TopLine    : Border
-      ├─ BottomLine : Border
-      ├─ LeftLine   : Border
-      └─ RightLine  : Border
+  `-- CrosshairRoot
+      |-- TopLine    : Border
+      |-- BottomLine : Border
+      |-- LeftLine   : Border
+      `-- RightLine  : Border
 ```
 
 ### Blueprint Layout Notes

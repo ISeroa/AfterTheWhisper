@@ -26,10 +26,10 @@
 
 ```text
 ATDEnemyCharacter
- ├─ ATDEnemyAIController
- │   └─ Timer → 이동 목표 계산 → MoveToLocation
- └─ UTDEnemyMeleeAttackComponent
-     └─ 거리 확인 → Windup → 재확인 → ApplyDamage → Cooldown
+ |-- ATDEnemyAIController
+ |   `-- Timer -> 이동 목표 계산 -> MoveToLocation
+ `-- UTDEnemyMeleeAttackComponent
+     `-- 거리 확인 -> Windup -> 재확인 -> ApplyDamage -> Cooldown
 ```
 
 ## Trade-offs

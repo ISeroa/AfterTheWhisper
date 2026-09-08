@@ -33,12 +33,12 @@
 
 ```text
 Mouse Position
-  → Deproject to World Ray
-  → LineTrace 또는 Aim Plane fallback
-  → 거리 제한 및 Dead Zone
-  → SmoothedAimPoint
-      ├─ Player Rotation
-      └─ Weapon AimTarget
+  -> Deproject to World Ray
+  -> LineTrace 또는 Aim Plane fallback
+  -> 거리 제한 및 Dead Zone
+  -> SmoothedAimPoint
+      |-- Player Rotation
+      `-- Weapon AimTarget
 ```
 
 ## Trade-offs

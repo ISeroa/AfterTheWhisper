@@ -7,22 +7,22 @@
 
 ```text
 systems
- ├─ ai
- │   ├─ enemy-system.md
- │   └─ enemy-encircle-movement.md
- ├─ combat
- │   ├─ weapon-system.md
- │   └─ weapon-audio-system.md
- ├─ gameplay
- │   ├─ aim-system.md
- │   ├─ death-system.md
- │   └─ vision-system.md
- └─ ui
-     ├─ ammo-indicator.md
-     ├─ crosshair-system.md
-     ├─ navigation-indicator.md
-     ├─ player-hud.md
-     └─ reload-indicator.md
+ |-- ai
+ |   |-- enemy-system.md
+ |   `-- enemy-encircle-movement.md
+ |-- combat
+ |   |-- weapon-system.md
+ |   `-- weapon-audio-system.md
+ |-- gameplay
+ |   |-- aim-system.md
+ |   |-- death-system.md
+ |   `-- vision-system.md
+ `-- ui
+     |-- ammo-indicator.md
+     |-- crosshair-system.md
+     |-- navigation-indicator.md
+     |-- player-hud.md
+     `-- reload-indicator.md
 ```
 
 ## Categories

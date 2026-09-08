@@ -27,16 +27,16 @@
 
 ```text
 Fire Success
-  ├─ Ammo 감소 → OnAmmoChanged
-  ├─ LineTrace → Impact Sound → ApplyPointDamage
-  ├─ Muzzle Flash / Casing / Fire Sound
-  └─ OnWeaponFired → Character Fire Montage
+  |-- Ammo 감소 -> OnAmmoChanged
+  |-- LineTrace -> Impact Sound -> ApplyPointDamage
+  |-- Muzzle Flash / Casing / Fire Sound
+  |-- OnWeaponFired -> Character Fire Montage
 
 Reload
-  ├─ OnReloadUIStart(Duration)
-  ├─ Timer 또는 NotifyReloadFinished
-  ├─ Ammo 보충 → OnAmmoChanged
-  └─ OnReloadUIStop
+  |-- OnReloadUIStart(Duration)
+  |-- Timer 또는 NotifyReloadFinished
+  |-- Ammo 보충 -> OnAmmoChanged
+  `-- OnReloadUIStop
 ```
 
 ## Trade-offs

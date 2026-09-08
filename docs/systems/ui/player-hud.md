@@ -21,10 +21,10 @@ Health Component의 상태 변경을 Delegate로 전달받아 Tick 없이 갱신
 
 ```text
 Damage
-  → UTDHealthComponent
-  → OnHealthChanged(NewHealth, Delta)
-  → ATDPlayerCharacter::HandleHealthChanged()
-  → UTDPlayerStatusHUD::SetHealth(Current, Max)
+  -> UTDHealthComponent
+  -> OnHealthChanged(NewHealth, Delta)
+  -> ATDPlayerCharacter::HandleHealthChanged()
+  -> UTDPlayerStatusHUD::SetHealth(Current, Max)
 ```
 
 ## Trade-offs

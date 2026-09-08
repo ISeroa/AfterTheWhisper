@@ -2,12 +2,12 @@
 
 ## Overview
 `UTDVisionComponent`의 판정 결과를 바탕으로 적, 아이템, 탄피 같은 Gameplay Entity의 렌더링 상태를 관리하는 시스템이다.
-시야를 직접 계산하지 않고, 이미 계산된 보임·안 보임 결과를 대상 Actor에 적용하는 역할만 담당한다.
+시야를 직접 계산하지 않고, 이미 계산된 보임/안 보임 결과를 대상 Actor에 적용하는 역할만 담당한다.
 현재는 구현 전 설계 단계이며, 아래 구조는 초기 구현 예정 방향을 정리한 것이다.
 
 ## Key Decisions
 - 위치와 Actor의 가시성 판정은 `UTDVisionComponent`에 위임한다.
-- 이 시스템은 판정 결과를 실제 표시·숨김 상태에 적용하는 책임만 가진다.
+- 이 시스템은 판정 결과를 실제 표시/숨김 상태에 적용하는 책임만 가진다.
 - 초기 적용 범위는 Actor의 렌더링 상태이며, Collision, 이동, 공격, AI 로직은 변경하지 않는다.
 - 초기 구현에서는 매 프레임 Tick이나 Actor별 Timer 대신, Actor Visibility System이 소유하는 중앙 Timer 하나를 사용할 예정이다.
 - 초기 갱신 간격은 `0.1~0.2초` 범위에서 시작하고 실제 플레이 감각과 대상 수를 기준으로 조정할 예정이다.
@@ -24,27 +24,27 @@
 - 각 Entry는 `TWeakObjectPtr<ATDEnemyCharacter>`, 이전 가시 상태, 첫 판정 여부를 함께 보관한다.
 - `TWeakObjectPtr`를 사용하여 Destroy된 Actor를 안전하게 감지하고, 역순 순회와 `RemoveAtSwap()`으로 유효하지 않은 Entry를 제거한다.
 - 중앙 Timer가 등록된 대상을 순회하며 `UTDVisionComponent::IsActorVisible()`을 호출할 예정이다.
-- `IsActorVisible()`은 원형·콘 시야를 먼저 검사하고, 범위 밖이면 LineTrace 없이 즉시 false를 반환한다.
+- `IsActorVisible()`은 원형/콘 시야를 먼저 검사하고, 범위 밖이면 LineTrace 없이 즉시 false를 반환한다.
 - 판정 결과가 캐싱된 상태와 다를 때만 `SetActorHiddenInGame()` 또는 Mesh의 `SetVisibility()`를 호출한다.
 - 상태가 유지되면 렌더링 함수를 다시 호출하지 않는다.
 - Actor가 파괴되거나 유효하지 않으면 관리 대상에서 안전하게 제거한다.
 - 시야 밖 상태는 렌더링에만 영향을 주며 Gameplay 로직을 중단하지 않는다.
 - 시야 안이지만 어두운 Actor는 숨김 처리하지 않고 Unreal 조명 결과에 따라 어둡게 렌더링한다.
-- 대상이 많아질 경우 플레이어 주변 대상만 조회하거나 등록·해제 범위를 제한한다.
+- 대상이 많아질 경우 플레이어 주변 대상만 조회하거나 등록/해제 범위를 제한한다.
 - 시스템 관계는 다음과 같다.
 
 ```text
 Actor Visibility System
- └─ Central Timer (0.1~0.2초)
-      └─ 등록 Actor 순회
-           └─ UTDVisionComponent::IsActorVisible(TargetActor)
-                ├─ Vision 범위 밖 → LineTrace 생략 → false
-                └─ Vision 범위 안 → LineTrace 가림 판정
-                     ↓
+ `-- Central Timer (0.1~0.2초)
+      `-- 등록 Actor 순회
+           `-- UTDVisionComponent::IsActorVisible(TargetActor)
+                |-- Vision 범위 밖 -> LineTrace 생략 -> false
+                `-- Vision 범위 안 -> LineTrace 가림 판정
+                     v
                 이전 상태와 비교
-                     ├─ false → true  : 표시
-                     ├─ true  → false : 숨김
-                     └─ 상태 유지     : 변경 없음
+                     |-- false -> true  : 표시
+                     |-- true  -> false : 숨김
+                     `-- 상태 유지     : 변경 없음
 ```
 
 ## Trade-offs
@@ -53,7 +53,7 @@ Actor Visibility System
 - 가시성과 Gameplay 활성 상태를 분리하면 구조가 안전하지만, 보이지 않는 적도 AI와 Collision 연산을 계속 수행한다.
 - 모든 대상을 순회하는 방식은 초기 구현에는 단순하지만 대상 수가 증가하면 공간 조회 또는 등록 범위 최적화가 필요하다.
 - 낮은 빈도의 중앙 Timer는 Actor별 Timer보다 관리와 부하 제어가 쉽지만, 한 번의 갱신 시점에 조회가 몰릴 수 있다.
-- `TArray`는 전체 순회에 적합하지만 특정 Actor의 등록 여부 확인과 제거 대상 검색은 O(N)이다. 초기 적 규모와 낮은 등록·해제 빈도에서는 단순성과 순회 효율을 우선한다.
+- `TArray`는 전체 순회에 적합하지만 특정 Actor의 등록 여부 확인과 제거 대상 검색은 O(N)이다. 초기 적 규모와 낮은 등록/해제 빈도에서는 단순성과 순회 효율을 우선한다.
 - 적 수가 늘어났을 때 `TMap`이나 `TSet`으로 바꾸더라도 전체 가시성 순회 횟수는 줄지 않으므로, Container 변경보다 후보 대상 수를 줄이는 방식을 우선한다.
 
 ## Future

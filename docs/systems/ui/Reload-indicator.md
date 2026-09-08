@@ -22,12 +22,12 @@ Weapon Delegate로 상태를 갱신하고 Reload Duration을 Blueprint Animation
 
 ```text
 Reload Start
-  → OnReloadUIStart(Duration)
-  → BP_ShowReloadBar(Duration)
+  -> OnReloadUIStart(Duration)
+  -> BP_ShowReloadBar(Duration)
 
 Reload Finish / Cancel
-  → OnReloadUIStop
-  → BP_HideReloadBar()
+  -> OnReloadUIStop
+  -> BP_HideReloadBar()
 ```
 
 ## Trade-offs
@@ -38,7 +38,7 @@ Reload Finish / Cancel
 
 ## Future
 - Weapon 재바인딩 시 이전 Delegate 해제
-- Montage Notify State 기반 완료·취소 동기화
+- Montage Notify State 기반 완료/취소 동기화
 - 피격이나 다른 행동에 의한 Reload 인터럽트
 - Fade와 완료 피드백
 - 관련 문서: [[weapon-system]], [[ammo-indicator]], [[player-hud]]

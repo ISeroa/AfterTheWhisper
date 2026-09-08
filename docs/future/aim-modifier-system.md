@@ -24,13 +24,13 @@ RMB 입력으로 정밀 조준 상태에 진입하여 사격 정확도와 전방
 
 ```text
 RMB Press / Release
-  → Player Aim State 변경
-      ├─ Weapon Spread Modifier
-      ├─ Movement Speed Modifier
-      └─ Camera Offset Modifier
+  -> Player Aim State 변경
+      |-- Weapon Spread Modifier
+      |-- Movement Speed Modifier
+      `-- Camera Offset Modifier
 
 Existing Aim System
-  → AimPoint 계산과 캐릭터 회전 유지
+  -> AimPoint 계산과 캐릭터 회전 유지
 ```
 
 ## Trade-offs
